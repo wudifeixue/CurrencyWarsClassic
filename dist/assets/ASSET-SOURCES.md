@@ -8,6 +8,16 @@ Each local PNG is an unchanged transparent **376 × 512** source image. Total si
 
 Source URL pattern: `https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/image/character_preview/<ID>.png`
 
+## Square portrait cards
+
+The matching 24 square portraits in `portraits/` were downloaded unchanged on 2026-11-13 from [`icon/character`](https://github.com/Mar-7th/StarRailRes/tree/master/icon/character) in the same resource repository. Each PNG is **256 × 256**, and the total size is **2,912,640 bytes**. They use the same character IDs and rights attribution as the previews below.
+
+Source URL pattern: `https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/character/<ID>.png`
+
+## Interface illustrations
+
+The 17 vector equipment illustrations in `equipment/`, 12 white trait symbols in `traits/`, and gold hexagonal currency token in `ui/coin.svg` were drawn specifically for this fan adaptation. These are original SVG interface assets, not extracted official Currency Wars equipment icons. The equipment and coin drawings use transparent 80 × 80 view boxes; trait symbols use 48 × 48 view boxes. Equipment and trait filenames match the IDs in `data.js`.
+
 | Local file | Character |
 | --- | --- |
 | `characters/1001.png` | 三月七 |

@@ -1,6 +1,6 @@
-import {CHARACTERS,TRAITS,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP} from './data.js?v=2.0.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=2.0.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=2.0.0';
+import {CHARACTERS,TRAITS,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP} from './data.js?v=3.0.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=3.0.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=3.0.0';
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const equipment = new Map(EQUIPMENT.map(e=>[e.id,e]));

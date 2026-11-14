@@ -1,4 +1,4 @@
-import {CHARACTERS, TRAITS, EQUIPMENT} from './data.js?v=2.0.0';
+import {CHARACTERS, TRAITS, EQUIPMENT} from './data.js?v=3.0.0';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
 const equipmentMap = new Map(EQUIPMENT.map(e => [e.id, e]));
