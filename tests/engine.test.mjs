@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame,act,getCharacter,getEquipment,getSynergies,getTeamPower,getEnemy,getUnitStats,validateState} from '../dist/engine.js';
-import {EQUIPMENT,STRATEGIES,CHARACTERS} from '../dist/data.js';
+import {EQUIPMENT,STRATEGIES,CHARACTERS,CLASSIC_ROSTER} from '../dist/data.js';
 
 const run=(state,action)=>{const result=act(state,action);assert.equal(result.ok,true,result.message);assert.equal(validateState(state),true);return result;};
 const invalid=(state,action)=>{const before=JSON.stringify(state);assert.equal(act(state,action).ok,false);assert.equal(JSON.stringify(state),before);};
@@ -10,8 +10,10 @@ test('new games have valid populated boards and repeatable seeded shops',()=>{
   const a=createGame(123),b=createGame(123);
   assert.equal(validateState(a),true);assert.equal(a.units.length,4);
   run(a,{type:'refresh'});run(b,{type:'refresh'});assert.deepEqual(a,b);
-  assert.ok(getTeamPower(a)>getEnemy(a).power);
-  assert.equal(CHARACTERS.length,24);
+  assert.ok(getTeamPower(a)>0);
+  assert.equal(CLASSIC_ROSTER.length,72);
+  assert.ok(CHARACTERS.length>=CLASSIC_ROSTER.length);
+  assert.ok(a.units.every(u=>CLASSIC_ROSTER.some(c=>c.id===u.characterId)));
 });
 
 test('invalid actions are atomic, and phase restrictions cannot be bypassed',()=>{
@@ -29,28 +31,28 @@ test('invalid actions are atomic, and phase restrictions cannot be bypassed',()=
 });
 
 test('three copies merge automatically, preserve deployment and return excess items',()=>{
-  const s=createGame(2),dan=s.units.find(u=>u.characterId==='1002');
+  const s=createGame(2),dan=s.units.find(u=>u.characterId==='1013');
   run(s,{type:'equip',uid:dan.uid,itemIndex:0});
   run(s,{type:'buy',index:0});
-  const copy=s.units.find(u=>u.characterId==='1002'&&u.uid!==dan.uid);
+  const copy=s.units.find(u=>u.characterId==='1013'&&u.uid!==dan.uid);
   s.inventory.push('star','armor','skates');
   run(s,{type:'equip',uid:copy.uid,itemIndex:0});
   run(s,{type:'equip',uid:copy.uid,itemIndex:0});
   run(s,{type:'equip',uid:copy.uid,itemIndex:0});
   const inventoryBefore=s.inventory.length;
   run(s,{type:'buy',index:2});
-  const upgraded=s.units.find(u=>u.characterId==='1002');
+  const upgraded=s.units.find(u=>u.characterId==='1013');
   assert.equal(upgraded.uid,dan.uid);assert.equal(upgraded.star,2);assert.equal(upgraded.zone,'front');
   assert.equal(upgraded.items.length,3);assert.equal(s.inventory.length,inventoryBefore+1);
-  assert.equal(s.units.filter(u=>u.characterId==='1002').length,1);
+  assert.equal(s.units.filter(u=>u.characterId==='1013').length,1);
 });
 
 test('merge cascades from one star into three stars',()=>{
   const s=createGame(3);
-  s.units=s.units.filter(u=>u.characterId!=='1002');
-  for(let i=0;i<8;i++)s.units.push({uid:`fixture-${i}`,characterId:'1002',star:1,zone:i===0?'front':'bench',items:[]});
-  s.shop[0]='1002';run(s,{type:'buy',index:0});
-  const dans=s.units.filter(u=>u.characterId==='1002');
+  s.units=s.units.filter(u=>u.characterId!=='1013');
+  for(let i=0;i<8;i++)s.units.push({uid:`fixture-${i}`,characterId:'1013',star:1,zone:i===0?'front':'bench',items:[]});
+  s.shop[0]='1013';run(s,{type:'buy',index:0});
+  const dans=s.units.filter(u=>u.characterId==='1013');
   assert.equal(dans.length,1);assert.equal(dans[0].star,3);
 });
 
@@ -62,16 +64,24 @@ test('equipment raises power, can be removed, sold or combined without duplicati
   invalid(s,{type:'combine',indexA:0,indexB:1});
   run(s,{type:'equip',uid:unit.uid,itemIndex:0});run(s,{type:'sell',uid:unit.uid});assert.deepEqual(s.inventory,['electric']);
   assert.equal(s.gold,17);
-  for(const item of EQUIPMENT){const state=createGame(7);const unit=state.units[0],before=getUnitStats(state,unit).power;unit.items=[item.id];assert.ok(getUnitStats(state,unit).power>before,item.id);}
+  // Some classic items only affect energy, break or the other zone: they need not raise the power estimate.
+  for(const item of EQUIPMENT){
+    const state=createGame(7),wearer=state.units[0];state.inventory=[item.id];
+    run(state,{type:'equip',uid:wearer.uid,itemIndex:0});
+    const stats=getUnitStats(state,state.units[0]);
+    assert.ok(Number.isFinite(stats.hp)&&stats.hp>0,item.id);
+    assert.ok(Number.isFinite(stats.attack)&&stats.attack>0,item.id);
+    run(state,{type:'unequip',uid:wearer.uid,itemIndex:0});assert.deepEqual(state.inventory,[item.id]);
+  }
 });
 
 test('unique character identities determine synergies, bench copies do not count',()=>{
   const s=createGame(9);
-  assert.equal(getSynergies(s).find(x=>x.id==='express').count,2);
+  assert.equal(getSynergies(s).find(x=>x.id==='express').count,1);
   s.units.push({uid:'fixture',characterId:'1001',star:2,zone:'bench',items:[]});
-  assert.equal(getSynergies(s).find(x=>x.id==='express').count,2);
+  assert.equal(getSynergies(s).find(x=>x.id==='express').count,1);
   s.level=5;run(s,{type:'move',uid:'fixture',zone:'front'});
-  assert.equal(getSynergies(s).find(x=>x.id==='express').count,2);
+  assert.equal(getSynergies(s).find(x=>x.id==='express').count,1);
 });
 
 test('population and front/back capacity limits are enforced',()=>{
@@ -91,15 +101,17 @@ test('locked shops persist through round advance and interest is based on saved 
   assert.notDeepEqual(s.shop,shop);
 });
 
-test('every investment strategy has a functional effect',()=>{
+test('classic and legacy strategies can be acquired without corrupting a save',()=>{
   for(const strategy of STRATEGIES){
     const s=createGame(11),before=getTeamPower(s);s.phase='choice';s.choices=[{kind:'strategy',id:strategy.id}, {kind:'strategy',id:'compound'},{kind:'strategy',id:'dividend'}];
     run(s,{type:'choose',index:0});assert.ok(s.strategies.includes(strategy.id));
-    if(['vanguard','backline','fortress','recovery','momentum'].includes(strategy.id))assert.ok(getTeamPower(s)>before,strategy.id);
+    if(['vanguard','backline','fortress'].includes(strategy.id))assert.ok(getTeamPower(s)>before,strategy.id);
     if(strategy.id==='compound')assert.equal(s.gold,24);
     if(strategy.id==='growth'){assert.equal(s.level,5);run(s,{type:'exp'});assert.equal(s.xp,6);}
     if(strategy.id==='discount'){run(s,{type:'refresh'});assert.equal(s.gold,15);}
-    if(strategy.id==='dividend'){run(s,{type:'battle'});assert.equal(s.lastBattle.income,14);}
+    if(strategy.id==='dividend'){run(s,{type:'battle'});assert.equal(s.lastBattle.income,8+1+3+(s.lastBattle.won?2:0));}
+    if(strategy.id==='momentum'){run(s,{type:'battle'});assert.equal(s.lastBattle.income,9+(s.lastBattle.won?5:0));}
+    if(strategy.id==='recovery'){s.hp=50;run(s,{type:'battle'});assert.equal(s.hp,50-s.lastBattle.damage+5);}
   }
 });
 

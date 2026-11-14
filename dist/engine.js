@@ -1,6 +1,6 @@
-import {CHARACTERS,TRAITS,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP} from './data.js?v=3.0.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=3.0.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=3.0.0';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT} from './data.js?v=4.0.1';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=4.0.1';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=4.0.1';
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const equipment = new Map(EQUIPMENT.map(e=>[e.id,e]));
@@ -9,9 +9,20 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const fail = message => ({ok:false,message});
 const success = message => ({ok:true,message});
 const has = (state,id) => state.strategies.includes(id);
+const strategies = new Map(STRATEGIES.map(s=>[s.id,s]));
+const effects = state => state.strategies.map(id=>({id,...strategies.get(id)?.effect}));
+const sumEffect = (state,key) => effects(state).reduce((sum,e)=>sum+(Number(e[key])||0),0);
+const meta = (state,id) => state.strategyState[id] ||= {acquiredRound:state.round,nodes:0,purchasedCosts:[]};
+const spend = (state,amount) => {state.gold-=amount;state.goldSpentThisNode+=amount;};
 const deployed = state => state.units.filter(u=>u.zone!=='bench');
 export const getCharacter = id => characters.get(String(id));
 export const getEquipment = id => equipment.get(id);
+export const getMaxHp = state => 100+sumEffect(state,'maxHp');
+export const getRefreshCost = state => state.freeRefreshes>0?0:has(state,'discount')?1:2;
+export function getInterest(state) {
+  if(effects(state).some(e=>e.noInterest))return 0;
+  return Math.min(Math.max(has(state,'compound')?8:5,...effects(state).map(e=>e.interestCap||0)),Math.floor(state.gold/10));
+}
 
 function random(state) {
   let value = state.rng >>> 0;
@@ -28,21 +39,29 @@ function addUnit(state,characterId,zone='bench') {
 }
 
 function rollShop(state) {
-  const chances = {4:[55,32,13,0,0],5:[40,35,20,5,0],6:[27,33,28,10,2],7:[18,28,32,18,4],8:[12,20,30,28,10]};
   state.shop = Array.from({length:5},()=>{
     let roll=random(state)*100;
     let cost=1;
-    for(const chance of chances[state.level]) {if(roll<chance) break;roll-=chance;cost++;}
-    return pick(state,CHARACTERS.filter(c=>c.cost===cost)).id;
+    for(const chance of SHOP_ODDS[state.level]) {if(roll<chance) break;roll-=chance;cost++;}
+    return pick(state,CLASSIC_ROSTER.filter(c=>c.cost===cost)).id;
   });
 }
 
 function addXp(state,amount) {
   state.xp+=amount;
-  while(state.level<8 && state.xp>=LEVEL_XP[state.level]) {
+  while(state.level<MAX_LEVEL && state.xp>=LEVEL_XP[state.level]) {
     state.xp-=LEVEL_XP[state.level];state.level++;
   }
-  if(state.level===8) state.xp=0;
+  if(state.level===MAX_LEVEL) state.xp=0;
+}
+
+function retainCompatibleItems(state,unit,items) {
+  unit.items=[];
+  for(const id of items) {
+    const item=getEquipment(id);
+    if(unit.items.length>=3||unit.items.some(key=>getEquipment(key)?.exclusiveSlots)||(item?.exclusiveSlots&&unit.items.length)||(item?.unique&&unit.items.includes(id)))state.inventory.push(id);
+    else unit.items.push(id);
+  }
 }
 
 function mergeUnits(state) {
@@ -55,8 +74,7 @@ function mergeUnits(state) {
         const group=copies.slice(0,3), survivor=group[0];
         const allItems=group.flatMap(u=>u.items);
         survivor.star++;
-        survivor.items=allItems.slice(0,3);
-        state.inventory.push(...allItems.slice(3));
+        retainCompatibleItems(state,survivor,allItems);
         const removed=new Set(group.slice(1).map(u=>u.uid));
         state.units=state.units.filter(u=>!removed.has(u.uid));
         merges.push(`${character.name}升至${survivor.star}星`);
@@ -69,11 +87,12 @@ function mergeUnits(state) {
 
 export function createGame(seed=Date.now()) {
   const normalized=(Number(seed)>>>0)||197706;
-  const state={version:1,seed:normalized,rng:normalized,round:1,hp:100,gold:16,level:4,xp:0,nextUid:1,
+  const state={version:2,ruleset:'zero-sum',seed:normalized,rng:normalized,round:1,hp:100,gold:16,level:4,xp:0,nextUid:1,
     units:[],shop:[],locked:false,inventory:['knife','flower','battery'],strategies:[],phase:'prep',
-    choices:[],choiceKind:null,streak:0,wins:0,losses:0,lastBattle:null,history:[],result:null};
-  addUnit(state,'1001','front');addUnit(state,'1002','front');addUnit(state,'1013','front');addUnit(state,'1009','back');
-  state.shop=['1002','1001','1002','1105','1202'];
+    choices:[],choiceKind:null,streak:0,wins:0,losses:0,lastBattle:null,history:[],result:null,
+    freeRefreshes:0,goldSpentThisNode:0,strategyState:{}};
+  addUnit(state,'1013','front');addUnit(state,'1009','front');addUnit(state,'1108','front');addUnit(state,'1001','back');
+  state.shop=['1013','1001','1013','1202','1201'];
   return state;
 }
 
@@ -108,7 +127,7 @@ export function getEnemy(state) {
 }
 
 function choicesFor(state,kind) {
-  const candidates=kind==='strategy'?STRATEGIES.filter(s=>!has(state,s.id)):EQUIPMENT.filter(e=>e.tier===1);
+  const candidates=kind==='strategy'?STRATEGIES.filter(s=>!s.legacy&&!has(state,s.id)&&s.planes.includes(Math.ceil(state.round/4))):EQUIPMENT.filter(e=>e.tier===1);
   const pool=[...candidates];state.choices=[];
   while(state.choices.length<3&&pool.length) {
     const index=Math.floor(random(state)*pool.length);
@@ -117,17 +136,42 @@ function choicesFor(state,kind) {
   state.choiceKind=kind;state.phase='choice';
 }
 
+function gainStrategy(state,id) {
+  const e=strategies.get(id)?.effect||{};
+  state.strategies.push(id);meta(state,id);
+  state.gold+=(e.gold||0)+(e.goldFromLostHp?Math.max(0,getMaxHp(state)-state.hp):0);
+  state.freeRefreshes+=e.freeRefreshes||0;
+  addXp(state,e.xp||0);
+  state.hp=Math.min(getMaxHp(state),state.hp+(e.heal||0));
+  state.inventory.push(...(e.items||[]));
+  if(id==='compound')state.gold+=8;
+  if(id==='growth')addXp(state,8);
+}
+
+function enterNode(state) {
+  for(const e of effects(state)) {
+    const record=meta(state,e.id);record.nodes++;
+    if(!e.nodeGoldLimit||record.nodes<=e.nodeGoldLimit)state.gold+=e.nodeGold||0;
+    state.freeRefreshes+=(e.nodeFreeRefreshes||0)+(state.goldSpentThisNode===0?(e.unspentFreeRefreshes||0):0);
+    addXp(state,e.nodeXp||0);
+    if(e.benchXp&&state.units.filter(u=>u.zone==='bench').length<=e.benchMaxForXp)addXp(state,e.benchXp);
+    if(state.round%4===1) {addXp(state,e.planeXp||0);state.freeRefreshes+=e.planeFreeRefreshes||0;}
+    if(state.round%4===0)state.gold+=e.bossGold||0;
+  }
+  state.goldSpentThisNode=0;
+}
+
 function runAction(state,action) {
   if(!action||typeof action.type!=='string')return fail('操作无效。');
   const indexKeys={buy:['index'],choose:['index'],equip:['itemIndex'],unequip:['itemIndex'],combine:['indexA','indexB']}[action.type]||[];
   if(indexKeys.some(key=>!Number.isInteger(action[key])||action[key]<0))return fail('请选择有效的位置。');
   if(action.type==='next') {
     if(state.phase!=='result')return fail('请先完成本回合战斗。');
-    if(state.hp<=0||state.round===12) {
+    if(state.hp<=0||state.round===ROUND_COUNT) {
       state.phase='ended';state.result=state.hp>0&&state.lastBattle.won?'victory':'defeat';
       return success(state.result==='victory'?'远征完成，经典仍在继续。':'本次远征结束，下一次投资会更好。');
     }
-    state.round++;addXp(state,2);
+    state.round++;addXp(state,2);enterNode(state);
     if(!state.locked)rollShop(state);
     if([2,6,10].includes(state.round))choicesFor(state,'strategy');
     else if([3,5,7,9,11].includes(state.round))choicesFor(state,'equipment');
@@ -139,9 +183,7 @@ function runAction(state,action) {
     const choice=state.choices[action.index];if(!choice)return fail('请选择有效奖励。');
     let name;
     if(choice.kind==='strategy') {
-      state.strategies.push(choice.id);name=STRATEGIES.find(s=>s.id===choice.id).name;
-      if(choice.id==='compound')state.gold+=8;
-      if(choice.id==='growth')addXp(state,8);
+      gainStrategy(state,choice.id);name=strategies.get(choice.id).name;
     } else {state.inventory.push(choice.id);name=getEquipment(choice.id).name;}
     state.choices=[];state.choiceKind=null;state.phase='prep';
     return success(`已获得「${name}」`);
@@ -153,31 +195,46 @@ function runAction(state,action) {
       if(!character)return fail('这个位置没有可招募的角色。');
       if(state.gold<character.cost)return fail('金币不足。');
       const copies=state.units.filter(u=>u.characterId===character.id&&u.star===1).length;
-      if(state.units.filter(u=>u.zone==='bench').length>=8&&copies<2)return fail('备战席已满，请先部署或出售角色。');
-      state.gold-=character.cost;state.shop[action.index]=null;addUnit(state,character.id);
+      if(state.units.filter(u=>u.zone==='bench').length>=BENCH_CAPACITY&&copies<2)return fail('备战席已满，请先部署或出售角色。');
+      spend(state,character.cost);state.shop[action.index]=null;addUnit(state,character.id);
+      for(const e of effects(state))if(e.purchaseXp&&!meta(state,e.id).purchasedCosts.includes(character.cost)) {
+        addXp(state,e.purchaseXp[character.cost]);meta(state,e.id).purchasedCosts.push(character.cost);
+      }
       const merges=mergeUnits(state);
       return success(merges.length?merges.join(' · '):`已招募${character.name}`);
     }
     case 'refresh': {
-      const cost=has(state,'discount')?1:2;
+      const cost=getRefreshCost(state);
       if(state.gold<cost)return fail('刷新商店的金币不足。');
-      state.gold-=cost;rollShop(state);return success('商店已刷新');
+      if(cost) {spend(state,cost);addXp(state,sumEffect(state,'paidRefreshXp'));}
+      else state.freeRefreshes--;
+      rollShop(state);return success(cost?'商店已刷新':`免费刷新成功，剩余 ${state.freeRefreshes} 次`);
     }
     case 'lock':state.locked=!state.locked;return success(state.locked?'商店已锁定，下回合保留。':'已解除商店锁定');
     case 'exp': {
-      if(state.level>=8)return fail('已达到最高等级。');
+      if(state.level>=MAX_LEVEL)return fail('已达到最高等级。');
       if(state.gold<4)return fail('购买经验需要 4 金币。');
-      state.gold-=4;const previous=state.level;addXp(state,has(state,'growth')?6:4);
+      spend(state,4);const previous=state.level;addXp(state,has(state,'growth')?6:4);
+      if(effects(state).some(e=>e.expShopPromotion)) {
+        const available=state.shop.map((id,index)=>({id,index})).filter(s=>s.id&&getCharacter(s.id).cost<5);
+        if(available.length) {const slot=pick(state,available);state.shop[slot.index]=pick(state,CLASSIC_ROSTER.filter(c=>c.cost===getCharacter(slot.id).cost+1)).id;}
+      }
       return success(state.level>previous?`提升至 ${state.level} 级，可以部署更多角色。`:'已获得经验');
     }
     case 'move': {
       const unit=state.units.find(u=>u.uid===action.uid);
       if(!unit||!['front','back','bench'].includes(action.zone))return fail('请选择有效角色和位置。');
-      if(unit.zone===action.zone)return success('角色已在该位置。');
-      if(action.zone==='front'&&state.units.filter(u=>u.zone==='front').length>=4)return fail('前台最多部署 4 人，请先调整阵容。');
+      if(action.position!==undefined&&(!Number.isInteger(action.position)||action.position<0))return fail('请选择有效的位置。');
+      if(unit.zone===action.zone&&action.position===undefined)return success('角色已在该位置。');
+      if(unit.zone!==action.zone&&action.zone==='front'&&state.units.filter(u=>u.zone==='front').length>=FRONT_CAPACITY)return fail('前台最多部署 4 人，请先调整阵容。');
       if(unit.zone==='bench'&&action.zone!=='bench'&&deployed(state).length>=state.level)return fail('部署人数已达上限，购买经验可提升人口。');
-      if(action.zone==='bench'&&state.units.filter(u=>u.zone==='bench').length>=8)return fail('备战席已满。');
-      unit.zone=action.zone;return success(`已将${getCharacter(unit.characterId).name}移至${{front:'前台',back:'后台',bench:'备战席'}[action.zone]}`);
+      if(unit.zone!==action.zone&&action.zone==='bench'&&state.units.filter(u=>u.zone==='bench').length>=BENCH_CAPACITY)return fail('备战席已满。');
+      unit.zone=action.zone;const c=getCharacter(unit.characterId);
+      state.units=state.units.filter(u=>u!==unit);
+      const row=state.units.filter(u=>u.zone===action.zone),before=row[action.position??row.length];
+      const index=before?state.units.indexOf(before):row.length?state.units.indexOf(row.at(-1))+1:state.units.length;
+      state.units.splice(index,0,unit);
+      return success(`已将${c.name}移至${{front:'前台',back:'后台',bench:'备战席'}[action.zone]}${action.zone!=='bench'&&!c.allowedZones.includes(action.zone)?'；此位置无法激活角色赋能':''}`);
     }
     case 'sell': {
       const index=state.units.findIndex(u=>u.uid===action.uid);if(index<0)return fail('角色不存在。');
@@ -188,6 +245,8 @@ function runAction(state,action) {
     case 'equip': {
       const unit=state.units.find(u=>u.uid===action.uid),item=state.inventory[action.itemIndex];
       if(!unit||!getEquipment(item))return fail('请选择角色和有效装备。');
+      if(getEquipment(item).unique&&unit.items.includes(item))return fail('同一角色不能重复穿戴这件唯一装备。');
+      if((getEquipment(item).exclusiveSlots&&unit.items.length)||unit.items.some(id=>getEquipment(id).exclusiveSlots))return fail('随便骰子需要三个空装备栏，并占用另外两栏。');
       if(unit.items.length>=3)return fail('每位角色最多携带 3 件装备。');
       unit.items.push(item);state.inventory.splice(action.itemIndex,1);
       return success(`${getCharacter(unit.characterId).name}已装备${getEquipment(item).name}`);
@@ -202,28 +261,32 @@ function runAction(state,action) {
       const a=state.inventory[indexA],b=state.inventory[indexB];
       if(indexA===indexB||!getEquipment(a)||!getEquipment(b))return fail('请选择两件不同的简易装备。');
       if(getEquipment(a).tier!==1||getEquipment(b).tier!==1)return fail('进阶装备不能继续合成。');
-      const result=RECIPES[[a,b].sort().join('+')]||'hybrid';
+      const result=RECIPES[[a,b].sort().join('+')];
+      if(!result)return fail('这两件装备没有合成配方。');
       for(const index of [indexA,indexB].sort((x,y)=>y-x))state.inventory.splice(index,1);
-      state.inventory.push(result);return success(`合成成功：${getEquipment(result).name}`);
+      state.inventory.push(result);state.freeRefreshes+=sumEffect(state,'combineFreeRefreshes');return success(`合成成功：${getEquipment(result).name}`);
     }
     case 'battle': {
       if(!state.units.some(u=>u.zone==='front'))return fail('至少部署一名前台角色才能开始战斗。');
       const enemy=getEnemy(state),playerPower=getTeamPower(state);
+      const company=getSynergies(state).find(s=>s.id==='ipc');
+      const companyGold=!enemy.boss&&company?.active?(company.count>=3?3:1):0;
+      state.gold+=companyGold;
       const combat=simulateCombat(state);
       const won=combat.winner==='ally';
       const damage=won?0:Math.max(3,Math.round(9+state.round*1.4+(enemy.boss?5:0)-(has(state,'fortress')?4:0)));
-      const interest=Math.min(has(state,'compound')?8:5,Math.floor(state.gold/10));
+      const interest=getInterest(state);
       state.streak=won?Math.max(1,state.streak+1):Math.min(-1,state.streak-1);
       const streakBonus=Math.min(3,Math.floor(Math.abs(state.streak)/2));
       const income=8+interest+streakBonus+(won?2:0)+(has(state,'dividend')?3:0)+(won&&has(state,'momentum')?3:0);
-      let healing=has(state,'recovery')?5:0;
-      if(getSynergies(state).some(s=>s.id==='heal'&&s.active))healing+=4;
+      let healing=(has(state,'recovery')?5:0)+sumEffect(state,'battleHeal');
       // A lethal defeat cannot be undone by post-battle healing.
-      state.hp=state.hp-damage<=0?0:Math.min(100,state.hp-damage+healing);
+      state.hp=state.hp-damage<=0?0:Math.min(getMaxHp(state),state.hp-damage+healing);
       state.gold+=income;state[won?'wins':'losses']++;
       const logs=combat.events.map(event=>event.text);
-      if(healing&&state.hp>0)logs.push(`战后恢复生效，回复 ${healing} 点小队生命（最高 100）。`);
+      if(healing&&state.hp>0)logs.push(`战后恢复生效，回复 ${healing} 点小队生命（最高 ${getMaxHp(state)}）。`);
       const rewards=[`基础收入 +8`,`利息 +${interest}`,`连续战绩 +${streakBonus}`];
+      if(companyGold)rewards.push(`公司羁绊 +${companyGold}`);
       if(won)rewards.push('胜利奖励 +2');
       if(has(state,'dividend'))rewards.push('稳定分红 +3');
       if(won&&has(state,'momentum'))rewards.push('乘胜追投 +3');
@@ -243,22 +306,39 @@ export function act(state,action) {
   return response;
 }
 
+// Migrate without replaying acquisition rewards or changing saved units / results.
+export function migrateState(saved) {
+  if(!saved||![1,2].includes(saved.version))return null;
+  const state=clone(saved);
+  if(state.version===1) {
+    state.version=2;state.ruleset='zero-sum';state.freeRefreshes=0;
+    state.goldSpentThisNode=0;state.strategyState={};
+    for(const id of state.strategies||[])meta(state,id);
+    if(Array.isArray(state.units)&&Array.isArray(state.inventory))for(const unit of state.units)if(Array.isArray(unit?.items))retainCompatibleItems(state,unit,[...unit.items]);
+  }
+  return validateState(state)?state:null;
+}
+
 export function validateState(state) {
-  if(!state||state.version!==1)return false;
+  if(!state||state.version!==2||state.ruleset!=='zero-sum')return false;
   if(!['prep','result','choice','ended'].includes(state.phase))return false;
-  for(const key of ['round','hp','gold','level','xp','rng','seed','nextUid','streak','wins','losses'])if(!Number.isFinite(state[key])||!Number.isInteger(state[key]))return false;
-  if(state.round<1||state.round>12||state.hp<0||state.hp>100||state.gold<0||state.level<4||state.level>8||state.xp<0)return false;
-  if(state.nextUid<1||state.wins<0||state.losses<0||(state.level<8&&state.xp>=LEVEL_XP[state.level])||(state.level===8&&state.xp!==0))return false;
-  if(!Array.isArray(state.units)||state.units.length>16||!Array.isArray(state.inventory)||!Array.isArray(state.shop)||state.shop.length!==5)return false;
+  for(const key of ['round','hp','gold','level','xp','rng','seed','nextUid','streak','wins','losses','freeRefreshes','goldSpentThisNode'])if(!Number.isFinite(state[key])||!Number.isInteger(state[key]))return false;
+  if(state.round<1||state.round>ROUND_COUNT||state.hp<0||state.gold<0||state.level<4||state.level>MAX_LEVEL||state.xp<0||state.freeRefreshes<0||state.goldSpentThisNode<0)return false;
+  if(state.nextUid<1||state.wins<0||state.losses<0||(state.level<MAX_LEVEL&&state.xp>=LEVEL_XP[state.level])||(state.level===MAX_LEVEL&&state.xp!==0))return false;
+  if(!Array.isArray(state.units)||state.units.length>MAX_LEVEL+BENCH_CAPACITY||!Array.isArray(state.inventory)||!Array.isArray(state.shop)||state.shop.length!==5)return false;
   if(!Array.isArray(state.strategies)||!state.strategies.every(id=>strategyIds.has(id))||new Set(state.strategies).size!==state.strategies.length)return false;
+  if(state.hp>getMaxHp(state)||!state.strategyState||typeof state.strategyState!=='object'||Array.isArray(state.strategyState))return false;
+  for(const record of Object.values(state.strategyState))if(!record||!Number.isInteger(record.acquiredRound)||record.acquiredRound<1||record.acquiredRound>state.round||!Number.isInteger(record.nodes)||record.nodes<0||!Array.isArray(record.purchasedCosts)||!record.purchasedCosts.every(n=>Number.isInteger(n)&&n>=1&&n<=5))return false;
   if(!Array.isArray(state.choices)||!Array.isArray(state.history)||typeof state.locked!=='boolean')return false;
   const ids=new Set();
   for(const unit of state.units) {
     if(!unit||typeof unit.uid!=='string'||ids.has(unit.uid)||!getCharacter(unit.characterId)||![1,2,3].includes(unit.star)||!['front','back','bench'].includes(unit.zone))return false;
     if(!Array.isArray(unit.items)||unit.items.length>3||!unit.items.every(id=>getEquipment(id)))return false;
+    if(unit.items.some(id=>getEquipment(id).exclusiveSlots)&&unit.items.length>1)return false;
+    if(unit.items.some(id=>getEquipment(id).unique&&unit.items.filter(key=>key===id).length>1))return false;
     ids.add(unit.uid);
   }
-  if(state.units.filter(u=>u.zone==='front').length>4||state.units.filter(u=>u.zone==='bench').length>8||deployed(state).length>state.level)return false;
+  if(state.units.filter(u=>u.zone==='front').length>FRONT_CAPACITY||state.units.filter(u=>u.zone==='bench').length>BENCH_CAPACITY||deployed(state).length>state.level)return false;
   if(!state.inventory.every(id=>getEquipment(id))||!state.shop.every(id=>id===null||getCharacter(id)))return false;
   for(const choice of state.choices)if(!choice||!['strategy','equipment'].includes(choice.kind)||(choice.kind==='strategy'?!strategyIds.has(choice.id):!getEquipment(choice.id)))return false;
   if(state.phase==='choice'&&state.choices.length!==3)return false;

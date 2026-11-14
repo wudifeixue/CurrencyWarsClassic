@@ -13,23 +13,26 @@ test('seeded tactical combat is deterministic and does not mutate the management
   const s=createGame(21),before=structuredClone(s);
   const a=simulateCombat(s),b=simulateCombat(s);
   assert.deepEqual(a,b);assert.deepEqual(s,before);
-  assert.ok(a.events.length>10);assert.ok(a.events.some(e=>e.actorId?.startsWith('enemy-')));
+  assert.ok(a.events.length>3);assert.ok(a.events.some(e=>e.targets.some(t=>t.damage>0)));
+  assert.ok(a.events.some(e=>['skill','basic','support'].includes(e.kind)));
   assert.equal(a.winner,'ally');assert.equal(a.events.at(-1).winner,a.winner);
 });
 
-test('nearly equal estimates can yield opposite outcomes because skills decide combat',()=>{
+test('similar management estimates retain distinct tactical defense and attack mechanics',()=>{
   const guard=team(['1104']),attacker=team(['1201']);
   assert.ok(Math.abs(getTeamPower(guard)-getTeamPower(attacker))<5);
-  const opponents=[dummy({hp:2000,maxHp:2000,attack:130,speed:100,weaknesses:['风','雷']})];
-  assert.equal(simulateCombat(guard,{enemyLineup:opponents}).winner,'ally');
-  assert.equal(simulateCombat(attacker,{enemyLineup:opponents}).winner,'enemy');
+  const opponents=[dummy({hp:4000,maxHp:4000,attack:130,speed:100,weaknesses:['风','雷']})];
+  const defense=simulateCombat(guard,{enemyLineup:opponents}),offense=simulateCombat(attacker,{enemyLineup:opponents});
+  assert.ok(defense.stats[0].shielding>0);assert.equal(offense.stats[0].shielding,0);
+  assert.ok(defense.events.some(e=>e.skill==='凛冬反攻'));
+  assert.ok(offense.events.some(e=>e.text.includes('暗杠')));
 });
 
 test('backline characters provide speed-based support without skill points or incoming hits',()=>{
-  const s=team([{id:'1002',star:2},{id:'1202',zone:'back'}]);
+  const s=team([{id:'1002',star:2},{id:'1202',zone:'back',items:['perpetual']}]);
   const r=simulate(s,{maxActions:15});
-  const support=r.events.filter(e=>e.actorId==='ally-1'&&e.kind==='support');
-  assert.ok(support.length>=2);assert.ok(support.some(e=>e.targets.some(t=>t.id==='ally-0'&&t.energy>0)));
+  const support=r.events.filter(e=>e.actorId==='ally-1'&&e.kind==='ultimate');
+  assert.ok(support.length>=1);assert.ok(support.some(e=>e.targets.some(t=>t.id==='ally-0'&&t.energy>0)));
   assert.equal(r.events.some(e=>e.actorId==='ally-1'&&e.kind==='basic'),false);
   assert.equal(r.events.some(e=>e.actorId==='target'&&e.targets.some(t=>t.id==='ally-1'&&t.damage>0)),false);
   const lethal=simulate(s,{enemyLineup:[dummy({attack:10000,speed:1000})]});
@@ -37,13 +40,13 @@ test('backline characters provide speed-based support without skill points or in
   assert.equal(lethal.final.find(u=>u.id==='ally-1').hp,lethal.units.find(u=>u.id==='ally-1').maxHp);
 });
 
-test('shield absorbs damage and March counters protected teammates',()=>{
-  const s=team(['1001','1002']);
+test('classic March shields from the backline and does not invent a frontline counter',()=>{
+  const s=team([{id:'1001',zone:'back'},'1002']);
   const r=simulate(s,{enemyLineup:[dummy({attack:90,speed:100})]});
   assert.ok(r.events.some(e=>e.targets.some(t=>t.shield>0)));
   assert.ok(r.events.some(e=>e.targets.some(t=>t.absorbed>0)));
-  assert.ok(r.events.some(e=>e.kind==='followup'&&e.skill==='少女的特权'));
-  const march=r.stats.find(u=>u.id==='ally-0');assert.ok(march.shielding>0&&march.damage>0);
+  assert.equal(r.events.some(e=>e.kind==='followup'&&e.skill==='少女的特权'),false);
+  const march=r.stats.find(u=>u.id==='ally-0');assert.ok(march.shielding>0);
 });
 
 test('healing restores living frontline HP, stays capped, and never resurrects',()=>{
@@ -82,27 +85,26 @@ test('speed equipment changes action frequency and energy equipment enables earl
   assert.ok(charged.events.some(e=>e.text.includes('永动机')));
 });
 
-test('healing, shielding and offensive equipment have observable event effects',()=>{
-  const garden=simulate(team([{id:'1107',items:['garden']}]),{enemyLineup:[dummy({attack:120})]});
-  assert.ok(garden.events.some(e=>e.skill==='不凋之花'&&e.targets.some(t=>t.heal>0)));
-  const blade=simulate(team([{id:'1107',items:['blade']}]),{enemyLineup:[dummy({attack:120})]});
-  assert.ok(blade.stats[0].healing>0);
-  const bastion=simulate(team([{id:'1002',items:['bastion']}]),{maxActions:15});
-  assert.ok(bastion.events[0].targets.some(t=>t.shield>0));
-  assert.ok(bastion.events.some(e=>e.text.includes('星海壁垒')));
-  const cannon=simulate(team([{id:'1002',items:['cannon']}]),{maxActions:8});
-  assert.ok(cannon.events.some(e=>e.snapshot.find(u=>u.id==='target').statuses.some(s=>s.type==='exposed')));
+test('classic healing, shielding and offensive equipment have observable event effects',()=>{
+  const heat=simulate(team([{id:'1107',items:['absolute-heat']}]),{enemyLineup:[dummy({attack:120})]});
+  assert.ok(heat.stats[0].healing>0);
+  const cover=simulate(team([{id:'1002',items:['cover-gun']}]),{maxActions:15});
+  assert.ok(cover.events.some(e=>e.targets.some(t=>t.shield>0)));
+  const drill=simulate(team([{id:'1002',items:['planetary-drill']}]),{maxActions:8});
+  assert.ok(drill.events.some(e=>e.snapshot.find(u=>u.id==='target').statuses.some(s=>s.type==='exposed')));
+  const blade=simulate(team([{id:'1002',items:['blade']}]),{enemyLineup:[dummy({attack:120})]});
+  assert.equal(blade.stats[0].healing,0,'碎星斩舰刀 is strength and damage, not the previous invented lifesteal');
 });
 
 test('skill points, energy, reaction count and all replay values remain bounded',()=>{
   const s=team([{id:'1001',star:3},{id:'1107',star:3},{id:'1013',star:3},{id:'1204',star:3},{id:'1202',zone:'back'},{id:'1203',zone:'back'}]);
   const r=simulate(s,{enemyLineup:[dummy({id:'one',attack:500,archetype:'caster',hp:50000,maxHp:50000}),dummy({id:'two',attack:450,hp:50000,maxHp:50000})],maxActions:180});
   assert.ok(r.events.length<=250);assert.ok(r.turns<=180);assert.equal(r.events.at(-1).kind,'end');assert.equal(r.events.at(-1).winner,r.winner);
-  for(const e of r.events){assert.ok(e.skillPoints>=0&&e.skillPoints<=5);for(const u of e.snapshot){assert.ok(Number.isFinite(u.hp)&&u.hp>=0&&u.hp<=u.maxHp);assert.ok(u.energy>=0&&u.energy<=100);assert.ok(u.shield>=0&&u.shield<=u.maxHp);}}
+  for(const e of r.events){assert.ok(e.skillPoints>=0&&e.skillPoints<=r.maxSkillPoints);for(const u of e.snapshot){assert.ok(Number.isFinite(u.hp)&&u.hp>=0&&u.hp<=u.maxHp);assert.ok(u.energy>=0&&u.energy<=100);assert.ok(u.shield>=0&&u.shield<=u.maxHp);}}
 });
 
-test('all 24 character skill and support definitions execute, and all equipment loadouts are valid',()=>{
-  for(const c of CHARACTERS){assert.ok(c.skillDescription&&c.ultimate&&c.ultimateDescription&&c.backlineDescription,c.id);for(const zone of ['front','back']){const s=team([{id:c.id,zone,star:2},...(zone==='back'?[{id:'1104',star:3}]:[])]);const r=simulate(s);assert.ok(r.events.some(e=>e.actorId==='ally-0'),`${c.name} ${zone}`);}}
+test('classic characters and legacy saves produce finite replays in their supported positions',()=>{
+  for(const c of CHARACTERS)for(const zone of c.allowedZones||['front','back']){const s=team([{id:c.id,zone,star:2},...(zone==='back'?[{id:'1104',star:3}]:[])]);const r=simulate(s);assert.ok(r.stats.find(u=>u.id==='ally-0'),`${c.name} ${zone}`);for(const u of r.final){assert.ok(Number.isFinite(u.hp),`${c.name}: HP`);assert.ok(Number.isFinite(u.attack),`${c.name}: attack`);}}
   for(const e of EQUIPMENT){const r=simulate(team([{id:'1002',items:[e.id]}]),{maxActions:6});assert.ok(r.events.length>1,e.id);}
 });
 
@@ -116,12 +118,12 @@ test('legacy saves without combat replays still validate; new battles include re
 
 
 test('backline investment increases both direct support damage and ongoing damage',()=>{
-  const normal=team([{id:'1001',star:3},{id:'1108',zone:'back'}],1),boosted=structuredClone(normal);
-  boosted.strategies=['backline'];
+  const normal=team([{id:'1104',star:3},{id:'1108',zone:'back'}],1),boosted=structuredClone(normal);
+  boosted.strategies=['pistol-blessing'];
   const enemy=[dummy({hp:99999,maxHp:99999,attack:1,speed:100})];
   const a=simulateCombat(normal,{enemyLineup:enemy,maxActions:8}),b=simulateCombat(boosted,{enemyLineup:enemy,maxActions:8});
   const firstDot=r=>r.events.find(e=>e.kind==='dot').targets.reduce((sum,t)=>sum+(t.damage||0)+(t.absorbed||0),0);
-  assert.ok(firstDot(b)>firstDot(a)*1.3);
+  assert.ok(firstDot(b)>firstDot(a)*1.2);
 });
 
 test('an expedition can be won using only legal economy, recruitment, placement and reward actions',()=>{

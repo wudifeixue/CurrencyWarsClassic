@@ -1,0 +1,198 @@
+[
+  {
+    "id": "luofu",
+    "name": "仙舟",
+    "url": "https://patchwiki.biligame.com/images/sr/6/6a/sb277ytjt5budlnvxjm1k7zfb2ijm5x.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E4%BB%99%E8%88%9F.png",
+    "path": "assets/traits/classic-luofu.png"
+  },
+  {
+    "id": "ipc",
+    "name": "公司",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a8/d6k7jnvos2feybi8g61j51ywvhwmrnx.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%85%AC%E5%8F%B8.png",
+    "path": "assets/traits/classic-ipc.png"
+  },
+  {
+    "id": "debuff",
+    "name": "减益",
+    "url": "https://patchwiki.biligame.com/images/sr/9/95/hf5stdpkeqoxa5teszpki25070uckyk.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%87%8F%E7%9B%8A.png",
+    "path": "assets/traits/classic-debuff.png"
+  },
+  {
+    "id": "break",
+    "name": "击破",
+    "url": "https://patchwiki.biligame.com/images/sr/1/1c/qop5aytlvbzw3he0bl5yyxxn42ob688.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%87%BB%E7%A0%B4.png",
+    "path": "assets/traits/classic-break.png"
+  },
+  {
+    "id": "express",
+    "name": "列车同行",
+    "url": "https://patchwiki.biligame.com/images/sr/8/83/ddjn2dpe5dl4utjn7oo430j9lz0e60u.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%88%97%E8%BD%A6%E5%90%8C%E8%A1%8C.png",
+    "path": "assets/traits/classic-express.png"
+  },
+  {
+    "id": "seer",
+    "name": "命运卜者",
+    "url": "https://patchwiki.biligame.com/images/sr/8/8d/gvxo9wib4mmemb8sjvlwdeyl6kozs3o.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%91%BD%E8%BF%90%E5%8D%9C%E8%80%85.png",
+    "path": "assets/traits/classic-seer.png"
+  },
+  {
+    "id": "night",
+    "name": "夜之半神",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a7/a9pc7ngot5mnukyb4gjj2bdx6f6kd5a.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%A4%9C%E4%B9%8B%E5%8D%8A%E7%A5%9E.png",
+    "path": "assets/traits/classic-night.png"
+  },
+  {
+    "id": "guardian",
+    "name": "大守护者",
+    "url": "https://patchwiki.biligame.com/images/sr/1/15/c3sn7uelvc7o7c6nyn78j5huh8vq2c0.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%A4%A7%E5%AE%88%E6%8A%A4%E8%80%85.png",
+    "path": "assets/traits/classic-guardian.png"
+  },
+  {
+    "id": "ranger",
+    "name": "巡海游侠",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c7/etar8ho6kz14epuaipb20g4q0m9wl0l.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E5%B7%A1%E6%B5%B7%E6%B8%B8%E4%BE%A0.png",
+    "path": "assets/traits/classic-ranger.png"
+  },
+  {
+    "id": "sp",
+    "name": "战技点",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d8/1xajnsyqm8t5vatg928gisyjxjbscb3.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%88%98%E6%8A%80%E7%82%B9.png",
+    "path": "assets/traits/classic-sp.png"
+  },
+  {
+    "id": "shield",
+    "name": "护盾",
+    "url": "https://patchwiki.biligame.com/images/sr/c/ca/g83tfl4ec8wcff6k78dy8wa327sbfed.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%8A%A4%E7%9B%BE.png",
+    "path": "assets/traits/classic-shield.png"
+  },
+  {
+    "id": "dot",
+    "name": "持续伤害",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d0/qrn0y0a8fzlp9v4tx2u1he9c2gwy7t1.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%8C%81%E7%BB%AD%E4%BC%A4%E5%AE%B3.png",
+    "path": "assets/traits/classic-dot.png"
+  },
+  {
+    "id": "beloved",
+    "name": "挚爱之人",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d4/k1nhzdmr2mr2jh4ahmukpiyuft3rtxa.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%8C%9A%E7%88%B1%E4%B9%8B%E4%BA%BA.png",
+    "path": "assets/traits/classic-beloved.png"
+  },
+  {
+    "id": "savior",
+    "name": "救世主",
+    "url": "https://patchwiki.biligame.com/images/sr/1/10/2mnw5bpng28avis6az6m6actzagzlgo.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%95%91%E4%B8%96%E4%B8%BB.png",
+    "path": "assets/traits/classic-savior.png"
+  },
+  {
+    "id": "hunters",
+    "name": "星核猎手",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5f/sb81fmfc39r6crqxa8jyfgn2jrvmbga.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%98%9F%E6%A0%B8%E7%8C%8E%E6%89%8B.png",
+    "path": "assets/traits/classic-hunters.png"
+  },
+  {
+    "id": "wanderer",
+    "name": "星间旅人",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9d/84jcl6p97edsg24tw6ojhdiz0jzicw5.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%98%9F%E9%97%B4%E6%97%85%E4%BA%BA.png",
+    "path": "assets/traits/classic-wanderer.png"
+  },
+  {
+    "id": "day",
+    "name": "昼之半神",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9f/ti7g6hji2s2gtcy1y663kvnew8u8927.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%98%BC%E4%B9%8B%E5%8D%8A%E7%A5%9E.png",
+    "path": "assets/traits/classic-day.png"
+  },
+  {
+    "id": "heal",
+    "name": "治疗",
+    "url": "https://patchwiki.biligame.com/images/sr/d/da/f6m35yn0ffya0277sbq1r8g0eh0mn8n.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E6%B2%BB%E7%96%97.png",
+    "path": "assets/traits/classic-heal.png"
+  },
+  {
+    "id": "blood",
+    "name": "燃血",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d8/r67685k1qii7zoqqjww40j9qlb44gv7.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E7%87%83%E8%A1%80.png",
+    "path": "assets/traits/classic-blood.png"
+  },
+  {
+    "id": "wolfpack",
+    "name": "狼狩",
+    "url": "https://patchwiki.biligame.com/images/sr/5/54/6ljuy85c0xbiem4fqgdpb4sj807xw14.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E7%8B%BC%E7%8B%A9.png",
+    "path": "assets/traits/classic-wolfpack.png"
+  },
+  {
+    "id": "festival",
+    "name": "盛会之星",
+    "url": "https://patchwiki.biligame.com/images/sr/b/bc/o2l4vs2dlpb85zwh9vudbly3rbjqihd.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E7%9B%9B%E4%BC%9A%E4%B9%8B%E6%98%9F.png",
+    "path": "assets/traits/classic-festival.png"
+  },
+  {
+    "id": "aoe",
+    "name": "群攻",
+    "url": "https://patchwiki.biligame.com/images/sr/2/28/3mxnyy4o59gdk6hm1ti6o0x9f3ys2oc.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E7%BE%A4%E6%94%BB.png",
+    "path": "assets/traits/classic-aoe.png"
+  },
+  {
+    "id": "energy",
+    "name": "能量",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e5/omxu209gp6yxyx1348544p69g6g2p4o.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E8%83%BD%E9%87%8F.png",
+    "path": "assets/traits/classic-energy.png"
+  },
+  {
+    "id": "belobog",
+    "name": "贝洛伯格",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d3/krav2bql01jn7kemem8thginbo3yy2d.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E8%B4%9D%E6%B4%9B%E4%BC%AF%E6%A0%BC.png",
+    "path": "assets/traits/classic-belobog.png"
+  },
+  {
+    "id": "follow",
+    "name": "追击",
+    "url": "https://patchwiki.biligame.com/images/sr/2/2c/0nro695p2pxmbq0a9yqmtzxxt1zv2hb.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E8%BF%BD%E5%87%BB.png",
+    "path": "assets/traits/classic-follow.png"
+  },
+  {
+    "id": "quantum",
+    "name": "量子同频",
+    "url": "https://patchwiki.biligame.com/images/sr/7/74/0yb18qas8de7c0sr4lrfokfk2xl3tbi.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E9%87%8F%E5%AD%90%E5%90%8C%E9%A2%91.png",
+    "path": "assets/traits/classic-quantum.png"
+  },
+  {
+    "id": "scholar",
+    "name": "银河学者",
+    "url": "https://patchwiki.biligame.com/images/sr/2/23/s20illaru5rw6pz0vqwrlkstn76rv7o.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E9%93%B6%E6%B2%B3%E5%AD%A6%E8%80%85.png",
+    "path": "assets/traits/classic-scholar.png"
+  },
+  {
+    "id": "magician",
+    "name": "魔术师",
+    "url": "https://patchwiki.biligame.com/images/sr/b/b6/7wxjwhc1nqwewi1e0w14olfv77608of.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%87%E4%BB%B6:%E8%B4%A7%E5%B8%81%E6%88%98%E4%BA%89-%E7%BE%81%E7%BB%8A%E5%9B%BE%E6%A0%87-%E9%AD%94%E6%9C%AF%E5%B8%88.png",
+    "path": "assets/traits/classic-magician.png"
+  }
+]

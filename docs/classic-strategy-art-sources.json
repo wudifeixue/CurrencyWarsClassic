@@ -1,0 +1,233 @@
+[
+  {
+    "id": "experience-account",
+    "name": "经验到账",
+    "url": "https://patchwiki.biligame.com/images/sr/7/75/a6oq7vfgivdiqbtrd499hd1lr2niq5c.png",
+    "path": "assets/strategies/classic-experience-account.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "free-lunch",
+    "name": "免费午餐",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5d/lg4oo1grrv3rbi59aa6u7pa1qbj0lpe.png",
+    "path": "assets/strategies/classic-free-lunch.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "special-fund",
+    "name": "特战资金",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7f/4g0m9lcwiiax7vu5knpi1stvl75bsm6.png",
+    "path": "assets/strategies/classic-special-fund.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "savings-return",
+    "name": "存款回报",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c9/i3o9ru3wvx2r77ravgyioycilshjgo0.png",
+    "path": "assets/strategies/classic-savings-return.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "armed-refresh",
+    "name": "武力刷新",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a8/doq1vinrow9u7b1nkvwubemuyx4mgea.png",
+    "path": "assets/strategies/classic-armed-refresh.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "health-charge",
+    "name": "健康充值",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e3/oj1kah8ozw6ie6564f64yfiqaoe4mqu.png",
+    "path": "assets/strategies/classic-health-charge.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "positive-energy",
+    "name": "正能量",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a1/fwri86pr95ard00l39vwlqkx1uff7w5.png",
+    "path": "assets/strategies/classic-positive-energy.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "team-hope",
+    "name": "全队的希望",
+    "url": "https://patchwiki.biligame.com/images/sr/0/0b/avi1hdejxw4p6shraqba3l69tpxrcfg.png",
+    "path": "assets/strategies/classic-team-hope.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "cheer-squad",
+    "name": "应援团",
+    "url": "https://patchwiki.biligame.com/images/sr/8/8e/7q6x8f5x7mkqahonthx5hun5gqhmfuo.png",
+    "path": "assets/strategies/classic-cheer-squad.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "team-strength-silver",
+    "name": "团队力量·银",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7a/gvamq2i89s2jypktc2py7la0fk7bn79.png",
+    "path": "assets/strategies/classic-team-strength-silver.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "efficient-employee",
+    "name": "效率员工奖",
+    "url": "https://patchwiki.biligame.com/images/sr/b/b1/edwwt9y3aztpw1h7ao8940d2nuc1rvj.png",
+    "path": "assets/strategies/classic-efficient-employee.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "grassroots",
+    "name": "基层贡献",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c4/djb0x1bqvaxzafbl265cin265hx0kxo.png",
+    "path": "assets/strategies/classic-grassroots.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "regular-benefit",
+    "name": "定期福利",
+    "url": "https://patchwiki.biligame.com/images/sr/0/02/oi0ako3pqd7k9buhzot035d8vmct968.png",
+    "path": "assets/strategies/classic-regular-benefit.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "gas-station",
+    "name": "加油站",
+    "url": "https://patchwiki.biligame.com/images/sr/f/fa/dvkbf4rduvah68kf7c2jy5d2mmnv3zn.png",
+    "path": "assets/strategies/classic-gas-station.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "long-term",
+    "name": "长期主义",
+    "url": "https://patchwiki.biligame.com/images/sr/a/af/6wtdi27olwi6imbyy48rv8f2r18c1fl.png",
+    "path": "assets/strategies/classic-long-term.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "fixed-finance",
+    "name": "固定理财",
+    "url": "https://patchwiki.biligame.com/images/sr/b/b9/hl6sfgr0tiqk7pr3jyz75ualsh2m7lk.png",
+    "path": "assets/strategies/classic-fixed-finance.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "talent-vacancy",
+    "name": "人才空洞",
+    "url": "https://patchwiki.biligame.com/images/sr/3/34/9z35bxcymr6xik7vvfeebndrooy5mh2.png",
+    "path": "assets/strategies/classic-talent-vacancy.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "twin-primes",
+    "name": "孪生素数",
+    "url": "https://patchwiki.biligame.com/images/sr/3/3d/rld3pgjpjfboxejt4wpejrr0f4tnik6.png",
+    "path": "assets/strategies/classic-twin-primes.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "knife-blessing",
+    "name": "折叠小刀祝福",
+    "url": "https://patchwiki.biligame.com/images/sr/1/1e/lfjo5piswt56nn4l1m9maotep9l49tp.png",
+    "path": "assets/strategies/classic-knife-blessing.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "pistol-blessing",
+    "name": "和平手枪祝福",
+    "url": "https://patchwiki.biligame.com/images/sr/2/23/g1e389fn5x81fzr2r82gjttf7eff4qf.png",
+    "path": "assets/strategies/classic-pistol-blessing.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "star-blessing",
+    "name": "幸运星祝福",
+    "url": "https://patchwiki.biligame.com/images/sr/3/35/s01k8mrfmmin5gz09d274evmfnnzz82.png",
+    "path": "assets/strategies/classic-star-blessing.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "flower-blessing",
+    "name": "生命之花祝福",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f2/ts3ttml68td9b47okc5naom6ags5fss.png",
+    "path": "assets/strategies/classic-flower-blessing.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "armor-blessing",
+    "name": "量产型装甲祝福",
+    "url": "https://patchwiki.biligame.com/images/sr/4/47/n3fx1f99f91rhxr652av6b6luao338t.png",
+    "path": "assets/strategies/classic-armor-blessing.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "supply-chain",
+    "name": "打通上下游·金",
+    "url": "https://patchwiki.biligame.com/images/sr/8/85/leyw84au1c7kyng332a2dztby94cz4k.png",
+    "path": "assets/strategies/classic-supply-chain.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "delayed-return",
+    "name": "延迟收益",
+    "url": "https://patchwiki.biligame.com/images/sr/2/29/t93nqgq7x19oypwi5ey4577tnl1klz1.png",
+    "path": "assets/strategies/classic-delayed-return.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "triple-three",
+    "name": "三三三",
+    "url": "https://patchwiki.biligame.com/images/sr/7/71/0fduupr7netqve03cjjvxqm9n9jrjen.png",
+    "path": "assets/strategies/classic-triple-three.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "middle-class",
+    "name": "中产阶级",
+    "url": "https://patchwiki.biligame.com/images/sr/9/91/j9jwc74ukfl3b6rin2we3w9po5faebw.png",
+    "path": "assets/strategies/classic-middle-class.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "team-strength-gold",
+    "name": "团队力量·金",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7a/gvamq2i89s2jypktc2py7la0fk7bn79.png",
+    "path": "assets/strategies/classic-team-strength-gold.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "interest-raise",
+    "name": "利息上调",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a4/9lmcqbfyn9lw30ieu7zwqxhz25ug87v.png",
+    "path": "assets/strategies/classic-interest-raise.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "buyout",
+    "name": "买断制",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a0/09zgoprk7a2co0h73s4ndvhhr8gd9my.png",
+    "path": "assets/strategies/classic-buyout.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "prospector",
+    "name": "淘金客",
+    "url": "https://patchwiki.biligame.com/images/sr/9/97/17narsi52bfx1rwneay5rycc66kylxq.png",
+    "path": "assets/strategies/classic-prospector.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "promotion",
+    "name": "晋升名额",
+    "url": "https://patchwiki.biligame.com/images/sr/2/22/jknnebv1d72qcyjfak9k0sfmtaeh5mg.png",
+    "path": "assets/strategies/classic-promotion.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "peace-insurance",
+    "name": "星际和平保险",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e0/3v93q8i7k7cprokargebv85e9ysfhz5.png",
+    "path": "assets/strategies/classic-peace-insurance.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  }
+]

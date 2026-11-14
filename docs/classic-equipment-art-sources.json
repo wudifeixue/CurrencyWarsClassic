@@ -1,0 +1,310 @@
+[
+  {
+    "id": "knife",
+    "name": "折叠小刀",
+    "url": "https://patchwiki.biligame.com/images/sr/b/b6/3xtgvw37s5gakbvjzb9afhec2zkngnt.png",
+    "path": "assets/equipment/classic-knife.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%8A%98%E5%8F%A0%E5%B0%8F%E5%88%80"
+  },
+  {
+    "id": "pistol",
+    "name": "和平手枪",
+    "url": "https://patchwiki.biligame.com/images/sr/4/47/pzpvx95meoarawtue4rr20emrzkllqw.png",
+    "path": "assets/equipment/classic-pistol.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%92%8C%E5%B9%B3%E6%89%8B%E6%9E%AA"
+  },
+  {
+    "id": "star",
+    "name": "幸运星",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f0/p1elhq9rvdan8fi3fnuj7q1rj626pn0.png",
+    "path": "assets/equipment/classic-star.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%B9%B8%E8%BF%90%E6%98%9F"
+  },
+  {
+    "id": "flower",
+    "name": "生命之花",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9b/ova1zcng0frnbh1932iij24m58031be.png",
+    "path": "assets/equipment/classic-flower.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%94%9F%E5%91%BD%E4%B9%8B%E8%8A%B1"
+  },
+  {
+    "id": "skates",
+    "name": "轮滑鞋",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f1/qu4txn7itc6ho8i79dv2ulrqnzhj0bh.png",
+    "path": "assets/equipment/classic-skates.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%BD%AE%E6%BB%91%E9%9E%8B"
+  },
+  {
+    "id": "armor",
+    "name": "量产型装甲",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c9/ahyladeaygqsp08r7ym0u4n14ued1r7.png",
+    "path": "assets/equipment/classic-armor.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E9%87%8F%E4%BA%A7%E5%9E%8B%E8%A3%85%E7%94%B2"
+  },
+  {
+    "id": "drill",
+    "name": "以太钻头",
+    "url": "https://patchwiki.biligame.com/images/sr/6/6e/bhk964m385zlsbozvgxuyp143xatr3t.png",
+    "path": "assets/equipment/classic-drill.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E4%BB%A5%E5%A4%AA%E9%92%BB%E5%A4%B4"
+  },
+  {
+    "id": "battery",
+    "name": "光能电池",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5a/s5tbp47335hgbqoey7at9rquqdwzgw4.png",
+    "path": "assets/equipment/classic-battery.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%85%89%E8%83%BD%E7%94%B5%E6%B1%A0"
+  },
+  {
+    "id": "boots",
+    "name": "反重力皮靴",
+    "url": "https://patchwiki.biligame.com/images/sr/2/27/cvbi5e5z4thqgs311yf2j5ln6m5p89m.png",
+    "path": "assets/equipment/classic-boots.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%8F%8D%E9%87%8D%E5%8A%9B%E7%9A%AE%E9%9D%B4"
+  },
+  {
+    "id": "firestorm",
+    "name": "火力风暴潮",
+    "url": "https://patchwiki.biligame.com/images/sr/e/ec/procmtsk0qooo58ce92in7h1z2v9tv0.png",
+    "path": "assets/equipment/classic-firestorm.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%81%AB%E5%8A%9B%E9%A3%8E%E6%9A%B4%E6%BD%AE"
+  },
+  {
+    "id": "catapult",
+    "name": "电磁弹射器",
+    "url": "https://patchwiki.biligame.com/images/sr/7/70/ok0fy6uy98drftzv20o7k5djfhbshnv.png",
+    "path": "assets/equipment/classic-catapult.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%94%B5%E7%A3%81%E5%BC%B9%E5%B0%84%E5%99%A8"
+  },
+  {
+    "id": "star-chase",
+    "name": "追逐星辰",
+    "url": "https://patchwiki.biligame.com/images/sr/9/99/b0d8lme3910kdmbez1qs905zlxudaz6.png",
+    "path": "assets/equipment/classic-star-chase.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%BF%BD%E9%80%90%E6%98%9F%E8%BE%B0"
+  },
+  {
+    "id": "blossom",
+    "name": "步步生花",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a6/tp9rcxq8umu91bel9q1dgy0h5any5f3.png",
+    "path": "assets/equipment/classic-blossom.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%AD%A5%E6%AD%A5%E7%94%9F%E8%8A%B1"
+  },
+  {
+    "id": "meteor-wings",
+    "name": "流星飞翼",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c4/alrn3tliluloz3vgqjrk499cd0w0da2.png",
+    "path": "assets/equipment/classic-meteor-wings.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%B5%81%E6%98%9F%E9%A3%9E%E7%BF%BC"
+  },
+  {
+    "id": "light-propeller",
+    "name": "光速螺旋桨",
+    "url": "https://patchwiki.biligame.com/images/sr/e/ed/tuj9v192vmobh7xslh16kbia0uurl7q.png",
+    "path": "assets/equipment/classic-light-propeller.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%85%89%E9%80%9F%E8%9E%BA%E6%97%8B%E6%A1%A8"
+  },
+  {
+    "id": "electric",
+    "name": "电光履",
+    "url": "https://patchwiki.biligame.com/images/sr/0/0c/kwytpntq59eppt02fspkrfkxg0zt8h8.png",
+    "path": "assets/equipment/classic-electric.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%94%B5%E5%85%89%E5%B1%A5"
+  },
+  {
+    "id": "blade",
+    "name": "碎星斩舰刀",
+    "url": "https://patchwiki.biligame.com/images/sr/1/11/4tp5deflxs90qowulzea1284u7y5xj7.png",
+    "path": "assets/equipment/classic-blade.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%A2%8E%E6%98%9F%E6%96%A9%E8%88%B0%E5%88%80"
+  },
+  {
+    "id": "hybrid",
+    "name": "武器大师",
+    "url": "https://patchwiki.biligame.com/images/sr/4/48/hgt31ij3fy4x37nmhmuads1kd3ffaw1.png",
+    "path": "assets/equipment/classic-hybrid.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%AD%A6%E5%99%A8%E5%A4%A7%E5%B8%88"
+  },
+  {
+    "id": "chainsaw",
+    "name": "高周波电锯",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d1/295dp1qdznous57998ddav5rpftk3q2.png",
+    "path": "assets/equipment/classic-chainsaw.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E9%AB%98%E5%91%A8%E6%B3%A2%E7%94%B5%E9%94%AF"
+  },
+  {
+    "id": "bloodshot",
+    "name": "杀红眼",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9d/c8u8zqx3igju3acfb4lw5inlon0t9rq.png",
+    "path": "assets/equipment/classic-bloodshot.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%9D%80%E7%BA%A2%E7%9C%BC"
+  },
+  {
+    "id": "confidence",
+    "name": "信心注入器",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a0/4hqov03g1ee61d5brm35ncbu1ln8tje.png",
+    "path": "assets/equipment/classic-confidence.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E4%BF%A1%E5%BF%83%E6%B3%A8%E5%85%A5%E5%99%A8"
+  },
+  {
+    "id": "kinetic-sword",
+    "name": "动能激发剑",
+    "url": "https://patchwiki.biligame.com/images/sr/4/4e/pfnwa5i7hlxk6ziktp34zphh6s7h757.png",
+    "path": "assets/equipment/classic-kinetic-sword.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%8A%A8%E8%83%BD%E6%BF%80%E5%8F%91%E5%89%91"
+  },
+  {
+    "id": "evolution",
+    "name": "战场进化手册",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9c/0unwdntnbtfeibmr78936k53mwugz26.png",
+    "path": "assets/equipment/classic-evolution.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%88%98%E5%9C%BA%E8%BF%9B%E5%8C%96%E6%89%8B%E5%86%8C"
+  },
+  {
+    "id": "orbital",
+    "name": "天基轨道炮",
+    "url": "https://patchwiki.biligame.com/images/sr/6/65/qv6dvngy31xn8r2eorix1rfc0uu5k4z.png",
+    "path": "assets/equipment/classic-orbital.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%A4%A9%E5%9F%BA%E8%BD%A8%E9%81%93%E7%82%AE"
+  },
+  {
+    "id": "satellite-sniper",
+    "name": "反卫星狙击枪",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7f/ih4obknjsrxnsotbtbgko1mtl6jtg6v.png",
+    "path": "assets/equipment/classic-satellite-sniper.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%8F%8D%E5%8D%AB%E6%98%9F%E7%8B%99%E5%87%BB%E6%9E%AA"
+  },
+  {
+    "id": "cover-gun",
+    "name": "掩体生成枪",
+    "url": "https://patchwiki.biligame.com/images/sr/3/31/tt9chl4txl7z29941avj88i1yoedelf.png",
+    "path": "assets/equipment/classic-cover-gun.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%8E%A9%E4%BD%93%E7%94%9F%E6%88%90%E6%9E%AA"
+  },
+  {
+    "id": "exoskeleton",
+    "name": "自适应外骨骼",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e7/es524rclnsrht795b56rnt1nfxkvjln.png",
+    "path": "assets/equipment/classic-exoskeleton.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%87%AA%E9%80%82%E5%BA%94%E5%A4%96%E9%AA%A8%E9%AA%BC"
+  },
+  {
+    "id": "cannon",
+    "name": "斩首行动",
+    "url": "https://patchwiki.biligame.com/images/sr/3/36/pz3qe0xci2okxgu51qyp9zur7ejpert.png",
+    "path": "assets/equipment/classic-cannon.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%96%A9%E9%A6%96%E8%A1%8C%E5%8A%A8"
+  },
+  {
+    "id": "energy-sail",
+    "name": "蓄能帆",
+    "url": "https://patchwiki.biligame.com/images/sr/3/31/50olq8xte3l0aeuagqh7l3gcu0hmjm6.png",
+    "path": "assets/equipment/classic-energy-sail.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%93%84%E8%83%BD%E5%B8%86"
+  },
+  {
+    "id": "comet",
+    "name": "随便骰子",
+    "url": "https://patchwiki.biligame.com/images/sr/f/fe/2r86qfn8jis73yz7ymp1keg0ljkppe8.png",
+    "path": "assets/equipment/classic-comet.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E9%9A%8F%E4%BE%BF%E9%AA%B0%E5%AD%90"
+  },
+  {
+    "id": "blood-fist",
+    "name": "热血沸腾拳",
+    "url": "https://patchwiki.biligame.com/images/sr/3/38/t7w5i6ofsl91u1vognn688cpmp6ubi3.png",
+    "path": "assets/equipment/classic-blood-fist.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%83%AD%E8%A1%80%E6%B2%B8%E8%85%BE%E6%8B%B3"
+  },
+  {
+    "id": "revenge-armor",
+    "name": "以牙还牙甲",
+    "url": "https://patchwiki.biligame.com/images/sr/d/db/eo02d2gr85j4lqukmjstaz91b6ip3wu.png",
+    "path": "assets/equipment/classic-revenge-armor.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E4%BB%A5%E7%89%99%E8%BF%98%E7%89%99%E7%94%B2"
+  },
+  {
+    "id": "victory-flag",
+    "name": "胜利之旗",
+    "url": "https://patchwiki.biligame.com/images/sr/3/31/535v3d7kzwbgfxudq0forup9v3chxok.png",
+    "path": "assets/equipment/classic-victory-flag.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%83%9C%E5%88%A9%E4%B9%8B%E6%97%97"
+  },
+  {
+    "id": "joke-engine",
+    "name": "冷笑话引擎",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a8/7slh4vr9sj62l96ejejxu2emvixd77o.png",
+    "path": "assets/equipment/classic-joke-engine.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%86%B7%E7%AC%91%E8%AF%9D%E5%BC%95%E6%93%8E"
+  },
+  {
+    "id": "garden",
+    "name": "生命之环",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a6/r6bi8e7h04qglgienze9g5nbz625m97.png",
+    "path": "assets/equipment/classic-garden.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%94%9F%E5%91%BD%E4%B9%8B%E7%8E%AF"
+  },
+  {
+    "id": "bastion",
+    "name": "痛觉阻断芯片",
+    "url": "https://patchwiki.biligame.com/images/sr/7/71/6549yh6pqolczbqqxp02vqdjmzfs7ke.png",
+    "path": "assets/equipment/classic-bastion.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%97%9B%E8%A7%89%E9%98%BB%E6%96%AD%E8%8A%AF%E7%89%87"
+  },
+  {
+    "id": "dissolver",
+    "name": "物质分解液",
+    "url": "https://patchwiki.biligame.com/images/sr/2/2e/owez3qwb6fk9kcaoslr3tz116fhqblr.png",
+    "path": "assets/equipment/classic-dissolver.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%89%A9%E8%B4%A8%E5%88%86%E8%A7%A3%E6%B6%B2"
+  },
+  {
+    "id": "absolute-heat",
+    "name": "绝对热量",
+    "url": "https://patchwiki.biligame.com/images/sr/5/58/44folvfa971o8gov65thbnxgum3u1f2.png",
+    "path": "assets/equipment/classic-absolute-heat.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%BB%9D%E5%AF%B9%E7%83%AD%E9%87%8F"
+  },
+  {
+    "id": "hard-armor",
+    "name": "很硬的甲",
+    "url": "https://patchwiki.biligame.com/images/sr/0/02/mefj3fu8vx0ri4eb0c103cor4it683j.png",
+    "path": "assets/equipment/classic-hard-armor.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%BE%88%E7%A1%AC%E7%9A%84%E7%94%B2"
+  },
+  {
+    "id": "flashbang",
+    "name": "闪光手榴弹",
+    "url": "https://patchwiki.biligame.com/images/sr/8/85/kubtrv6ger3f7d36hfttomyu0smwfvk.png",
+    "path": "assets/equipment/classic-flashbang.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E9%97%AA%E5%85%89%E6%89%8B%E6%A6%B4%E5%BC%B9"
+  },
+  {
+    "id": "light-shield",
+    "name": "光能盾牌",
+    "url": "https://patchwiki.biligame.com/images/sr/9/96/mehybcs3df2tt1o2lv56ktaea1caa3q.png",
+    "path": "assets/equipment/classic-light-shield.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%85%89%E8%83%BD%E7%9B%BE%E7%89%8C"
+  },
+  {
+    "id": "wormhole-drill",
+    "name": "虫洞掘进钻头",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5d/7alriyktsxdl43fuoc5z3hkqog26m5l.png",
+    "path": "assets/equipment/classic-wormhole-drill.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%99%AB%E6%B4%9E%E6%8E%98%E8%BF%9B%E9%92%BB%E5%A4%B4"
+  },
+  {
+    "id": "planetary-drill",
+    "name": "行星钻地弹",
+    "url": "https://patchwiki.biligame.com/images/sr/2/24/4hbqrn3pq600ijf5mkqpqzdeude4h5i.png",
+    "path": "assets/equipment/classic-planetary-drill.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%A1%8C%E6%98%9F%E9%92%BB%E5%9C%B0%E5%BC%B9"
+  },
+  {
+    "id": "perpetual",
+    "name": "永动机",
+    "url": "https://patchwiki.biligame.com/images/sr/8/85/q757o4d9skctjwjsmnow7zsyexw5le2.png",
+    "path": "assets/equipment/classic-perpetual.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E6%B0%B8%E5%8A%A8%E6%9C%BA"
+  }
+]

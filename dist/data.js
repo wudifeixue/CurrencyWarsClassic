@@ -1,158 +1,31 @@
-// An independently balanced, classic-inspired fan game. These are not official mode statistics.
-export const TRAITS = [
-  {id:'express',name:'星穹列车',thresholds:[2,4],description:'全队攻击提高 8% / 18%。',icon:'✦'},
-  {id:'station',name:'空间站',thresholds:[2,3],description:'全队速度提高 8% / 16%。',icon:'⌘'},
-  {id:'belobog',name:'贝洛伯格',thresholds:[2,4,6],description:'全队生命提高 10% / 20% / 32%。',icon:'❄'},
-  {id:'hunters',name:'星核猎手',thresholds:[2,3],description:'全队攻击提高 12% / 24%。',icon:'◈'},
-  {id:'luofu',name:'仙舟罗浮',thresholds:[2,4,6],description:'全队速度提高 6% / 14% / 24%。',icon:'☷'},
-  {id:'wildfire',name:'地火',thresholds:[2,3],description:'全队生命提高 12% / 24%。',icon:'♨'},
-  {id:'shield',name:'坚壁',thresholds:[2,3],description:'全队生命提高 14% / 28%。',icon:'⬡'},
-  {id:'strike',name:'强攻',thresholds:[2,4],description:'全队攻击提高 10% / 22%。',icon:'⚔'},
-  {id:'follow',name:'追击',thresholds:[2,4],description:'全队速度提高 10% / 22%。',icon:'⌁'},
-  {id:'support',name:'协奏',thresholds:[2,4],description:'全队攻击与生命提高 6% / 14%。',icon:'✧'},
-  {id:'dot',name:'持续伤害',thresholds:[2,3],description:'全队攻击提高 12% / 26%。',icon:'◉'},
-  {id:'heal',name:'治愈',thresholds:[2],description:'全队生命提高 18%；每场结算恢复 4 点生命。',icon:'✚'},
-];
+import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES } from './legacy-data.js?v=4.0.1';
+import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=4.0.1';
+import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=4.0.1';
+export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=4.0.1';
+export { CLASSIC_SOURCE_SEASON };
 
-const roster = [
-  ['1001','三月七',1,'冰','守护',['express','shield'],82,920,'极寒的弓矢','为前排筑起坚实护盾，可靠的开局伙伴。','#8ddaf3'],
-  ['1002','丹恒',1,'风','输出',['express','strike'],122,650,'云骑枪术','稳定的单体输出，升星后更具穿透力。','#79d1ba'],
-  ['1003','姬子',4,'火','追击',['express','follow'],190,940,'乘胜追击','发动协同追击，让每次破绽都成为机会。','#e29d84'],
-  ['1004','瓦尔特',4,'虚数','辅助',['express','support'],154,1120,'拟似黑洞','以重力控制战场，为队伍提供全面支援。','#cba77e'],
-  ['1005','卡芙卡',5,'雷','持续伤害',['hunters','dot'],228,1040,'月光摩挲连绵','引爆持续伤害，星核猎手的核心输出。','#b580cf'],
-  ['1006','银狼',4,'量子','辅助',['hunters','support'],178,940,'允许更改？','修改敌方弱点，让队伍输出更有效率。','#9b9bdf'],
-  ['1008','阿兰',1,'雷','输出',['station','strike'],126,650,'禁锢解除','将危机化为力量的空间站防卫科员。','#a29acc'],
-  ['1009','艾丝妲',1,'火','辅助',['station','support'],84,780,'星空祝言','加速全队行动，低费也能创造高回报。','#e9a2ae'],
-  ['1013','黑塔',1,'冰','追击',['station','follow'],110,690,'转圈圈','连续追击，适合与其他追击角色搭配。','#b69ad9'],
-  ['1101','布洛妮娅',4,'风','辅助',['belobog','support'],146,1050,'贝洛伯格进行曲','统领队伍，将主力的潜力充分释放。','#b9c8e9'],
-  ['1102','希儿',4,'量子','输出',['wildfire','strike'],208,840,'乱蝶','高速出击，寻找战局中稍纵即逝的机会。','#a78ae6'],
-  ['1103','希露瓦',2,'雷','持续伤害',['belobog','dot'],134,790,'机械热潮','用电流和节奏施加持续压力。','#c19ce7'],
-  ['1104','杰帕德',3,'冰','守护',['belobog','shield'],104,1450,'永屹之壁','厚重的防线，让后排放心输出。','#a7caf1'],
-  ['1105','娜塔莎',2,'物理','治疗',['wildfire','heal'],78,1130,'新生之礼','守护伙伴的医者，提供持久作战能力。','#91bfc8'],
-  ['1106','佩拉',2,'冰','辅助',['belobog','support'],108,880,'领域压制','精准的情报支援，提升队伍整体效率。','#92aada'],
-  ['1107','克拉拉',3,'物理','追击',['belobog','follow'],148,1260,'因为我们是家人','史瓦罗的反击同时兼顾伤害与生存。','#e6a9a9'],
-  ['1108','桑博',2,'风','持续伤害',['wildfire','dot'],144,800,'惊喜礼盒','让风化蔓延，在持久战中积累优势。','#9fb59d'],
-  ['1109','虎克',1,'火','输出',['belobog','strike'],118,740,'轰！飞来焰火！','漆黑的虎克大人，便宜又有活力的火力手。','#dfa978'],
-  ['1201','青雀',2,'量子','追击',['luofu','follow'],148,760,'幺鱼暗杠','等待好牌，以高额追击改变局面。','#a6c9c1'],
-  ['1202','停云',2,'雷','辅助',['luofu','support'],94,860,'庆云光覆仪祷','为主力补充能量，让全队运转更顺畅。','#d8ac89'],
-  ['1204','景元',5,'雷','追击',['luofu','follow'],232,1150,'神君','强大的追加攻击，是追击阵容的终点。','#e0c998'],
-  ['1205','刃',5,'风','输出',['hunters','strike'],206,1530,'大辟万死','以惊人的生命与攻击撑起前台。','#b78891'],
-  ['1203','罗刹',4,'虚数','治疗',['luofu','heal'],120,1350,'生息回轮','持续治愈，帮助阵容稳稳穿过终局。','#c2d5aa'],
-  ['1208','符玄',5,'量子','守护',['luofu','shield'],160,1750,'穷观阵','以穷观之阵承接伤害，构筑最终防线。','#d7a8d1'],
-];
-export const CHARACTERS = roster.map(([id,name,cost,element,role,traits,attack,hp,skill,description,color])=>({id,name,cost,element,role,traits,attack,hp,skill,description,color,image:`assets/characters/${id}.png`}));
-
-export const EQUIPMENT = [
-  {id:'knife',name:'折叠小刀',icon:'⚔',color:'#aab6ce',description:'攻击 +30。两件简易装备可以合成进阶装备。',attack:30,tier:1},
-  {id:'pistol',name:'和平手枪',icon:'⌖',color:'#aab6ce',description:'攻击 +22，速度 +5。',attack:22,speed:5,tier:1},
-  {id:'star',name:'幸运星',icon:'✦',color:'#aab6ce',description:'攻击 +18，生命 +100。',attack:18,hp:100,tier:1},
-  {id:'flower',name:'生命之花',icon:'✿',color:'#aab6ce',description:'生命 +240。',hp:240,tier:1},
-  {id:'skates',name:'轮滑鞋',icon:'➶',color:'#aab6ce',description:'速度 +12。',speed:12,tier:1},
-  {id:'armor',name:'量产型装甲',icon:'⬡',color:'#aab6ce',description:'生命 +180，攻击 +8。',hp:180,attack:8,tier:1},
-  {id:'drill',name:'以太钻头',icon:'◇',color:'#aab6ce',description:'攻击 +36。',attack:36,tier:1},
-  {id:'battery',name:'光能电池',icon:'ϟ',color:'#aab6ce',description:'攻击 +15，速度 +8。',attack:15,speed:8,tier:1},
-  {id:'boots',name:'反重力皮靴',icon:'➶',color:'#c6a4eb',description:'速度 +32。由两件轮滑鞋合成。',speed:32,tier:2},
-  {id:'electric',name:'电光履',icon:'ϟ',color:'#c6a4eb',description:'攻击 +35，速度 +28。轮滑鞋 + 光能电池。',attack:35,speed:28,tier:2},
-  {id:'perpetual',name:'永动机',icon:'∞',color:'#c6a4eb',description:'攻击 +50，速度 +24。两件光能电池合成。',attack:50,speed:24,tier:2},
-  {id:'blade',name:'破阵长刃',icon:'⚔',color:'#c6a4eb',description:'攻击 +95。两件折叠小刀合成。',attack:95,tier:2},
-  {id:'cannon',name:'以太重炮',icon:'⌖',color:'#c6a4eb',description:'攻击 +100。和平手枪 + 以太钻头。',attack:100,tier:2},
-  {id:'garden',name:'不凋之花',icon:'✿',color:'#c6a4eb',description:'生命 +700。两件生命之花合成。',hp:700,tier:2},
-  {id:'bastion',name:'星海壁垒',icon:'⬡',color:'#c6a4eb',description:'生命 +600，攻击 +25。生命之花 + 量产型装甲。',hp:600,attack:25,tier:2},
-  {id:'comet',name:'幸运彗星',icon:'✦',color:'#c6a4eb',description:'攻击 +65，生命 +280。两件幸运星合成。',attack:65,hp:280,tier:2},
-  {id:'hybrid',name:'复合式战斗模块',icon:'◈',color:'#c6a4eb',description:'攻击 +55，生命 +220，速度 +10。其他任意两件简易装备合成。',attack:55,hp:220,speed:10,tier:2},
-];
-
-export const STRATEGIES = [
-  {id:'compound',name:'复利的魔法',rarity:'黄金',icon:'◉',description:'利息上限从 5 提高至 8；立即获得 8 金币。'},
-  {id:'dividend',name:'稳定分红',rarity:'白银',icon:'▥',description:'每次战斗结算额外获得 3 金币。'},
-  {id:'growth',name:'人才投资',rarity:'黄金',icon:'↗',description:'立即获得 8 经验；购买经验额外获得 2 经验。'},
-  {id:'discount',name:'人脉网络',rarity:'白银',icon:'⌘',description:'刷新商店价格降低至 1 金币。'},
-  {id:'vanguard',name:'先发优势',rarity:'黄金',icon:'⚔',description:'所有前台角色攻击提高 22%。'},
-  {id:'backline',name:'幕后合伙人',rarity:'黄金',icon:'◇',description:'后台伤害、治疗和护盾效力从 72% 提高至 100%。'},
-  {id:'fortress',name:'风险对冲',rarity:'白银',icon:'⬡',description:'全队生命提高 25%；战败受到的伤害降低 4。'},
-  {id:'recovery',name:'长期主义',rarity:'白银',icon:'✚',description:'每场结算恢复 5 点生命；全队攻击提高 8%。'},
-  {id:'momentum',name:'乘胜追投',rarity:'黄金',icon:'✦',description:'全队攻击提高 10%；胜利额外获得 3 金币。'},
-];
-
-export const RECIPES = {
-  'skates+skates':'boots','battery+skates':'electric','battery+battery':'perpetual',
-  'knife+knife':'blade','drill+pistol':'cannon','flower+flower':'garden',
-  'armor+flower':'bastion','star+star':'comet',
-};
-export const LEVEL_XP = {4:8,5:12,6:20,7:28};
-
-// These tactical rules are an original 2D adaptation; names and art retain their fan-game context.
-const tacticalTraits = {
- express:'攻击 +8% / 18%；弱点击破时，全队恢复 6 / 12 能量。',
- station:'速度 +8 / 16；开场能量 +10 / 20。',
- belobog:'生命 +10% / 20% / 32%；前台获得最大生命 5% / 10% / 16% 的开场护盾。',
- hunters:'攻击 +12% / 24%；击败敌人时，击杀者恢复 15 / 25 能量。',
- luofu:'速度 +6 / 14 / 24；每两次行动恢复 6 / 10 / 16 能量。',
- wildfire:'生命 +12% / 24%；行动后若生命低于一半，自疗最大生命的 5% / 9%。',
- shield:'生命 +14% / 28%；护盾量 +15% / 30%，前台获得 10% / 18% 最大生命的开场护盾。',
- strike:'攻击 +10% / 22%；偶数次行动的普攻追加 35% / 65% 攻击伤害。',
- follow:'速度 +10 / 22；追加攻击伤害 +20% / 40%。',
- support:'攻击与生命 +6% / 14%；开场能量 +8 / 16。',
- dot:'攻击 +12% / 26%；灼烧、触电、风化伤害 +25% / 50%。',
- heal:'生命 +18%，治疗量 +20%；每场战斗结束恢复 4 点小队生命。',
-};
-for(const trait of TRAITS)trait.description=tacticalTraits[trait.id];
-
-const tacticalEquipment = {
- knife:'攻击 +30。',pistol:'攻击 +22，速度 +5。',star:'攻击 +18，生命 +100，暴击率 +10%。',
- flower:'生命 +240。',skates:'速度 +12。',armor:'生命 +180，攻击 +8；开场获得自身生命 8% 的护盾，受到伤害降低 5%。',
- drill:'攻击 +36；削韧效率 +30%，击破附加伤害提升。',battery:'攻击 +15，速度 +8；开场能量 +15。',
- boots:'速度 +32；首次行动提前 25%。两件轮滑鞋合成。',electric:'攻击 +35，速度 +28；开场能量 +25，终结技后行动提前。轮滑鞋 + 光能电池。',
- perpetual:'攻击 +50，速度 +24；开场能量 +40，每次行动额外恢复 12 能量。两件光能电池合成。',
- blade:'攻击 +95；直接伤害的 18% 转为自身治疗。两件折叠小刀合成。',
- cannon:'攻击 +100；直接命中使目标受到伤害提高 12%，持续 3 次目标行动。和平手枪 + 以太钻头。',
- garden:'生命 +700；每次行动前恢复最大生命的 10%。两件生命之花合成。',
- bastion:'生命 +600，攻击 +25；开场获得 30% 生命护盾，每三次行动为最虚弱前台提供 12% 生命护盾。生命之花 + 量产型装甲。',
- comet:'攻击 +65，生命 +280，暴击率 +25%，追加攻击伤害 +30%。两件幸运星合成。',
- hybrid:'攻击 +55，生命 +220，速度 +10；开场获得最大生命 12% 的护盾。其他两件简易装备合成。',
-};
-for(const equipment of EQUIPMENT)equipment.description=tacticalEquipment[equipment.id];
-
-const tactics = {
- '1001':['为最虚弱前台提供自身 24% 生命＋60% 攻击的护盾，并嘲讽敌人；受盾保护的前台受击时触发反击。','极寒的弓矢','对全体敌人造成 115% 攻击伤害，30% 概率冻结一次行动。','极寒屏障·协同','每次行动为最虚弱前台提供自身 20% 生命的护盾，按后台效率结算。'],
- '1002':['对单体造成 210% 攻击伤害，降低其速度 25%，持续 2 次行动。','洞天幻化，长梦一觉','造成 340% 攻击伤害；目标被减速时提高到 420%。','穿云枪·协同','以后台效率施放减速战技；不消耗战技点。'],
- '1003':['对全体敌人造成 120% 攻击伤害；前台时，累计两次弱点击破触发 135% 伤害的全体追击。','天坠之火','对全体敌人造成 200% 攻击伤害。','轨道火力·协同','以后台效率施放群体战技；不触发前台的击破追击。'],
- '1004':['弹射攻击 3 次，每次造成 72% 攻击伤害并减速 18%。','拟似黑洞','全体 135% 攻击伤害、减速 25%，并推迟敌方行动。','重力场·协同','全体敌人减速 15%，并小幅推迟行动。'],
- '1005':['单体 150% 攻击伤害，附加触电，并立即引爆目标全部持续伤害的 85%。','悲剧尽头的颤音','全体 145% 攻击伤害，附加 65% 攻击触电并引爆持续伤害。','引爆指令·协同','以后台效率施放触电与引爆战技。'],
- '1006':['单体 155% 攻击伤害，施加 30% 易伤与弱点植入；植入期间所有属性均可削韧。','账号已封禁','单体 280% 攻击伤害，施加 50% 易伤与弱点植入。','后台骇入·协同','使目标受到伤害提高 25%，并植入全属性弱点。'],
- '1008':['消耗自身 8% 最大生命，造成 230% 攻击伤害；损失生命越多，伤害越高。','狂者制裁','单体 340% 攻击伤害，对其他敌人造成 130%。','高压突击·协同','以后台效率施放燃血攻击；自损不会使自己退场。'],
- '1009':['弹射 3 次 50% 攻击伤害，并提高全队攻击 15%。','星空祝言','提高全队速度 28%，持续 3 次各自行动。','星空导航·协同','全队速度提高 14%，最高攻击前台获得 10 能量。'],
- '1013':['全体 110% 攻击伤害；前台时，每名敌人首次降至半血触发一次 85% 全体追击。','是魔法，我加了魔法','全体 190% 攻击伤害。','转圈圈·协同','以后台效率施放群体攻击；后台不触发半血追击。'],
- '1101':['使最高攻击的其他前台行动提前，并提高其攻击 35%。','贝洛伯格进行曲','全队攻击提高 38%，暴击率提高 15%。','作战调度·协同','使最高攻击前台行动提前，提高其攻击 22%。'],
- '1102':['单体 235% 攻击伤害，自身加速 25%；击杀后下次行动大幅提前。','乱蝶','单体 400% 攻击伤害。','蝶影突袭·协同','以后台效率施放高速单体战技。'],
- '1103':['全体 80% 攻击伤害，并附加持续 3 次目标行动的触电（50% 攻击）。','机械热潮','全体 140% 攻击伤害，并施加持续 4 次行动的触电。','摇滚电流·协同','以后台效率施放全体触电战技。'],
- '1104':['单体 140% 攻击伤害，40% 概率冻结，并为自己提供 12% 最大生命护盾。','永屹之壁','为所有前台提供杰帕德最大生命 32% 的护盾。','铁卫防线·协同','为所有前台提供自身 12% 生命的护盾，按后台效率结算。'],
- '1105':['治疗最虚弱前台：自身 30% 生命＋100，并提供两次持续治疗。','新生之礼','治疗所有前台：自身 22% 生命＋90；不会复活退场角色。','战地医护·协同','治疗最虚弱前台：自身 18% 生命＋60，按后台效率结算。'],
- '1106':['单体 110% 攻击伤害，使目标受到伤害提高 22%。','领域压制','全体 95% 攻击伤害，使目标受到伤害提高 35%。','弱点情报·协同','全体敌人受到伤害提高 18%。'],
- '1107':['全体 110% 攻击伤害并嘲讽；前台受到直接攻击时，以 130% 攻击反击。','是约定，不是命令','进入嘲讽与 28% 减伤姿态，接下来三次反击提高到 200% 攻击。','史瓦罗掩护·协同','以后台效率施放群体战技；后台不会承受攻击，因此不会受击反击。'],
- '1108':['弹射 3 次 65% 攻击伤害，叠加风化（每层 27% 攻击，最多 5 层）。','惊喜礼盒','全体 130% 攻击伤害，持续伤害易伤提高 40%。','风化投掷·协同','以后台效率施放弹射风化战技。'],
- '1109':['单体 190% 攻击伤害并施加灼烧；攻击已灼烧目标时提高到 250%。','轰！飞来焰火！','主目标 310%、其他敌人 115% 攻击伤害，附加更强灼烧。','焰火支援·协同','以后台效率施放灼烧战技。'],
- '1201':['60% 概率暗杠：单体 270%、其他敌人 105% 伤害；否则单体 140%。','幺鱼暗杠','全体 190% 攻击伤害，下次战技必定形成暗杠。','牌阵·协同','以后台效率施放战技；不消耗战技点。'],
- '1202':['提高最高攻击前台的攻击 28%，并恢复其 30 能量。','庆云光覆仪祷','恢复最高攻击前台 50 能量，提高其攻击 40%。','赐福·协同','最高攻击前台获得 25 能量与 20% 攻击提升。'],
- '1204':['全体 95% 攻击伤害，神君增加 2 段；每两次行动神君发动追加攻击。','吾身光明','全体 160% 攻击伤害，神君增加 3 段（最多 10 段）。','神君·协同','以后台效率施放战技，保留每两次行动的神君追击。'],
- '1205':['消耗 10% 生命，造成全体 135% 攻击伤害并回复自身 8% 生命；累计受伤五次触发追击。','大辟万死','自身生命至少恢复至一半，主目标 280%＋损失生命比例增伤，其他目标 140%。','血刃·协同','以后台效率施放燃血群攻；后台无法通过受击积累追击。'],
- '1203':['治疗最虚弱前台：自身 35% 生命＋100，并净化持续伤害与控制；前台时可自动急救半血伙伴。','归葬的遂愿','全体 150% 攻击伤害，展开结界：队友前台行动后全体回复生命。','白花祈愿·协同','治疗最虚弱前台：自身 18% 生命＋60，按后台效率结算。'],
- '1208':['全队减伤 18%、暴击率提高 12%，治疗自身；前台低血时最多触发两次大幅自疗。','天律大衍，历劫归一','全体 115% 攻击伤害，并为前台治疗自身生命的 9%。','穷观阵·协同','为前台提供 12% 减伤与自身 7% 生命护盾。'],
-};
-for(const c of CHARACTERS){const [skillDescription,ultimate,ultimateDescription,backlineSkill,backlineDescription]=tactics[c.id];Object.assign(c,{skillDescription,combatDescription:skillDescription,ultimate,ultimateDescription,backlineSkill,backlineDescription});}
-
-const verifiedSkillNames = {
- '1001':['可爱即是正义','冰刻箭雨之时'], '1002':['云骑枪术•疾雨','洞天幻化，长梦一觉'],
- '1003':['熔核爆裂','天坠之火'], '1004':['虚空断界','拟似黑洞'],
- '1005':['月光摩挲连绵','悲剧尽头的颤音'], '1006':['是否允许更改？','|账号已封禁|'],
- '1008':['禁锢解除','狂者制裁'], '1009':['流星群落','星空祝言'],
- '1013':['一锤子买卖','是魔法，我加了魔法'], '1101':['作战再部署','贝洛伯格进行曲'],
- '1102':['归刃','乱蝶'], '1103':['电光石火间','机械热潮登场！'],
- '1104':['震慑之击','永屹之壁'], '1105':['爱，救护与抉择','新生之礼'],
- '1106':['低温妨害','领域压制'], '1107':['史瓦罗在看着你','是约定不是命令'],
- '1108':['反复横跳的爱','惊喜礼盒'], '1109':['嘿！记得虎克吗','轰！飞来焰火'],
- '1201':['海底捞月','四幺暗刻？和！'], '1202':['祥音和韵','庆云光覆仪祷'],
- '1204':['紫霄震曜','吾身光明'], '1205':['地狱变','大辟万死'],
- '1203':['白花的祈望','归葬的遂愿'], '1208':['太微行棋，灵台示影','天律大衍，历劫归一'],
-};
-for(const c of CHARACTERS)[c.skill,c.ultimate]=verifiedSkillNames[c.id];
+const oldCharacters = new Map(OLD_CHARACTERS.map(c => [c.id,c]));
+const firstSkill = c => c.empowerments.flatMap(e => e.skills).find(s => s.type === '战技');
+export const CLASSIC_ROSTER = CLASSIC_CHARACTERS.map(c => {
+  const old=oldCharacters.get(c.id), skill=firstSkill(c);
+  return {
+    ...old, ...c,
+    // A common trial sheet keeps this standalone game independent of account relics / Eidolons.
+    attack:old?.attack ?? 80+c.cost*26,
+    hp:old?.hp ?? 650+c.cost*135,
+    skill:skill?.name || old?.skill || c.empowerments[0]?.name || '战技',
+    ultimate:old?.ultimate || c.empowerments.flatMap(e=>e.skills).find(s=>s.type==='终结技')?.name || '终结技',
+    description:c.empowerments.map(e=>`${e.zone==='back'?'后台':'前台'}：${e.description}`).join('\n'),
+    referenceDescription:c.empowerments.map(e=>`${e.zone==='back'?'后台':'前台'}赋能「${e.name}」：${e.description}`).join('\n'),
+    simulationDescription:'独立回合模拟：保留赋能的触发方向；面板与固定伤害按网页战斗规模统一换算。',
+    legacy:false,
+  };
+});
+const classicIds=new Set(CLASSIC_ROSTER.map(c=>c.id));
+// Existing runs retain their old, now out-of-pool units instead of losing saved progress.
+export const CHARACTERS = [...CLASSIC_ROSTER, ...OLD_CHARACTERS.filter(c=>!classicIds.has(c.id)).map(c=>({...c,legacy:true,allowedZones:['front','back'],empowerments:[],portrait:`assets/portraits/${c.id}.png`,simulationDescription:'旧存档保留角色；不再出现在经典商店中。'}))];
+export const TRAITS = CLASSIC_TRAITS;
+export const EQUIPMENT = CLASSIC_EQUIPMENT;
+export const RECIPES = CLASSIC_RECIPES;
+const strategyIds=new Set(CLASSIC_STRATEGIES.map(s=>s.id));
+export const STRATEGIES = [...CLASSIC_STRATEGIES,...OLD_STRATEGIES.filter(s=>!strategyIds.has(s.id)).map(s=>({...s,legacy:true}))];

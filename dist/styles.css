@@ -185,11 +185,11 @@ a { color: var(--gold); }
 .shop-hidden .front-row { margin-top: auto; margin-bottom: 24px; }
 .shop-hidden .back-row { margin-top: 27px; margin-bottom: auto; }
 .shop-hidden .shop { display: none; }
-.unit-card { position: relative; width: 100%; height: 100%; min-height: 0; display: block; padding: 0; text-align: left; overflow: hidden; isolation: isolate; border: 1px solid #8ea3c72d; border-radius: 3px; background: radial-gradient(ellipse at 50% 20%, color-mix(in srgb, var(--char) 21%, transparent), transparent 80%), #1b263c; }
-.unit-card::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, #101b30 0, transparent 73%); pointer-events: none; }
-.unit-card img { position: absolute; z-index: -2; width: 114%; height: 100%; top: 0; left: -7%; object-fit: contain; object-position: center top; transition: transform .25s, filter .25s; pointer-events: none; }
-.unit-card:hover img { transform: scale(1.035); }
-.unit-card.selected { border-color: #e1c28abf; box-shadow: 0 0 0 1px #e1c28a18; }
+.unit-card:not(.roster-card) { position: relative; width: 100%; height: 100%; min-height: 0; display: block; padding: 0; text-align: left; overflow: hidden; isolation: isolate; border: 1px solid #8ea3c72d; border-radius: 3px; background: radial-gradient(ellipse at 50% 20%, color-mix(in srgb, var(--char) 21%, transparent), transparent 80%), #1b263c; }
+.unit-card:not(.roster-card)::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, #101b30 0, transparent 73%); pointer-events: none; }
+.unit-card:not(.roster-card) img { position: absolute; z-index: -2; width: 114%; height: 100%; top: 0; left: -7%; object-fit: contain; object-position: center top; transition: transform .25s, filter .25s; pointer-events: none; }
+.unit-card:not(.roster-card):hover img { transform: scale(1.035); }
+.unit-card:not(.roster-card).selected { border-color: #e1c28abf; box-shadow: 0 0 0 1px #e1c28a18; }
 .unit-meta { position: absolute; top: 9px; left: 11px; right: 9px; display: flex; justify-content: space-between; align-items: center; }
 .element-badge { color: var(--char); font-size: 9px; text-shadow: 0 1px 5px #000; }
 .stars { font-size: 10px; color: #e8c889; letter-spacing: 2px; text-shadow: 0 1px 6px #000; }
@@ -200,11 +200,11 @@ a { color: var(--gold); }
 .equipped-icons { display: flex; gap: 4px; margin-top: 6px; height: 21px; }
 .equipped-icon { display: grid; place-items: center; width: 21px; height: 21px; background: #101b2cc9; color: var(--gold); border: 1px solid #b4a37e4d; border-radius: 2px; font-size: 12px; }
 .equipped-icon.empty { border: 1px dashed #90a4c340; color: #6683ab; font-size: 9px; background: #1b2a435c; }
-.front-row .unit-card { border: 1px solid #c5c9f46b; border-bottom: 3px solid color-mix(in srgb, var(--char) 65%, #31324d); border-radius: 1px; overflow: hidden; background: radial-gradient(ellipse at 40% 10%, color-mix(in srgb, var(--char) 23%, transparent), transparent 80%), #1b2447; box-shadow: 0 7px 14px #080f3555; }
-.front-row .unit-card::before { content: ''; position: absolute; z-index: 3; inset: 3px; border: 1px solid #d0cfff14; pointer-events: none; }
-.front-row .unit-card::after { inset: 0; background: linear-gradient(0deg, #121c38 0, #121c38bd 17%, transparent 56%); }
-.front-row .unit-card.selected { border-color: #f0d4a0; box-shadow: 0 0 0 2px #e1c28a22, 0 8px 18px #0e153b80; }
-.front-row .unit-card img { width: 112%; height: 144%; left: -6%; top: -4px; object-position: center top; object-fit: cover; }
+.front-row .unit-card:not(.roster-card) { border: 1px solid #c5c9f46b; border-bottom: 3px solid color-mix(in srgb, var(--char) 65%, #31324d); border-radius: 1px; overflow: hidden; background: radial-gradient(ellipse at 40% 10%, color-mix(in srgb, var(--char) 23%, transparent), transparent 80%), #1b2447; box-shadow: 0 7px 14px #080f3555; }
+.front-row .unit-card:not(.roster-card)::before { content: ''; position: absolute; z-index: 3; inset: 3px; border: 1px solid #d0cfff14; pointer-events: none; }
+.front-row .unit-card:not(.roster-card)::after { inset: 0; background: linear-gradient(0deg, #121c38 0, #121c38bd 17%, transparent 56%); }
+.front-row .unit-card:not(.roster-card).selected { border-color: #f0d4a0; box-shadow: 0 0 0 2px #e1c28a22, 0 8px 18px #0e153b80; }
+.front-row .unit-card:not(.roster-card) img { width: 112%; height: 144%; left: -6%; top: -4px; object-position: center top; object-fit: cover; }
 .front-row .unit-meta { top: 5px; left: 6px; right: 5px; }
 .front-row .unit-info { bottom: 5px; left: 6px; right: 4px; }
 .front-row .unit-info h3 { font-size: 11px; letter-spacing: .5px; }
@@ -212,10 +212,10 @@ a { color: var(--gold); }
 .front-row .equipped-icons { height: 15px; margin-top: 3px; gap: 3px; }
 .front-row .equipped-icon { height: 15px; width: 15px; font-size: 9px; }
 .front-row .equipped-icon.empty { display: none; }
-.back-row .unit-card { border: 1px solid #b8bce765; border-bottom: 3px solid color-mix(in srgb, var(--char) 55%, #262d51); border-radius: 1px; background: #192548; box-shadow: 0 4px 11px #10123e40; }
-.back-row .unit-card.selected { border-color: #e5c990; }
-.back-row .unit-card img { width: 113%; height: 143%; top: -4px; left: -6%; object-fit: cover; object-position: center top; }
-.back-row .unit-card::after { background: linear-gradient(0deg, #141f38 0, #14203bbd 14%, transparent 62%); }
+.back-row .unit-card:not(.roster-card) { border: 1px solid #b8bce765; border-bottom: 3px solid color-mix(in srgb, var(--char) 55%, #262d51); border-radius: 1px; background: #192548; box-shadow: 0 4px 11px #10123e40; }
+.back-row .unit-card:not(.roster-card).selected { border-color: #e5c990; }
+.back-row .unit-card:not(.roster-card) img { width: 113%; height: 143%; top: -4px; left: -6%; object-fit: cover; object-position: center top; }
+.back-row .unit-card:not(.roster-card)::after { background: linear-gradient(0deg, #141f38 0, #14203bbd 14%, transparent 62%); }
 .back-row .unit-info { bottom: 4px; left: 5px; right: 4px; }
 .back-row .unit-info h3 { font-size: 10px; letter-spacing: .3px; }
 .back-row .unit-tags { display: none; }
@@ -257,10 +257,10 @@ a { color: var(--gold); }
 .subsection-head h2 .icon { width: 13px; height: 13px; }
 .subsection-head .tiny-label { font-size: 8px; letter-spacing: .3px; }
 .bench { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); height: 59px; gap: 6px; }
-.bench .unit-card, .bench .empty-slot { height: 60px; border-radius: 2px; }
-.bench .unit-card { background: radial-gradient(ellipse at 70% 10%, color-mix(in srgb, var(--char) 22%, transparent), transparent), #152138; }
-.bench .unit-card img { width: 105%; height: 185%; left: 12%; top: -2px; object-fit: contain; object-position: center top; }
-.bench .unit-card::after { background: linear-gradient(90deg, #142137 0, #142137b5 35%, transparent); }
+.bench .unit-card:not(.roster-card), .bench .empty-slot { height: 60px; border-radius: 2px; }
+.bench .unit-card:not(.roster-card) { background: radial-gradient(ellipse at 70% 10%, color-mix(in srgb, var(--char) 22%, transparent), transparent), #152138; }
+.bench .unit-card:not(.roster-card) img { width: 105%; height: 185%; left: 12%; top: -2px; object-fit: contain; object-position: center top; }
+.bench .unit-card:not(.roster-card)::after { background: linear-gradient(90deg, #142137 0, #142137b5 35%, transparent); }
 .bench .unit-info { bottom: 6px; left: 6px; right: 0; }
 .bench .unit-info h3 { font-size: 9px; letter-spacing: 0; }
 .bench .unit-tags, .bench .equipped-icons, .bench .element-badge { display: none; }
@@ -359,8 +359,8 @@ a { color: var(--gold); }
 .filter-button.active { color: #e5cda1; border-color: #e1c28a70; background: #e1c28a0e; }
 .search-input { margin-left: auto; padding: 7px 12px; width: 220px; background: #0c1729; color: #dce4f1; border: 1px solid #9eb2cd38; border-radius: 3px; font-size: 11px; }
 .codex-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
-.codex-grid .unit-card { height: 248px; }
-.codex-grid .unit-card img { height: 100%; }
+.codex-grid .unit-card:not(.roster-card) { height: 248px; }
+.codex-grid .unit-card:not(.roster-card) img { height: 100%; }
 .codex-grid .unit-info { bottom: 14px; }
 .codex-grid .unit-info h3 { font-size: 16px; }
 .codex-grid .unit-info > small { display: block; font-size: 9px; margin-top: 4px; }
