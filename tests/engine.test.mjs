@@ -118,7 +118,7 @@ test('a complete twelve-round expedition resolves choices, rewards and a termina
 });
 
 test('a lethal defeat ends the expedition and cannot be healed out of defeat',()=>{
-  const s=createGame(55);s.units=s.units.slice(0,1);s.hp=1;s.strategies=['recovery'];
+  const s=createGame(55);s.units=s.units.slice(0,1);s.round=12;s.hp=1;s.strategies=['recovery'];
   run(s,{type:'battle'});assert.equal(s.hp,0);run(s,{type:'next'});
   assert.equal(s.phase,'ended');assert.equal(s.result,'defeat');
 });

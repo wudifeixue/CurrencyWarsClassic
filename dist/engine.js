@@ -1,4 +1,6 @@
-import {CHARACTERS,TRAITS,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP} from './data.js';
+import {CHARACTERS,TRAITS,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP} from './data.js?v=2.0.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=2.0.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=2.0.0';
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const equipment = new Map(EQUIPMENT.map(e=>[e.id,e]));
@@ -75,50 +77,13 @@ export function createGame(seed=Date.now()) {
   return state;
 }
 
-export function getSynergies(state) {
-  const unique=new Set(deployed(state).map(u=>u.characterId));
-  const counts={};
-  for(const id of unique) for(const trait of getCharacter(id)?.traits||[]) counts[trait]=(counts[trait]||0)+1;
-  return TRAITS.filter(t=>counts[t.id]).map(t=>{
-    const count=counts[t.id],level=t.thresholds.filter(n=>count>=n).length;
-    return {...t,count,active:level>0,level,next:t.thresholds.find(n=>n>count)??null};
-  }).sort((a,b)=>Number(b.active)-Number(a.active)||b.count-a.count);
-}
-
-function traitBonuses(state) {
-  let attack=0,hp=0,speed=0;
-  for(const s of getSynergies(state)) {
-    if(!s.active)continue;
-    const index=s.level-1;
-    if(s.id==='express')attack+=[.08,.18][index];
-    if(s.id==='station')speed+=[8,16][index];
-    if(s.id==='belobog')hp+=[.10,.20,.32][index];
-    if(s.id==='hunters')attack+=[.12,.24][index];
-    if(s.id==='luofu')speed+=[6,14,24][index];
-    if(s.id==='wildfire')hp+=[.12,.24][index];
-    if(s.id==='shield')hp+=[.14,.28][index];
-    if(s.id==='strike')attack+=[.10,.22][index];
-    if(s.id==='follow')speed+=[10,22][index];
-    if(s.id==='support') {attack+=[.06,.14][index];hp+=[.06,.14][index];}
-    if(s.id==='dot')attack+=[.12,.26][index];
-    if(s.id==='heal')hp+=.18;
-  }
-  return {attack,hp,speed};
-}
+export const getSynergies = getBattleSynergies;
 
 export function getUnitStats(state,unit) {
-  const character=getCharacter(unit.characterId);
-  if(!character) return {attack:0,hp:0,speed:100,power:0,contribution:0};
-  const factor=[0,1,1.85,3.5][unit.star],bonus=traitBonuses(state);
-  let attack=character.attack*factor,hp=character.hp*factor,speed=100;
-  for(const id of unit.items) {const item=getEquipment(id);attack+=item?.attack||0;hp+=item?.hp||0;speed+=item?.speed||0;}
-  attack*=1+bonus.attack+(has(state,'vanguard')&&unit.zone==='front'?.22:0)+(has(state,'recovery')?.08:0)+(has(state,'momentum')?.10:0);
-  hp*=1+bonus.hp+(has(state,'fortress')?.25:0);
-  speed+=bonus.speed;
-  attack=Math.round(attack);hp=Math.round(hp);speed=Math.round(speed);
-  const power=Math.round((attack*2.2+hp*.18)*(speed/100));
+  const stats=getBattleStats(state,unit);
+  const power=Math.round((stats.attack*2.2+stats.hp*.18)*(stats.speed/100));
   const efficiency=unit.zone==='front'?1:unit.zone==='back'?(has(state,'backline')?1:.72):0;
-  return {attack,hp,speed,power,contribution:Math.round(power*efficiency)};
+  return {...stats,power,contribution:Math.round(power*efficiency)};
 }
 
 export function getTeamPower(state) {return deployed(state).reduce((sum,u)=>sum+getUnitStats(state,u).contribution,0);}
@@ -139,7 +104,7 @@ export function getEnemy(state) {
     ['末日兽',5100,'最终首领。击败它，完成这场经典远征。'],
   ];
   const [name,power,description]=enemies[Math.max(0,Math.min(11,state.round-1))];
-  return {name,power,boss:state.round%4===0,description};
+  return {name,power,boss:state.round%4===0,description,units:getEnemyLineup(state.round)};
 }
 
 function choicesFor(state,kind) {
@@ -244,7 +209,8 @@ function runAction(state,action) {
     case 'battle': {
       if(!state.units.some(u=>u.zone==='front'))return fail('至少部署一名前台角色才能开始战斗。');
       const enemy=getEnemy(state),playerPower=getTeamPower(state);
-      const won=playerPower>=enemy.power;
+      const combat=simulateCombat(state);
+      const won=combat.winner==='ally';
       const damage=won?0:Math.max(3,Math.round(9+state.round*1.4+(enemy.boss?5:0)-(has(state,'fortress')?4:0)));
       const interest=Math.min(has(state,'compound')?8:5,Math.floor(state.gold/10));
       state.streak=won?Math.max(1,state.streak+1):Math.min(-1,state.streak-1);
@@ -255,21 +221,14 @@ function runAction(state,action) {
       // A lethal defeat cannot be undone by post-battle healing.
       state.hp=state.hp-damage<=0?0:Math.min(100,state.hp-damage+healing);
       state.gold+=income;state[won?'wins':'losses']++;
-      const logs=[`敌方「${enemy.name}」进入战场，战力 ${enemy.power}。`];
-      for(const unit of deployed(state)) {
-        const c=getCharacter(unit.characterId);
-        logs.push(`${c.name}${unit.zone==='back'?'从后台协同，':'发动'}「${c.skill}」，贡献 ${getUnitStats(state,unit).contribution} 战力。`);
-      }
-      const synergies=getSynergies(state).filter(s=>s.active);
-      if(synergies.length)logs.push(`${synergies.map(s=>`${s.name}(${s.count})`).join('、')}羁绊生效。`);
-      logs.push(won?'击破敌方防线，本回合胜利！':`阵容未能突破防线，受到 ${damage} 点伤害。`);
-      if(healing&&state.hp>0)logs.push(`恢复效果生效，回复 ${healing} 点生命（最高 100）。`);
+      const logs=combat.events.map(event=>event.text);
+      if(healing&&state.hp>0)logs.push(`战后恢复生效，回复 ${healing} 点小队生命（最高 100）。`);
       const rewards=[`基础收入 +8`,`利息 +${interest}`,`连续战绩 +${streakBonus}`];
       if(won)rewards.push('胜利奖励 +2');
       if(has(state,'dividend'))rewards.push('稳定分红 +3');
       if(won&&has(state,'momentum'))rewards.push('乘胜追投 +3');
-      state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing};
-      state.history.push({round:state.round,won,damage,income,playerPower,enemyPower:enemy.power});
+      state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing,combat};
+      state.history.push({round:state.round,won,damage,income,playerPower,enemyPower:enemy.power,turns:combat.turns,reason:combat.reason});
       state.phase='result';return success(won?'战斗胜利':'战斗结束');
     }
     default:return fail('未知操作。');
