@@ -1,8 +1,12 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=5.0.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=5.0.0';
-import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=5.0.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=5.0.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=5.0.0';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.0.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.0.0';
+import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=6.0.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.0.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength} from './classic-flow.js?v=6.0.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.0.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.0.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.0.0';
+export {RUN_MODES,DIFFICULTIES,getRunMode,getRunNodes,getCurrentNode,getRunLength};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const strategyIds = new Set(STRATEGIES.map(s=>s.id));
@@ -24,13 +28,16 @@ export const getEquipment = resolveEquipment;
 export const getMaxHp = state => 100+(state.bonusMaxHp||0)+sumEffect(state,'maxHp');
 export const getPopulationLimit = state => state.level+(state.consumables||[]).filter(c=>c.id==='wealth-gem').length+(state.inventory||[]).filter(id=>id==='wealth-gem').length+(state.units||[]).reduce((n,u)=>n+u.items.filter(id=>id==='wealth-gem').length,0);
 export {getEffectiveCharacterCost};
+export const getLevelXp=state=>(isClassicRun(state)?CLASSIC_LEVEL_XP:LEVEL_XP)[state.level]||0;
+export const getSellPrice=(state,unit)=>unit?unitCost(state,unit)*3**(unit.star-1):0;
 export function getShopOdds(state) {
   const odds=[...SHOP_ODDS[state.level]],bonus=getProgressionShopModifiers(state).fiveCostOddsBonus*100;
   if(bonus){odds[0]-=bonus;odds[4]+=bonus;}
-  return odds;
+  return getEnvironmentShopOdds(state,odds);
 }
-export const getRefreshCost = state => state.freeRefreshes>0?0:has(state,'discount')?1:2;
+export const getRefreshCost = state => state.freeRefreshes>0?0:getEnvironmentRefreshCost(state,has(state,'discount')?1:2);
 export function getInterest(state) {
+  if(!getRunMode(state).interest)return 0;
   if(effects(state).some(e=>e.noInterest))return 0;
   return Math.min(Math.max(has(state,'compound')?8:5,...effects(state).map(e=>e.interestCap||0)),Math.floor(state.gold/10));
 }
@@ -54,14 +61,16 @@ function rollShop(state) {
     let roll=random(state)*100;
     let cost=1;
     for(const chance of getShopOdds(state)) {if(roll<chance) break;roll-=chance;cost++;}
-    return pick(state,CLASSIC_ROSTER.filter(c=>getEffectiveCharacterCost(state,c.id)===cost)).id;
+    const pool=CLASSIC_ROSTER.filter(c=>getEffectiveCharacterCost(state,c.id)===cost);
+    let weight=random(state)*pool.reduce((total,c)=>total+getEnvironmentShopWeight(state,c),0);
+    return (pool.find(c=>(weight-=getEnvironmentShopWeight(state,c))<0)||pool.at(-1)).id;
   });
 }
 
 function addXp(state,amount) {
   state.xp+=amount;
-  while(state.level<MAX_LEVEL && state.xp>=LEVEL_XP[state.level]) {
-    state.xp-=LEVEL_XP[state.level];state.level++;
+  while(state.level<MAX_LEVEL && state.xp>=getLevelXp(state)) {
+    state.xp-=getLevelXp(state);state.level++;
   }
   if(state.level===MAX_LEVEL) state.xp=0;
 }
@@ -102,7 +111,7 @@ function mergeUnits(state) {
   return merges;
 }
 
-export function createGame(seed=Date.now()) {
+export function createGame(seed=Date.now(),options={}) {
   const normalized=(Number(seed)>>>0)||197706;
   const state={version:3,ruleset:'zero-sum',seed:normalized,rng:normalized,round:1,hp:100,gold:16,level:4,xp:0,nextUid:1,
     units:[],shop:[],locked:false,inventory:[],strategies:[],phase:'prep',
@@ -111,6 +120,10 @@ export function createGame(seed=Date.now()) {
   initializeLoot(state,true);
   addUnit(state,'1013','front');addUnit(state,'1009','front');addUnit(state,'1108','front');addUnit(state,'1001','back');
   state.shop=['1013','1001','1013','1202','1201'];
+  if(options.mode){
+    state.flow=initFlow(options.mode,options.difficulty);state.gold=getRunMode(state).startGold;
+    initEnvironment(state,{enabled:true});state.phase='environment';
+  }
   return state;
 }
 
@@ -140,17 +153,29 @@ export function getEnemy(state) {
     ['末日军团',4630,'决战前的最后试炼。准备好你的最终阵容。'],
     ['末日兽',5100,'最终首领。击败它，完成这场经典远征。'],
   ];
-  const [name,power,description]=enemies[Math.max(0,Math.min(11,state.round-1))];
-  return {name,power,boss:state.round%4===0,description,units:getEnemyLineup(state.round)};
+  const node=getCurrentNode(state),[name,power,description]=enemies[Math.max(0,Math.min(11,(node?.combatRound||state.round)-1))];
+  const difficulty=DIFFICULTIES[state.flow?.difficulty||0],encounter=state.flow?.selectedEncounter;
+  // Simulator tuning: a full standard route earns far more equipment and copies
+  // than the historical web prototype. These are not original server stats.
+  const routeHp=[0,1+(node?.index||1)*.2,5+(node?.index||1)*.5,10+(node?.index||1)*.9][node?.plane||1];
+  const routeAttack=[0,1.05,1.35,1.7][node?.plane||1];
+  const hpFactor=isClassicRun(state)?routeHp*difficulty.hpMultiplier*(encounter?.hpMultiplier||1)*(node.type==='reward'?.2:1):1;
+  const attackFactor=isClassicRun(state)?routeAttack*difficulty.attackMultiplier*(encounter?.attackMultiplier||1)*(node.type==='reward'?.45:1):1;
+  const units=getEnemyLineup(node?.combatRound||state.round).map(e=>({...e,maxHp:Math.round(e.maxHp*hpFactor),hp:Math.round(e.hp*hpFactor),attack:Math.round(e.attack*attackFactor)}));
+  return {name:node?.type==='reward'?'奖励节点 · 战利品守卫':name,power:Math.round(power*hpFactor),boss:node?.boss||false,description,units,node};
 }
 
 function choicesFor(state,kind) {
-  const candidates=kind==='strategy'?STRATEGIES.filter(s=>!s.legacy&&!has(state,s.id)&&s.planes.includes(Math.ceil(state.round/4))):EQUIPMENT.filter(e=>e.tier===1);
+  const candidates=kind==='strategy'?STRATEGIES.filter(s=>!s.legacy&&!has(state,s.id)&&s.planes.includes(getCurrentNode(state)?.plane||Math.ceil(state.round/4))):EQUIPMENT.filter(e=>e.tier===1);
   const pool=[...candidates];state.choices=[];
   while(state.choices.length<3&&pool.length) {
-    const index=Math.floor(random(state)*pool.length);
+    const rarity=getEnvironmentStrategyRarity(state,(state.flow?.strategySelections||0)+1,state.choices.length);
+    const eligible=pool.filter(s=>!rarity||s.rarity===rarity);
+    if(!eligible.length)break;
+    const candidate=pick(state,eligible),index=pool.indexOf(candidate);
     state.choices.push({kind,id:pool.splice(index,1)[0].id});
   }
+  if(state.flow)state.flow.strategyRerolls=Array(3).fill(1+(getEnvironmentRules(state).strategyRerollsBonus||0));
   state.choiceKind=kind;state.phase='choice';
 }
 
@@ -162,6 +187,7 @@ function gainStrategy(state,id) {
   addXp(state,e.xp||0);
   state.hp=Math.min(getMaxHp(state),state.hp+(e.heal||0));
   queueRewards(state,(e.items||[]).map(id=>({kind:'item',id})),'投资策略');
+  queueRewards(state,e.rewards||[],'投资策略');
   if(id==='compound')state.gold+=8;
   if(id==='growth')addXp(state,8);
 }
@@ -170,11 +196,12 @@ function enterNode(state) {
   for(const e of effects(state)) {
     const record=meta(state,e.id);record.nodes++;
     if(!e.nodeGoldLimit||record.nodes<=e.nodeGoldLimit)state.gold+=e.nodeGold||0;
+    if(!e.nodeRewardLimit||record.nodes<=e.nodeRewardLimit)queueRewards(state,e.nodeRewards||[],'投资策略');
     state.freeRefreshes+=(e.nodeFreeRefreshes||0)+(state.goldSpentThisNode===0?(e.unspentFreeRefreshes||0):0);
     addXp(state,e.nodeXp||0);
     if(e.benchXp&&state.units.filter(u=>u.zone==='bench').length<=e.benchMaxForXp)addXp(state,e.benchXp);
-    if(state.round%4===1) {addXp(state,e.planeXp||0);state.freeRefreshes+=e.planeFreeRefreshes||0;}
-    if(state.round%4===0)state.gold+=e.bossGold||0;
+    if(getCurrentNode(state)?.index===1) {addXp(state,e.planeXp||0);state.freeRefreshes+=e.planeFreeRefreshes||0;}
+    if(getCurrentNode(state)?.boss)state.gold+=e.bossGold||0;
   }
   state.goldSpentThisNode=0;
   for(const unit of state.units.filter(u=>u.items.includes('wealth-gem'))) {
@@ -182,6 +209,55 @@ function enterNode(state) {
     if(unit.wealthNodes%3===0)queueRewards(state,[{kind:'gold',amount:unit.items.filter(id=>id==='wealth-gem').length}],'财富宝钻');
   }
   queueRewards(state,onNodeEntry(state),'羁绊成长');
+  if(isClassicRun(state)){
+    state.gold+=getRunMode(state).nodeGold;
+    const node=getCurrentNode(state);queueRewards(state,onEnvironmentEvent(state,{...node,node,type:'node',key:String(state.round)}),'投资环境');
+  }
+}
+
+function makeSupplyOffers(state){
+  const node=getCurrentNode(state),cost=Math.min(5,node.plane+1),pool=CLASSIC_ROSTER.filter(c=>c.cost===cost);
+  const materials=EQUIPMENT.filter(e=>e.tier===1),count=getEnvironmentRules(state).supplyEquipmentCount||1;
+  state.flow.supplyOffers=Array.from({length:3},(_,i)=>{
+    const character=pick(state,pool),item=pick(state,materials);
+    const rewards=[{kind:'character',id:character.id,star:1},{kind:'item',id:item.id,amount:count}];
+    // Diamond supplies are original; the offer chance is simulator tuning.
+    if(node.plane>=2&&i===2&&getEquipment('red-gem'))rewards[1]={kind:'item',id:pick(state,['red-gem','blue-gem']),amount:count};
+    return {id:`supply-${state.round}-${i}`,name:`${character.name} · 补给包`,description:`获得${cost}费${character.name}，以及${rewards[1].amount===2?'2件':''}${getEquipment(rewards[1].id).name}。领取后以晶矿保留，可稍后开启。`,rewards};
+  });
+  state.phase='supply';
+}
+function makeEncounterOffers(state){
+  const plane=getCurrentNode(state).plane;
+  state.flow.encounterOffers=[1,2,3].map(level=>{
+    const rewards=level===1?[{kind:'gold',amount:6+plane*2}]:level===2?[{kind:'chest',quality:'basic'},{kind:'refresh',amount:5}]:[{kind:'chest',quality:plane===3?'privileged':'advanced'},{kind:'gold',amount:8+plane*2}];
+    return {id:`encounter-${state.round}-${level}`,name:`难度 ${level}`,level,hpMultiplier:[0,.9,1.2,1.65][level],attackMultiplier:[0,.85,1.05,1.25][level],description:level===1?'较轻的战斗压力，获胜获得金币。':level===2?'更强的敌人，获胜获得简易武装箱与5次免费刷新。':'高难度敌人，获胜获得进阶武装箱和更多金币；第三位面升级为特权箱。',rewards};
+  });state.phase='encounter';
+}
+function prepareClassicNode(state){
+  const node=getCurrentNode(state),rules=getEnvironmentRules(state),flow=state.flow;
+  state.choices=[];state.choiceKind=null;flow.pendingNodeKind=null;
+  if(node.boss&&rules.extraBossSupply&&!flow.extraSupplyDone.includes(state.round)){
+    flow.pendingNodeKind='prep';makeSupplyOffers(state);return;
+  }
+  if(rules.extraStrategyLabels?.includes(node.label)&&!flow.extraStrategyDone.includes(state.round)){
+    flow.pendingNodeKind=node.type==='encounter'?'encounter':node.type==='supply'?'supply':'prep';choicesFor(state,'strategy');return;
+  }
+  if(node.type==='strategy')choicesFor(state,'strategy');
+  else if(node.type==='supply')makeSupplyOffers(state);
+  else if(node.type==='encounter')makeEncounterOffers(state);
+  else state.phase='prep';
+}
+function finishRun(state){
+  state.phase='ended';state.result=state.hp>0?'victory':'defeat';
+  state.runSummary={mode:getRunMode(state).name,nodesCompleted:state.round,totalNodes:getRunLength(state),battles:state.history.length,wins:state.wins,losses:state.losses,rankGain:state.hp>0&&state.flow?.mode==='standard'?(state.hp>=70?3:state.hp>=40?2:1):0};
+  return success(state.result==='victory'?'三个位面完成，对局胜利。':'本次博弈结束，下一次投资会更好。');
+}
+function advanceClassicNode(state){
+  if(state.hp<=0||state.round>=getRunLength(state))return finishRun(state);
+  state.round++;const flow=state.flow;flow.nodeComplete=false;flow.selectedEncounter=null;flow.supplyOffers=[];flow.encounterOffers=[];flow.supplyRerolls=1;flow.encounterRerolls=1;
+  addXp(state,getRunMode(state).nodeXp);enterNode(state);if(!state.locked)rollShop(state);prepareClassicNode(state);
+  return success(`进入 ${getCurrentNode(state).label} · ${getCurrentNode(state).name}`);
 }
 
 function grantCharacter(state,id,star=1,cost=getEffectiveCharacterCost(state,id)) {
@@ -231,15 +307,13 @@ function useConsumable(state,action) {
     unit.extraTraits=[...(unit.extraTraits||[]),trait];
   } else if(tool.id==='smelter') {
     if(!unit.items.length)return fail('请为目标装备至少一件装备。');
-    if(unit.items.includes('wealth-gem'))return fail('财富宝钻暂无同类重铸候选，请先卸下宝钻。');
-    for(const id of unit.items) {
-      const original=getEquipment(id),pool=original.trait?TRAITS.filter(t=>t.type===TRAITS.find(t=>t.id===original.trait).type).map(t=>getEquipment(`trait-${t.id}`)).filter(Boolean):EQUIPMENT.filter(e=>e.tier===(original.privileged?2:original.tier)&&e.id!==(original.baseId||id));
-      state.inventory.push((original.privileged?'privileged:':'')+pick(state,pool).id);
-    }
+    const pools=unit.items.map(getSmeltingPool);
+    if(pools.some(pool=>!pool.length))return fail('目标含没有同类重铸候选的装备，请先卸下。');
+    for(const pool of pools)state.inventory.push(pick(state,pool));
     unit.items=[];
   } else {
     const privileged=tool.id==='privilege-dice';
-    const slot=unit.items.findIndex(id=>getEquipment(id)?.tier===(privileged?3:2));
+    const slot=unit.items.findIndex(id=>privileged?getEquipment(id)?.privileged===true:getEquipment(id)?.tier===2);
     if(slot<0)return fail(privileged?'请为目标装备一件特权装备。':'请为目标装备一件普通进阶装备。');
     if(tool.id==='privilege-card')unit.items[slot]=`privileged:${unit.items[slot]}`;
     else {
@@ -253,9 +327,48 @@ function useConsumable(state,action) {
 
 function runAction(state,action) {
   if(!action||typeof action.type!=='string')return fail('操作无效。');
-  const indexKeys={buy:['index'],choose:['index'],'choose-chest':['index'],equip:['itemIndex'],unequip:['itemIndex'],combine:['indexA','indexB']}[action.type]||[];
+  const indexKeys={buy:['index'],choose:['index'],'choose-chest':['index'],'choose-supply':['index'],'choose-encounter':['index'],'refresh-strategy':['index'],equip:['itemIndex'],unequip:['itemIndex'],combine:['indexA','indexB']}[action.type]||[];
   if(indexKeys.some(key=>!Number.isInteger(action[key])||action[key]<0))return fail('请选择有效的位置。');
+  if(action.type==='choose-environment'){
+    if(state.phase!=='environment')return fail('当前不在投资环境选择阶段。');
+    const response=chooseEnvironment(state,action.id);if(!response.ok)return response;
+    if(response.replaceStarter){state.units=[];state.loot=state.loot.filter(o=>o.source!=='初始补给');}
+    queueRewards(state,response.rewards,'投资环境');enterNode(state);prepareClassicNode(state);return response;
+  }
+  if(action.type==='reroll-environment')return state.phase==='environment'?rerollEnvironments(state):fail('当前不在投资环境选择阶段。');
+  if(action.type==='refresh-strategy'){
+    if(state.phase!=='choice'||!state.flow||!state.flow.strategyRerolls[action.index])return fail('此选项没有剩余刷新次数。');
+    const old=state.choices[action.index],rarity=getEnvironmentStrategyRarity(state,state.flow.strategySelections+1,action.index);
+    const candidates=STRATEGIES.filter(s=>!s.legacy&&!has(state,s.id)&&s.planes.includes(getCurrentNode(state).plane)&&!state.choices.some(c=>c.id===s.id)&&(!rarity||s.rarity===rarity));
+    if(!candidates.length)return fail('当前品级没有其他可选策略。');
+    state.choices[action.index]={kind:'strategy',id:pick(state,candidates).id};state.flow.strategyRerolls[action.index]--;return success('投资策略已刷新');
+  }
+  if(action.type==='reroll-encounter')return fail('当前遭遇分支为固定难度与奖励，不提供无效刷新。');
+  if(action.type==='reroll-supply'){
+    if(state.phase!=='supply'||!state.flow?.supplyRerolls)return fail('没有剩余刷新次数。');
+    state.flow.supplyRerolls--;makeSupplyOffers(state);return success('补给选项已刷新');
+  }
+  if(action.type==='choose-supply'){
+    const offer=state.flow?.supplyOffers[action.index];if(state.phase!=='supply'||!offer)return fail('请选择有效补给。');
+    queueRewards(state,offer.rewards,'补给包');state.flow.supplyOffers=[];
+    if(state.flow.pendingNodeKind){state.flow.extraSupplyDone.push(state.round);state.flow.pendingNodeKind=null;state.phase='prep';}
+    else {state.flow.nodeComplete=true;state.phase='prep';}
+    return success('补给已化为晶矿，可领取后继续前进。');
+  }
+  if(action.type==='choose-encounter'){
+    const offer=state.flow?.encounterOffers[action.index];if(state.phase!=='encounter'||!offer)return fail('请选择有效遭遇分支。');
+    state.flow.selectedEncounter=clone(offer);state.flow.encounterOffers=[];state.phase='prep';return success(`已选择${offer.name}，调整阵容后出战。`);
+  }
+  if(action.type==='next-node'){
+    if(state.phase!=='prep'||!state.flow?.nodeComplete||state.activeChest)return fail('请先完成当前节点。');
+    return advanceClassicNode(state);
+  }
   if(action.type==='next') {
+    if(isClassicRun(state)){
+      if(state.phase==='prep'&&state.flow.nodeComplete&&!state.activeChest)return advanceClassicNode(state);
+      if(state.phase!=='result')return fail('请先完成当前节点。');
+      return advanceClassicNode(state);
+    }
     if(state.phase!=='result')return fail('请先完成本回合战斗。');
     if(state.hp<=0||state.round===ROUND_COUNT) {
       state.phase='ended';state.result=state.hp>0&&state.lastBattle.won?'victory':'defeat';
@@ -274,8 +387,10 @@ function runAction(state,action) {
     let name;
     if(choice.kind==='strategy') {
       gainStrategy(state,choice.id);name=strategies.get(choice.id).name;
+      if(state.flow){state.flow.strategySelections++;queueRewards(state,onEnvironmentEvent(state,{type:'strategy',count:state.flow.strategySelections}),'投资环境');}
     } else {state.inventory.push(choice.id);name=getEquipment(choice.id).name;}
     state.choices=[];state.choiceKind=null;state.phase='prep';
+    if(state.flow?.pendingNodeKind){const pending=state.flow.pendingNodeKind;state.flow.extraStrategyDone.push(state.round);state.flow.pendingNodeKind=null;if(pending==='supply')makeSupplyOffers(state);if(pending==='encounter')makeEncounterOffers(state);}
     return success(`已获得「${name}」`);
   }
   if(state.phase!=='prep')return fail('请先完成当前结算或奖励选择。');
@@ -284,7 +399,7 @@ function runAction(state,action) {
     case 'collect-loot': {
       const index=state.loot.findIndex(o=>o.uid===action.uid);if(index<0)return fail('晶矿已经领取。');
       const result=grantRewards(state,state.loot[index].contents);if(!result.ok)return result;
-      state.loot.splice(index,1);return result;
+      state.loot.splice(index,1);queueRewards(state,onEnvironmentEvent(state,{type:'collect-loot'}),'投资环境');return result;
     }
     case 'open-chest': {
       if(!state.chests.some(c=>c.uid===action.uid))return fail('武装箱不存在。');
@@ -320,7 +435,7 @@ function runAction(state,action) {
       if(state.gold<cost)return fail('刷新商店的金币不足。');
       if(cost) {spend(state,cost);addXp(state,sumEffect(state,'paidRefreshXp'));}
       else state.freeRefreshes--;
-      rollShop(state);return success(cost?'商店已刷新':`免费刷新成功，剩余 ${state.freeRefreshes} 次`);
+      rollShop(state);queueRewards(state,onEnvironmentEvent(state,{type:'refresh',paid:cost>0}),'投资环境');return success(cost?'商店已刷新':`免费刷新成功，剩余 ${state.freeRefreshes} 次`);
     }
     case 'lock':state.locked=!state.locked;return success(state.locked?'商店已锁定，下回合保留。':'已解除商店锁定');
     case 'exp': {
@@ -350,20 +465,15 @@ function runAction(state,action) {
     }
     case 'sell': {
       const index=state.units.findIndex(u=>u.uid===action.uid);if(index<0)return fail('角色不存在。');
-      const unit=state.units[index],value=unitCost(state,unit)*3**(unit.star-1);
+      const unit=state.units[index],value=getSellPrice(state,unit);
       for(const [id,uid] of Object.entries(state.progression.day.assignments))if(uid===unit.uid)delete state.progression.day.assignments[id];
       for(const [id,uid] of Object.entries(state.progression.gamer.accessoryOwners||{}))if(uid===unit.uid)delete state.progression.gamer.accessoryOwners[id];
       state.gold+=value;state.inventory.push(...unit.items);state.units.splice(index,1);
       return success(`已出售，获得 ${value} 金币；装备已返还。`);
     }
     case 'equip': {
-      const unit=state.units.find(u=>u.uid===action.uid),item=state.inventory[action.itemIndex];
-      if(!unit||!getEquipment(item))return fail('请选择角色和有效装备。');
-      if(getEquipment(item).unique&&unit.items.some(key=>baseItemId(key)===baseItemId(item)))return fail('同一角色不能重复穿戴这件唯一装备。');
-      if((getEquipment(item).exclusiveSlots&&(unit.items.length||daySlots(state,unit.uid)))||unit.items.some(id=>getEquipment(id).exclusiveSlots))return fail('随便骰子需要三个空装备栏，并占用另外两栏。');
-      if(unit.items.length+daySlots(state,unit.uid)>=3)return fail('每位角色最多携带 3 件装备（包含白昼装备）。');
-      unit.items.push(item);state.inventory.splice(action.itemIndex,1);
-      return success(`${getCharacter(unit.characterId).name}已装备${getEquipment(item).name}`);
+      const response=equipCraftingItem(state,action.uid,action.itemIndex);
+      if(response.ok&&response.crafted)state.freeRefreshes+=sumEffect(state,'combineFreeRefreshes');return response;
     }
     case 'unequip': {
       const unit=state.units.find(u=>u.uid===action.uid);
@@ -371,46 +481,49 @@ function runAction(state,action) {
       state.inventory.push(unit.items.splice(action.itemIndex,1)[0]);return success('装备已放回仓库');
     }
     case 'combine': {
-      const {indexA,indexB}=action;
-      const a=state.inventory[indexA],b=state.inventory[indexB];
-      if(indexA===indexB||!getEquipment(a)||!getEquipment(b))return fail('请选择两件不同的简易装备。');
-      if(getEquipment(a).tier!==1||getEquipment(b).tier!==1)return fail('进阶装备不能继续合成。');
-      const result=RECIPES[[a,b].sort().join('+')];
-      if(!result)return fail('这两件装备没有合成配方。');
-      for(const index of [indexA,indexB].sort((x,y)=>y-x))state.inventory.splice(index,1);
-      state.inventory.push(result);state.freeRefreshes+=sumEffect(state,'combineFreeRefreshes');return success(`合成成功：${getEquipment(result).name}`);
+      const response=combineInventoryItems(state,action.indexA,action.indexB);
+      if(response.ok)state.freeRefreshes+=sumEffect(state,'combineFreeRefreshes');return response;
     }
     case 'battle': {
+      if(isClassicRun(state)&&getCurrentNode(state).type==='supply')return fail('补给节点无需战斗，请领取补给并继续。');
       if(!state.units.some(u=>u.zone==='front'))return fail('至少部署一名前台角色才能开始战斗。');
       const enemy=getEnemy(state),playerPower=getTeamPower(state);
       const company=getSynergies(state).find(s=>s.id==='ipc');
       const companyGold=!enemy.boss&&company?.active?(company.count>=3?3:1):0;
       state.gold+=companyGold;
-      const combat=simulateCombat(state);
+      const node=getCurrentNode(state),classic=isClassicRun(state);
+      const combat=simulateCombat(state,{enemyLineup:enemy.units,maxActions:node.type==='reward'?180:100});
       const won=combat.winner==='ally';
-      const damage=won?0:Math.max(3,Math.round(9+state.round*1.4+(enemy.boss?5:0)-(has(state,'fortress')?4:0)));
+      const remainingHp=combat.final.filter(u=>u.side==='enemy').reduce((sum,u)=>sum+Math.max(0,u.hp),0),totalHp=enemy.units.reduce((sum,u)=>sum+u.maxHp,0);
+      const progress=won?100:Math.max(0,Math.min(99,Math.floor((1-remainingHp/totalHp)*100)));
+      const damage=won?0:classic?Math.max(2,Math.ceil((1-progress/100)*(12+node.plane*6+(enemy.boss?6:0)))):Math.max(3,Math.round(9+state.round*1.4+(enemy.boss?5:0)-(has(state,'fortress')?4:0)));
       const interest=getInterest(state);
-      state.streak=won?Math.max(1,state.streak+1):Math.min(-1,state.streak-1);
+      state.streak=won?Math.max(1,state.streak+1):classic?0:Math.min(-1,state.streak-1);
       const streakBonus=Math.min(3,Math.floor(Math.abs(state.streak)/2));
-      const income=8+interest+streakBonus+(won?2:0)+(has(state,'dividend')?3:0)+(won&&has(state,'momentum')?3:0);
+      const baseIncome=classic?5:8,victoryIncome=won?(classic?1:2):0;
+      const income=baseIncome+interest+streakBonus+victoryIncome+(has(state,'dividend')?3:0)+(won&&has(state,'momentum')?3:0);
       let healing=(has(state,'recovery')?5:0)+sumEffect(state,'battleHeal');
       // A lethal defeat cannot be undone by post-battle healing.
       state.hp=state.hp-damage<=0?0:Math.min(getMaxHp(state),state.hp-damage+healing);
       state.gold+=income;state[won?'wins':'losses']++;
       const growthRewards=onBattleResolved(state,combat);
       queueRewards(state,growthRewards,'战后羁绊奖励');
-      if(won&&enemy.boss)queueRewards(state,[{kind:'chest',quality:state.round>=8?'privileged':'advanced'},{kind:'gold',amount:5}],'首领晶矿');
+      if(won&&enemy.boss)queueRewards(state,[{kind:'chest',quality:node.plane>=2?'privileged':'advanced'},{kind:'gold',amount:5}],'首领晶矿');
+      if(classic&&won&&node.type==='reward')queueRewards(state,[{kind:'gold',amount:4+node.plane*2},{kind:'chest',quality:'basic'},{kind:'item',id:pick(state,EQUIPMENT.filter(e=>e.tier===1)).id}],'奖励节点晶矿');
+      if(classic&&won&&node.type==='encounter'&&state.flow.selectedEncounter)queueRewards(state,state.flow.selectedEncounter.rewards,'遭遇奖励');
       const logs=combat.events.map(event=>event.text);
       if(healing&&state.hp>0)logs.push(`战后恢复生效，回复 ${healing} 点小队生命（最高 ${getMaxHp(state)}）。`);
-      const rewards=[`基础收入 +8`,`利息 +${interest}`,`连续战绩 +${streakBonus}`];
+      const rewards=[`基础收入 +${baseIncome}`,getRunMode(state).interest?`利息 +${interest}`:'超频模式无利息',`连胜奖励 +${streakBonus}`];
       if(companyGold)rewards.push(`公司羁绊 +${companyGold}`);
-      if(won)rewards.push('胜利奖励 +2');
+      if(won)rewards.push(`胜利奖励 +${victoryIncome}`);
       if(has(state,'dividend'))rewards.push('稳定分红 +3');
       if(won&&has(state,'momentum'))rewards.push('乘胜追投 +3');
       if(growthRewards.length)rewards.push(`羁绊产出 ${growthRewards.length} 枚晶矿，返回备战后领取`);
       if(won&&enemy.boss)rewards.push('首领晶矿已掉落，返回备战后领取');
-      state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing,combat};
-      state.history.push({round:state.round,won,damage,income,playerPower,enemyPower:enemy.power,turns:combat.turns,reason:combat.reason});
+      state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing,combat,nodeLabel:node.label,nodeType:node.type,progress};
+      state.history.push({round:state.round,nodeLabel:node.label,nodeType:node.type,won,damage,income,playerPower,enemyPower:enemy.power,turns:combat.turns,reason:combat.reason});
+      queueRewards(state,onEnvironmentEvent(state,{type:'interest',amount:interest}),'投资环境');
+      queueRewards(state,onEnvironmentEvent(state,{type:'battle',key:String(state.round),battle:state.lastBattle}),'投资环境');
       state.phase='result';return success(won?'战斗胜利':'战斗结束');
     }
     default:return fail('未知操作。');
@@ -424,6 +537,7 @@ export function act(state,action) {
   if(response.ok) {
     if(['buy','exp','refresh'].includes(action.type))queueRewards(draft,onManagementAction(draft,action,{goldSpent:Math.max(0,draft.goldSpentThisNode-state.goldSpentThisNode),xp:action.type==='exp'?(has(state,'growth')?6:4):0}),'圣杯试炼');
     else queueRewards(draft,onRosterChanged(draft),'羁绊奖励');
+    queueRewards(draft,onEnvironmentEvent(draft,{type:'roster'}),'投资环境');
     refreshProgression(draft);
     Object.assign(state,draft);
   }
@@ -453,11 +567,17 @@ export function migrateState(saved) {
 }
 
 export function validateState(state) {
-  if(!state||state.version!==3||state.ruleset!=='zero-sum'||!validateLoot(state)||!validateProgression(state))return false;
-  if(!['prep','result','choice','ended'].includes(state.phase))return false;
+  if(!state||state.version!==3||state.ruleset!=='zero-sum'||!validateLoot(state)||!validateProgression(state)||!validateFlow(state)||!validateEnvironment(state))return false;
+  if(!['prep','result','choice','ended','environment','supply','encounter'].includes(state.phase))return false;
+  if(isClassicRun(state)){
+    if(!state.environment)return false;
+    if(state.phase==='environment'){
+      if(state.round!==1||state.environment.id!==null||state.environment.choices.length!==3)return false;
+    }else if(!state.environment.id)return false;
+  }
   for(const key of ['round','hp','gold','level','xp','rng','seed','nextUid','streak','wins','losses','freeRefreshes','goldSpentThisNode'])if(!Number.isFinite(state[key])||!Number.isInteger(state[key]))return false;
-  if(state.round<1||state.round>ROUND_COUNT||state.hp<0||state.gold<0||state.level<4||state.level>MAX_LEVEL||state.xp<0||state.freeRefreshes<0||state.goldSpentThisNode<0)return false;
-  if(state.nextUid<1||state.wins<0||state.losses<0||(state.level<MAX_LEVEL&&state.xp>=LEVEL_XP[state.level])||(state.level===MAX_LEVEL&&state.xp!==0))return false;
+  if(state.round<1||state.round>getRunLength(state)||state.hp<0||state.gold<0||state.level<4||state.level>MAX_LEVEL||state.xp<0||state.freeRefreshes<0||state.goldSpentThisNode<0)return false;
+  if(state.nextUid<1||state.wins<0||state.losses<0||(state.level<MAX_LEVEL&&state.xp>=getLevelXp(state))||(state.level===MAX_LEVEL&&state.xp!==0))return false;
   if(!Array.isArray(state.units)||state.units.length>getPopulationLimit(state)+BENCH_CAPACITY||!Array.isArray(state.inventory)||!Array.isArray(state.shop)||state.shop.length!==5)return false;
   if(!Array.isArray(state.strategies)||!state.strategies.every(id=>strategyIds.has(id))||new Set(state.strategies).size!==state.strategies.length)return false;
   if(state.hp>getMaxHp(state)||!state.strategyState||typeof state.strategyState!=='object'||Array.isArray(state.strategyState))return false;

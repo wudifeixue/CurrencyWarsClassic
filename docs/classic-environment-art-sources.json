@@ -1,0 +1,457 @@
+[
+  {
+    "id": "secondhand",
+    "name": "二手市场",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e0/i6pt5fzaxrive3qznoqgdxo3uytj2hr.png",
+    "path": "assets/environments/classic-secondhand.png",
+    "source": "https://wiki.biligame.com/sr/二手市场"
+  },
+  {
+    "id": "talent-reserve",
+    "name": "人才储备",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f9/dk3j5k93j48igkrrm5xw2ub2kobccj3.png",
+    "path": "assets/environments/classic-talent-reserve.png",
+    "source": "https://wiki.biligame.com/sr/人才储备"
+  },
+  {
+    "id": "talent-import",
+    "name": "人才引进",
+    "url": "https://patchwiki.biligame.com/images/sr/6/6d/13kwl48pa9k383n614jnxpl7kaeo448.png",
+    "path": "assets/environments/classic-talent-import.png",
+    "source": "https://wiki.biligame.com/sr/人才引进"
+  },
+  {
+    "id": "accident-insurance",
+    "name": "人身意外险",
+    "url": "https://patchwiki.biligame.com/images/sr/8/89/6sqby5uqnssryfc0eejrxrvnarandyk.png",
+    "path": "assets/environments/classic-accident-insurance.png",
+    "source": "https://wiki.biligame.com/sr/人身意外险"
+  },
+  {
+    "id": "company-contract",
+    "name": "公司契约",
+    "url": "https://patchwiki.biligame.com/images/sr/6/61/8zh8x3w2fzvtof29dvx34z3f2kl4zxm.png",
+    "path": "assets/environments/classic-company-contract.png",
+    "source": "https://wiki.biligame.com/sr/公司契约"
+  },
+  {
+    "id": "labor-contract",
+    "name": "劳务派遣合同",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a5/kxjaxabjfylk880jwyjv0zcbp7b9srm.png",
+    "path": "assets/environments/classic-labor-contract.png",
+    "source": "https://wiki.biligame.com/sr/劳务派遣合同"
+  },
+  {
+    "id": "grail-contract",
+    "name": "命运圣杯契约",
+    "url": "https://patchwiki.biligame.com/images/sr/2/21/ahz4l42mbvvtf3fj8p433235et4335q.png",
+    "path": "assets/environments/classic-grail-contract.png",
+    "source": "https://wiki.biligame.com/sr/命运圣杯契约"
+  },
+  {
+    "id": "currency-issue",
+    "name": "增发货币",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f3/jvba03pos38kv9w237b9yaw4mgg32qy.png",
+    "path": "assets/environments/classic-currency-issue.png",
+    "source": "https://wiki.biligame.com/sr/增发货币"
+  },
+  {
+    "id": "first-prismatic",
+    "name": "头彩",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e5/78qric2hyfmiacvk3celku8vwdwzsu0.png",
+    "path": "assets/environments/classic-first-prismatic.png",
+    "source": "https://wiki.biligame.com/sr/头彩"
+  },
+  {
+    "id": "last-prismatic",
+    "name": "尾彩",
+    "url": "https://patchwiki.biligame.com/images/sr/3/3e/9e230ewxq7hsuc6tduknksd1fe1y9ph.png",
+    "path": "assets/environments/classic-last-prismatic.png",
+    "source": "https://wiki.biligame.com/sr/尾彩"
+  },
+  {
+    "id": "rainbow",
+    "name": "彩虹时代",
+    "url": "https://patchwiki.biligame.com/images/sr/1/1d/06wff1e95fov7iqwx80juqv0xv3bgc7.png",
+    "path": "assets/environments/classic-rainbow.png",
+    "source": "https://wiki.biligame.com/sr/彩虹时代"
+  },
+  {
+    "id": "success-experience",
+    "name": "成功经验",
+    "url": "https://patchwiki.biligame.com/images/sr/1/14/e70qxsfl0x47v0wzo2smakagll5vfxt.png",
+    "path": "assets/environments/classic-success-experience.png",
+    "source": "https://wiki.biligame.com/sr/成功经验"
+  },
+  {
+    "id": "war-frontier",
+    "name": "战争边疆",
+    "url": "https://patchwiki.biligame.com/images/sr/9/98/suish6631defw55y32cs2mxinknv5o4.png",
+    "path": "assets/environments/classic-war-frontier.png",
+    "source": "https://wiki.biligame.com/sr/战争边疆"
+  },
+  {
+    "id": "sp-contract",
+    "name": "战技点契约",
+    "url": "https://patchwiki.biligame.com/images/sr/a/ab/ozvoltw6rzkl34it3i15x73nzz15ni4.png",
+    "path": "assets/environments/classic-sp-contract.png",
+    "source": "https://wiki.biligame.com/sr/战技点契约"
+  },
+  {
+    "id": "elation-contract",
+    "name": "欢愉契约",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9e/rtcmfndn9xbynxnnvi15mo3qs8b4sld.png",
+    "path": "assets/environments/classic-elation-contract.png",
+    "source": "https://wiki.biligame.com/sr/欢愉契约"
+  },
+  {
+    "id": "deepwell",
+    "name": "深井角斗场",
+    "url": "https://patchwiki.biligame.com/images/sr/5/56/h8lnjfbgmpcso6ep6j17u4q0w04sk9v.png",
+    "path": "assets/environments/classic-deepwell.png",
+    "source": "https://wiki.biligame.com/sr/深井角斗场"
+  },
+  {
+    "id": "gunpowder",
+    "name": "火药味",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7e/tmokloahgsflcnhid20ejlgyp3u67ph.png",
+    "path": "assets/environments/classic-gunpowder.png",
+    "source": "https://wiki.biligame.com/sr/火药味"
+  },
+  {
+    "id": "privileged-class",
+    "name": "特权阶级",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e7/cmb1wprvpk5zi116sar9y6ocob6xn5b.png",
+    "path": "assets/environments/classic-privileged-class.png",
+    "source": "https://wiki.biligame.com/sr/特权阶级"
+  },
+  {
+    "id": "silver-age",
+    "name": "白银时代",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c3/awm4i6otlznfnbjpz1i516u175bra5q.png",
+    "path": "assets/environments/classic-silver-age.png",
+    "source": "https://wiki.biligame.com/sr/白银时代"
+  },
+  {
+    "id": "strategy-master",
+    "name": "策略大师",
+    "url": "https://patchwiki.biligame.com/images/sr/7/74/iykf2wwaykmddpj5dkkkxyn0cwr2ibv.png",
+    "path": "assets/environments/classic-strategy-master.png",
+    "source": "https://wiki.biligame.com/sr/策略大师"
+  },
+  {
+    "id": "red-nobility",
+    "name": "红钻贵族",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e8/o2bg287ioiahdzugrzyt49m5u11c67a.png",
+    "path": "assets/environments/classic-red-nobility.png",
+    "source": "https://wiki.biligame.com/sr/红钻贵族"
+  },
+  {
+    "id": "joint-decision",
+    "name": "联席决策",
+    "url": "https://patchwiki.biligame.com/images/sr/0/06/2vn41ne08yw4yq0jo6a2k66b5mvtf6y.png",
+    "path": "assets/environments/classic-joint-decision.png",
+    "source": "https://wiki.biligame.com/sr/联席决策"
+  },
+  {
+    "id": "blue-ocean",
+    "name": "蓝海",
+    "url": "https://patchwiki.biligame.com/images/sr/1/16/ljujcazy0mz93nn6ax5tibvepyt5tqr.png",
+    "path": "assets/environments/classic-blue-ocean.png",
+    "source": "https://wiki.biligame.com/sr/蓝海"
+  },
+  {
+    "id": "blue-nobility",
+    "name": "蓝钻贵族",
+    "url": "https://patchwiki.biligame.com/images/sr/e/ea/898pqm3opntamipa0clbg28frc8g2la.png",
+    "path": "assets/environments/classic-blue-nobility.png",
+    "source": "https://wiki.biligame.com/sr/蓝钻贵族"
+  },
+  {
+    "id": "rotation",
+    "name": "轮岗",
+    "url": "https://patchwiki.biligame.com/images/sr/4/49/m9e117mv7ngyaav626vp1ttqtdd3zxw.png",
+    "path": "assets/environments/classic-rotation.png",
+    "source": "https://wiki.biligame.com/sr/轮岗"
+  },
+  {
+    "id": "excess-budget",
+    "name": "过剩经费",
+    "url": "https://patchwiki.biligame.com/images/sr/0/01/5w7se2msw0onvmsv6d30ca2n0d8b4ua.png",
+    "path": "assets/environments/classic-excess-budget.png",
+    "source": "https://wiki.biligame.com/sr/过剩经费"
+  },
+  {
+    "id": "evolution-algorithm",
+    "name": "进化算法",
+    "url": "https://patchwiki.biligame.com/images/sr/5/54/5fmo4daqv6io6auxfea4bve324pqgk8.png",
+    "path": "assets/environments/classic-evolution-algorithm.png",
+    "source": "https://wiki.biligame.com/sr/进化算法"
+  },
+  {
+    "id": "quantum-contract",
+    "name": "量子同频契约",
+    "url": "https://patchwiki.biligame.com/images/sr/1/13/0ff7lwcvx5d923zgw0vpmqp1sskwrao.png",
+    "path": "assets/environments/classic-quantum-contract.png",
+    "source": "https://wiki.biligame.com/sr/量子同频契约"
+  },
+  {
+    "id": "silver-gold-prismatic",
+    "name": "银•金•彩",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7c/5lplvji49jzbco40n48vnayh0y8ez91.png",
+    "path": "assets/environments/classic-silver-gold-prismatic.png",
+    "source": "https://wiki.biligame.com/sr/银•金•彩"
+  },
+  {
+    "id": "long-positive",
+    "name": "长线利好",
+    "url": "https://patchwiki.biligame.com/images/sr/9/9a/tggj9feutdi9bssp5p9am25plig6g00.png",
+    "path": "assets/environments/classic-long-positive.png",
+    "source": "https://wiki.biligame.com/sr/长线利好"
+  },
+  {
+    "id": "gold-age",
+    "name": "黄金时代",
+    "url": "https://patchwiki.biligame.com/images/sr/3/31/req777t3jg99rbmp76f5bbj089zoul3.png",
+    "path": "assets/environments/classic-gold-age.png",
+    "source": "https://wiki.biligame.com/sr/黄金时代"
+  },
+  {
+    "id": "invite-luofu",
+    "name": "仙舟邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/a/ab/lbgf1r7d24lr6udytiylxidwxh9v5qf.png",
+    "path": "assets/environments/classic-invite-luofu.png",
+    "source": "https://wiki.biligame.com/sr/仙舟邀请"
+  },
+  {
+    "id": "concept-luofu",
+    "name": "仙舟概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d1/tqy5ko7eyxl5f0rspqdj3kqc8jwx2oi.png",
+    "path": "assets/environments/classic-concept-luofu.png",
+    "source": "https://wiki.biligame.com/sr/仙舟概念股"
+  },
+  {
+    "id": "invite-debuff",
+    "name": "减益邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/b/bb/6ttb4eme75y9y0fkwdopzksznw31t8k.png",
+    "path": "assets/environments/classic-invite-debuff.png",
+    "source": "https://wiki.biligame.com/sr/减益邀请"
+  },
+  {
+    "id": "concept-debuff",
+    "name": "减益概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/5/58/gdw8r9bedz9gge6uga3ksqj2ewosigi.png",
+    "path": "assets/environments/classic-concept-debuff.png",
+    "source": "https://wiki.biligame.com/sr/减益概念股"
+  },
+  {
+    "id": "invite-break",
+    "name": "击破邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e4/t0ci505hgsafopp62k5g8uod5olpt8w.png",
+    "path": "assets/environments/classic-invite-break.png",
+    "source": "https://wiki.biligame.com/sr/击破邀请"
+  },
+  {
+    "id": "concept-break",
+    "name": "击破概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/b/bd/hw1s6q5196nxbiestwdzq94xt7b6iwr.png",
+    "path": "assets/environments/classic-concept-break.png",
+    "source": "https://wiki.biligame.com/sr/击破概念股"
+  },
+  {
+    "id": "invite-express",
+    "name": "列车同行邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/0/0b/eifousb8077q0qxavwbw2fgrhvybbam.png",
+    "path": "assets/environments/classic-invite-express.png",
+    "source": "https://wiki.biligame.com/sr/列车同行邀请"
+  },
+  {
+    "id": "concept-express",
+    "name": "列车同行概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e0/gungz3hihejgtp3r7puw9qbhbkk85ig.png",
+    "path": "assets/environments/classic-concept-express.png",
+    "source": "https://wiki.biligame.com/sr/列车同行概念股"
+  },
+  {
+    "id": "invite-grail",
+    "name": "命运圣杯邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/f/fe/lsh77xn1qxjtmp4qhdg83kkonp3s053.png",
+    "path": "assets/environments/classic-invite-grail.png",
+    "source": "https://wiki.biligame.com/sr/命运圣杯邀请"
+  },
+  {
+    "id": "invite-night",
+    "name": "夜之半神邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/1/1b/078151jexa3a5ci65q5d5kzrkmj3te8.png",
+    "path": "assets/environments/classic-invite-night.png",
+    "source": "https://wiki.biligame.com/sr/夜之半神邀请"
+  },
+  {
+    "id": "concept-night",
+    "name": "夜之半神概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/0/0d/s7469ukqy1llzbngoh63rk4hu7ec3ji.png",
+    "path": "assets/environments/classic-concept-night.png",
+    "source": "https://wiki.biligame.com/sr/夜之半神概念股"
+  },
+  {
+    "id": "invite-sp",
+    "name": "战技点邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/d/de/o7cngc0pzwl8fm8yzuz9lnvv285qgxv.png",
+    "path": "assets/environments/classic-invite-sp.png",
+    "source": "https://wiki.biligame.com/sr/战技点邀请"
+  },
+  {
+    "id": "invite-dot",
+    "name": "持续伤害邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/0/0a/1vgtih3pxkbtcz2yeoq7fvxv659qdyb.png",
+    "path": "assets/environments/classic-invite-dot.png",
+    "source": "https://wiki.biligame.com/sr/持续伤害邀请"
+  },
+  {
+    "id": "invite-wanderer",
+    "name": "星间旅人邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/5/57/jto9s9d2if9ygydzon8awvom4txy9iz.png",
+    "path": "assets/environments/classic-invite-wanderer.png",
+    "source": "https://wiki.biligame.com/sr/星间旅人邀请"
+  },
+  {
+    "id": "concept-wanderer",
+    "name": "星间旅人概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/7/78/nu4sore0a5u0e09hzh56ewp3px0d9sg.png",
+    "path": "assets/environments/classic-concept-wanderer.png",
+    "source": "https://wiki.biligame.com/sr/星间旅人概念股"
+  },
+  {
+    "id": "invite-day",
+    "name": "昼之半神邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a1/jcza2rxgc9nmgccudh005f0jvo6uji5.png",
+    "path": "assets/environments/classic-invite-day.png",
+    "source": "https://wiki.biligame.com/sr/昼之半神邀请"
+  },
+  {
+    "id": "concept-day",
+    "name": "昼之半神概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/0/00/ll65lgkf1zbn6qx0fkwskpl6fpdtgc8.png",
+    "path": "assets/environments/classic-concept-day.png",
+    "source": "https://wiki.biligame.com/sr/昼之半神概念股"
+  },
+  {
+    "id": "invite-elation",
+    "name": "欢愉邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/7/77/rxjoh43xyeevleq6qa039cghd2cnggj.png",
+    "path": "assets/environments/classic-invite-elation.png",
+    "source": "https://wiki.biligame.com/sr/欢愉邀请"
+  },
+  {
+    "id": "invite-blood",
+    "name": "燃血邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d4/rnygtt9k694rxi40y9r5dicc5hyi96v.png",
+    "path": "assets/environments/classic-invite-blood.png",
+    "source": "https://wiki.biligame.com/sr/燃血邀请"
+  },
+  {
+    "id": "concept-blood",
+    "name": "燃血概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/f/fa/mncqpofg4z1wqqxduitqn0scbomeuw5.png",
+    "path": "assets/environments/classic-concept-blood.png",
+    "source": "https://wiki.biligame.com/sr/燃血概念股"
+  },
+  {
+    "id": "invite-wolfpack",
+    "name": "狼狩邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/c/cc/blke0wvlwexol0f0css3htit9ka1lc0.png",
+    "path": "assets/environments/classic-invite-wolfpack.png",
+    "source": "https://wiki.biligame.com/sr/狼狩邀请"
+  },
+  {
+    "id": "concept-wolfpack",
+    "name": "狼狩概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f9/5sgnzcv0wjr8syh8xlexyxscbilmxzh.png",
+    "path": "assets/environments/classic-concept-wolfpack.png",
+    "source": "https://wiki.biligame.com/sr/狼狩概念股"
+  },
+  {
+    "id": "invite-festival",
+    "name": "盛会之星邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/0/04/7imryumpcoj3m4lnjapvujriudk1a15.png",
+    "path": "assets/environments/classic-invite-festival.png",
+    "source": "https://wiki.biligame.com/sr/盛会之星邀请"
+  },
+  {
+    "id": "invite-aoe",
+    "name": "群攻邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/6/62/7jbsp56c24afit9dqxacagcqybdx9cf.png",
+    "path": "assets/environments/classic-invite-aoe.png",
+    "source": "https://wiki.biligame.com/sr/群攻邀请"
+  },
+  {
+    "id": "concept-aoe",
+    "name": "群攻概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a5/9fuub9x1crxu8ns0ujb7s7kuzixs7k0.png",
+    "path": "assets/environments/classic-concept-aoe.png",
+    "source": "https://wiki.biligame.com/sr/群攻概念股"
+  },
+  {
+    "id": "invite-energy",
+    "name": "能量邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f6/fi78to9eyjzo3z8l5bmboegcwbss6o6.png",
+    "path": "assets/environments/classic-invite-energy.png",
+    "source": "https://wiki.biligame.com/sr/能量邀请"
+  },
+  {
+    "id": "concept-energy",
+    "name": "能量概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c8/isyqpjx16nnabyg0wu0gxm4xfxia3dp.png",
+    "path": "assets/environments/classic-concept-energy.png",
+    "source": "https://wiki.biligame.com/sr/能量概念股"
+  },
+  {
+    "id": "invite-belobog",
+    "name": "贝洛伯格邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/1/10/1nrp2l49jqkq8d511cdrrdpam4m63pz.png",
+    "path": "assets/environments/classic-invite-belobog.png",
+    "source": "https://wiki.biligame.com/sr/贝洛伯格邀请"
+  },
+  {
+    "id": "concept-belobog",
+    "name": "贝洛伯格概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d3/928sgqz4ywnz4i89xqp4v69e54pz12p.png",
+    "path": "assets/environments/classic-concept-belobog.png",
+    "source": "https://wiki.biligame.com/sr/贝洛伯格概念股"
+  },
+  {
+    "id": "invite-follow",
+    "name": "追击邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/4/45/376dxuibkkr1yv17qnj0hnup8tobq0s.png",
+    "path": "assets/environments/classic-invite-follow.png",
+    "source": "https://wiki.biligame.com/sr/追击邀请"
+  },
+  {
+    "id": "concept-follow",
+    "name": "追击概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5b/aenc9he0aphqnuthbtogbjzr0enro46.png",
+    "path": "assets/environments/classic-concept-follow.png",
+    "source": "https://wiki.biligame.com/sr/追击概念股"
+  },
+  {
+    "id": "invite-quantum",
+    "name": "量子同频邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/2/28/6wyybsj0mpxgwxw76hp0ymn2s8a42ki.png",
+    "path": "assets/environments/classic-invite-quantum.png",
+    "source": "https://wiki.biligame.com/sr/量子同频邀请"
+  },
+  {
+    "id": "invite-scholar",
+    "name": "银河学者邀请",
+    "url": "https://patchwiki.biligame.com/images/sr/b/bc/44yd20cl1pekkd0nwtu1zirgsofvoqz.png",
+    "path": "assets/environments/classic-invite-scholar.png",
+    "source": "https://wiki.biligame.com/sr/银河学者邀请"
+  },
+  {
+    "id": "concept-scholar",
+    "name": "银河学者概念股",
+    "url": "https://patchwiki.biligame.com/images/sr/a/ae/b1kqf7tllt6lbczd1ywt5wr63wzbnot.png",
+    "path": "assets/environments/classic-concept-scholar.png",
+    "source": "https://wiki.biligame.com/sr/银河学者概念股"
+  }
+]

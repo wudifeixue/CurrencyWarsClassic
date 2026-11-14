@@ -94,7 +94,7 @@ test('result overview and damage pages use the same saved run and expose both pa
   freeze(state);
   const overview = resultScreen(state, { view: 'overview' });
   const damage = resultScreen(state, { view: 'damage' });
-  assert.match(overview, /已完成 2 \/ 12 关/);
+  assert.match(overview, /当前进度 2 \/ 12 节点/);
   assert.ok(overview.includes(`${state.wins} / ${state.losses}`));
   for (const html of [overview, damage]) {
     assert.match(html, /data-action="result-view" data-view="overview"/);

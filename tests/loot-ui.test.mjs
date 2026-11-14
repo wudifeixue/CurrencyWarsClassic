@@ -32,7 +32,8 @@ test('duplicate inventory icons preserve the exact first item index and special 
   const html=inventoryContents({inventory,chests:[],consumables:[]});
   assert.equal((html.match(/data-action="item"/g)||[]).length,5);
   assert.match(html,/is-privileged/);assert.match(html,/inventory-count">2/);
-  assert.doesNotMatch(html,/classic-privileged:|classic-trait-day|classic-wealth-gem/);
+  assert.doesNotMatch(html,/classic-privileged:|classic-trait-day/);
+  assert.match(html,/assets\/equipment\/classic-wealth-gem\.png/);
   for(const match of html.matchAll(/src="([^"]+)"/g))assert.ok(existsSync(new URL(`../dist/${match[1]}`,import.meta.url)),match[1]);
 });
 

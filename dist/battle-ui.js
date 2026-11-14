@@ -1,4 +1,4 @@
-import { CHARACTERS } from './data.js?v=5.0.0';
+import { CHARACTERS } from './data.js?v=6.0.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');

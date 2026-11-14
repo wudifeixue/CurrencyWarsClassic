@@ -287,3 +287,15 @@
 
 .strategy-art { width:100%; height:100%; object-fit:contain; }
 .strategy-overview .strategy-art { width:50px; height:50px; }
+
+/* Sale is an actual drag destination, kept outside the reserve slots. */
+.classic-scene .sell-zone{position:absolute;z-index:13;top:835px;width:168px;height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1px dashed #c7b5d565;background:#19142f6b;color:#dfd5eb;opacity:.7;pointer-events:auto;transition:background .15s,border-color .15s,opacity .15s;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)}
+.classic-scene .sell-zone-left{left:12px}.classic-scene .sell-zone-right{right:12px}
+.classic-scene .sell-zone .icon{width:32px;height:32px}.classic-scene .sell-zone strong{font-size:21px}.classic-scene .sell-zone b{font-size:19px;color:#f8d78e}.classic-scene .sell-zone small{font-size:14px}
+.dragging-unit .sell-zone{opacity:1;background:#4c281de8;border:2px solid #e8b76d;box-shadow:0 0 26px #c17d3b80}
+.dragging-unit .sell-zone.drag-over{background:#a4552d;border-color:#fff1be;box-shadow:0 0 35px #ffbc57b3}
+.dragging-item .roster-card.drag-over{outline:4px solid #ffe492;box-shadow:0 0 25px #fff2bc}
+.modal .sell-button{display:flex;justify-content:space-between;align-items:center;position:sticky;bottom:0;padding:14px 18px;background:linear-gradient(100deg,#583327,#302235);border:1px solid #e0b377;color:#fff2db;font-size:16px;margin-top:17px;box-shadow:0 -8px 12px #17131d}
+.modal .sell-button:hover{background:#75442f;color:white}.modal .sell-button .gold{font-weight:700}
+
+.equipment-rail [data-action="item"]{touch-action:none;user-select:none;-webkit-user-select:none}.modal .day-slot{position:relative}.modal .day-slot small{position:absolute;bottom:0;left:0;right:0;background:#181a37b3;font-size:12px}.modal .reserved-slot{font-size:13px;color:#938aa8}

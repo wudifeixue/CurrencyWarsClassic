@@ -1,10 +1,12 @@
-import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=5.0.0';
+import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.0.0';
 export { LEGACY_TRAITS };
-import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=5.0.0';
-import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=5.0.0';
-import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=5.0.0';
-import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=5.0.0';
-export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=5.0.0';
+import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.0.0';
+import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.0.0';
+import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.0.0';
+import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.0.0';
+import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.0.0';
+export { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES };
+export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.0.0';
 export { CLASSIC_SOURCE_SEASON };
 
 const oldCharacters = new Map(OLD_CHARACTERS.map(c => [c.id,c]));
@@ -31,6 +33,8 @@ export const TRAITS = CLASSIC_TRAITS;
 export const getTraitArtPath = id => ['grail','gamer','mentor','elation','navigator'].includes(id)||!TRAITS.some(t=>t.id===id)?`assets/traits/${id}.svg`:`assets/traits/classic-${id}.png`;
 export const EQUIPMENT = CLASSIC_EQUIPMENT;
 export function resolveEquipment(id) {
+  const special=SPECIAL_CRAFTING_EQUIPMENT.find(e=>e.id===id);
+  if(special)return special;
   if(id==='wealth-gem')return {id,name:'财富宝钻',tier:3,color:'#d2bdff',icon:'◆',description:'持有时团队规模上限+1，无论是否穿戴；穿戴者每经过3个备战阶段提供1金币。',passive:'wealth-gem'};
   if(typeof id==='string'&&id.startsWith('trait-')) {
     const trait=TRAITS.find(t=>t.id===id.slice(6)),definition=CLASSIC_EMBLEMS[trait?.id];
@@ -42,10 +46,10 @@ export function resolveEquipment(id) {
   return privileged?{...base,...PRIVILEGED_EQUIPMENT[baseId].stats,id,baseId,privileged:true,tier:3,name:`${base.name}·特权`,description:PRIVILEGED_EQUIPMENT[baseId].description}:base;
 }
 export function getEquipmentArtPath(id) {
-  if(id==='wealth-gem')return 'assets/loot/wealth-gem.svg';
+  if(id==='wealth-gem')return 'assets/equipment/classic-wealth-gem.png';
   const item=resolveEquipment(id);
   return item?.trait?getTraitArtPath(item.trait):`assets/equipment/classic-${item?.baseId||id}.png`;
 }
-export const RECIPES = CLASSIC_RECIPES;
+export const RECIPES = {...CLASSIC_RECIPES,...SPECIAL_CRAFTING_RECIPES};
 const strategyIds=new Set(CLASSIC_STRATEGIES.map(s=>s.id));
 export const STRATEGIES = [...CLASSIC_STRATEGIES,...OLD_STRATEGIES.filter(s=>!strategyIds.has(s.id)).map(s=>({...s,legacy:true}))];

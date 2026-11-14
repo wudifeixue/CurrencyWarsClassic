@@ -28,7 +28,7 @@ test('classic recipes cover all 36 old-season pairs with the correct named produ
   ];
   assert.equal(EQUIPMENT.filter(e=>e.tier===1).length,8);
   assert.equal(EQUIPMENT.filter(e=>e.tier===2).length,36);
-  assert.equal(Object.keys(RECIPES).length,36);
+  assert.equal(Object.entries(RECIPES).filter(([,id])=>getEquipment(id).tier===2).length,36);
   const produced=new Set();
   for(const [a,b,name] of expected)for(const [first,second] of [[a,b],[b,a]]){
     const s=createGame(3);s.inventory=['star',first,'knife',second,'armor'];
@@ -124,7 +124,7 @@ test('strategy rewards grant exact starting money, XP, equipment and free refres
     'knife-blessing':{item:'knife'},'pistol-blessing':{item:'pistol'},'star-blessing':{item:'star'},
     'flower-blessing':{item:'flower'},'armor-blessing':{item:'armor'},
   };
-  assert.equal(STRATEGIES.filter(s=>!s.legacy).length,35);
+  assert.equal(STRATEGIES.filter(s=>!s.legacy).length,59);
   for(const [id,e] of Object.entries(expected)){
     const s=choose(createGame(2),id);
     assert.equal(s.gold,16+(e.gold||0),id);assert.equal(xpTotal(s),e.xp||0,id);

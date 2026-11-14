@@ -1,5 +1,5 @@
-import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=5.0.0';
-import {getConsumable} from './loot.js?v=5.0.0';
+import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.0.0';
+import {getConsumable} from './loot.js?v=6.0.0';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);

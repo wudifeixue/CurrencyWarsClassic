@@ -33,10 +33,11 @@ test('invalid actions are atomic, and phase restrictions cannot be bypassed',()=
 test('three copies merge automatically, preserve deployment and return excess items',()=>{
   const s=createGame(2),dan=s.units.find(u=>u.characterId==='1013');
   for(const orb of [...s.loot])run(s,{type:'collect-loot',uid:orb.uid});
+  // Completed equipment remains separate; components now combine on the wearer.
+  s.inventory=['blade','garden','hard-armor','chainsaw'];
   run(s,{type:'equip',uid:dan.uid,itemIndex:0});
   run(s,{type:'buy',index:0});
   const copy=s.units.find(u=>u.characterId==='1013'&&u.uid!==dan.uid);
-  s.inventory.push('star','armor','skates');
   run(s,{type:'equip',uid:copy.uid,itemIndex:0});
   run(s,{type:'equip',uid:copy.uid,itemIndex:0});
   run(s,{type:'equip',uid:copy.uid,itemIndex:0});

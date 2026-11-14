@@ -1,10 +1,10 @@
-import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=5.0.0';
+import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=6.0.0';
 
 export const LOOT_QUALITIES=['white','blue','gold','prismatic'];
 const consumables={
   projector:{name:'员工投影仪',description:'选择一名1～3费角色，获得其1星复制体。装备和星级不会复制。',requiresTarget:true,icon:'◇'},
   'perfect-projector':{name:'完美员工投影仪',description:'选择任意费用角色，获得其1星复制体。',requiresTarget:true,icon:'◈'},
-  'privilege-card':{name:'特权卡',description:'将所选角色第一件普通进阶装备升级为同名特权装备。',requiresTarget:true,icon:'✦'},
+  'privilege-card':{name:'特权赋予卡',description:'将所选角色第一件普通进阶装备升级为同名特权装备。',requiresTarget:true,icon:'✦'},
   'reroll-dice':{name:'装备重铸骰',description:'重铸所选角色第一件普通进阶装备，保持装备品级。',requiresTarget:true,icon:'⚄'},
   'privilege-dice':{name:'特权重铸骰',description:'重铸所选角色第一件特权装备，保持特权品级。',requiresTarget:true,icon:'⚅'},
   smelter:{name:'冶金炉',description:'取下所选角色的全部装备，各自重铸为同类型随机装备并返回仓库。',requiresTarget:true,icon:'♜'},

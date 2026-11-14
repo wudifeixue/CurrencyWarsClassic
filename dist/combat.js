@@ -1,9 +1,10 @@
-import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=5.0.0';
-import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=5.0.0';
-export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=5.0.0';
-import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=5.0.0';
+import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.0.0';
+import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.0.0';
+import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.0.0';
+export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.0.0';
+import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.0.0';
 export {CLASSIC_SIMULATION_NOTE};
-import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=5.0.0';
+import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.0.0';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
 const equipmentEntries=u=>(u.items||[]).map(resolveEquipment).filter(Boolean);
@@ -115,7 +116,7 @@ export function getBattleStats(state, unit, options={}) {
   if(state.strategies.includes('recovery'))out.damageAmp+=.08;
   if(state.strategies.includes('momentum'))out.damageAmp+=.1;
   if(state.strategies.includes('fortress'))out.hpPct+=.25;
-  for(const extra of [progression.team,progression.units?.[unit.uid]])for(const [key,value]of Object.entries(extra||{}))if(typeof value==='number'&&Number.isFinite(value)){if(key==='breakEfficiency')out.breakBonus+=value;else out[key]=(out[key]||0)+value;}
+  for(const extra of [progression.team,progression.units?.[unit.uid],getEnvironmentUnitModifiers(state,unit)])for(const [key,value]of Object.entries(extra||{}))if(typeof value==='number'&&Number.isFinite(value)){if(key==='breakEfficiency')out.breakBonus+=value;else out[key]=(out[key]||0)+value;}
   const day=rules.day,ownedDay=dayEquipment(state,unit,day);
   if(day){
     for(const owner of deployed)for(const id of dayEquipment(state,owner,day))if(id==='day-hybrid'){out.frontPower+=day.enhanced?.5:.25;out.backPower+=day.enhanced?.5:.25;if(day.enhanced)out.damageAmp+=.1;}

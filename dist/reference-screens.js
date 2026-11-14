@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=5.0.0';
-import { getSynergies } from './engine.js?v=5.0.0';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.0.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice } from './engine.js?v=6.0.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -32,7 +32,7 @@ export function choiceScreen(game, selectedIndex = null) {
   const hasSelection = Boolean(selectedChoice && (selectedChoice.kind === 'strategy' ? STRATEGIES.some(s => s.id === selectedChoice.id) : selectedChoice.kind === 'equipment' && equipment(selectedChoice.id)));
   return `<div class="reference-overlay"><section class="reference-fullscreen reference-choice-screen" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
     <div class="reference-mesh" aria-hidden="true"></div>
-    <div class="reference-choice-stage">第 ${game.round} 回合 · ${isStrategy ? '投资机遇' : '装备补给'}</div>
+    <div class="reference-choice-stage">${getCurrentNode(game).label} · ${isStrategy ? '投资机遇' : '装备补给'}</div>
     <header class="reference-choice-heading"><i></i><h1 id="modal-heading">${isStrategy ? '请选择投资策略' : '请选择补给装备'}</h1><i></i></header>
     <div class="reference-choice-cards">${game.choices.map((choice, index) => {
       const item = choice.kind === 'strategy' ? STRATEGIES.find(s => s.id === choice.id) : equipment(choice.id);
@@ -40,7 +40,7 @@ export function choiceScreen(game, selectedIndex = null) {
       const chosen = index === selectedIndex;
       return `<div class="reference-choice-column"><button class="reference-choice-card ${chosen ? 'is-selected' : ''}" data-action="choice-select" data-index="${index}" aria-pressed="${chosen}" aria-label="${escape(item.name)}：${escape(item.description)}">
         <span class="reference-card-face"><span class="reference-card-foil" aria-hidden="true"></span><span class="reference-choice-emblem">${choice.kind === 'strategy' ? strategySymbol(item.id) : `<img src="${getEquipmentArtPath(item.id)}" alt="">`}</span><span class="reference-choice-copy"><strong>${escape(item.name)}</strong><span class="reference-choice-rule"></span><span class="reference-choice-description">${escape(item.description)}</span></span><span class="reference-card-detail" aria-hidden="true"></span></span>
-      </button><div class="reference-choice-caption"><span class="reference-rarity-mark">${isStrategy ? '✧' : '◇'}</span>${isStrategy ? `${escape(item.rarity)}投资策略` : '简易装备'}${chosen ? '<span class="reference-selected-caption">已选择</span>' : ''}</div></div>`;
+      </button><div class="reference-choice-caption"><span class="reference-rarity-mark">${isStrategy ? '✧' : '◇'}</span>${isStrategy ? `${escape(item.rarity)}投资策略` : '简易装备'}${chosen ? '<span class="reference-selected-caption">已选择</span>' : ''}</div>${isStrategy&&game.flow?`<button class="strategy-reroll-button" data-action="reroll-strategy" data-index="${index}" ${!game.flow.strategyRerolls[index]?'disabled':''}>↻ 刷新次数 ${game.flow.strategyRerolls[index]}</button>`:''}</div>`;
     }).join('')}</div>
     <p class="reference-choice-hint">${hasSelection ? '确认后获得所选奖励' : '选择一项奖励，然后确认'}</p>
     <button class="reference-confirm-button" data-action="choice-confirm" ${hasSelection ? '' : 'disabled'}>${check}<span>确认</span></button>
@@ -50,9 +50,10 @@ export function choiceScreen(game, selectedIndex = null) {
 
 function overviewPanel(game, battle, won, ended) {
   const active = getSynergies(game).filter(s => s.active);
-  const completed = Math.min(12, game.history.length);
+  const total=getRunLength(game);
+  const completed = ended?Math.min(game.round,total):Math.min(game.round,total);
   const cumulativeIncome = game.history.reduce((sum, b) => sum + (b.income || 0), 0);
-  return `<div class="reference-overview-grade"><h2>${ended ? won ? '远征完成' : '远征结束' : won ? '对局胜利' : '对局失利'}</h2><div class="reference-earned-wins"><span>${game.wins}</span><small>胜场</small></div><p><span>经典远征</span><i></i>第 ${game.round} 关</p><div class="reference-expedition-progress"><strong>已完成 ${completed} / 12 关</strong><span><i style="width:${completed / 12 * 100}%"></i></span></div></div>
+  return `<div class="reference-overview-grade"><h2>${ended ? won ? '远征完成' : '远征结束' : won ? '对局胜利' : '对局失利'}</h2><div class="reference-earned-wins"><span>${game.wins}</span><small>胜场</small></div><p><span>${getRunMode(game).name}</span><i></i>${getCurrentNode(game).label}</p><div class="reference-expedition-progress"><strong>当前进度 ${completed} / ${total} 节点</strong><span><i style="width:${completed / total * 100}%"></i></span></div></div>
   <div class="reference-overview-content"><div class="reference-overview-banner"><span>经典回响 <i>◇</i> 远征战报</span><strong>小队生命值 <b>♥</b> ${number(game.hp)}</strong></div>
   <section class="reference-overview-traits"><h3>羁绊信息</h3><div>${active.map(s => `<span class="reference-overview-trait" title="${escape(s.name)}：${escape(s.description)}"><img src="${getTraitArtPath(s.id)}" alt="${escape(s.name)}"><b>${s.count}</b></span>`).join('') || '<p class="reference-empty-overview">尚未激活羁绊</p>'}</div></section>
   <section class="reference-overview-team"><h3>我的阵容</h3><div class="reference-overview-roster">${game.units.filter(u => u.zone !== 'bench').map(u => {
@@ -70,8 +71,8 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
   const rows = (combat?.stats || []).filter(s => s.side === 'ally').sort((a, b) => b.damage - a.damage);
   const max = Math.max(1, ...rows.map(s => s.damage || 0));
   const deployed = game.units.filter(u => u.zone !== 'bench');
-  const teamValue = deployed.reduce((sum, u) => sum + (character(u.characterId)?.cost || 0) * 3 ** (u.star - 1), 0);
-  const roundLabel = ended ? `抵达第 ${game.round} 关 · ${game.wins} 胜 / ${game.losses} 负` : `第 ${game.round} 关 · ${escape(battle.enemy)}${combat ? ` · ${combat.turns} 次行动` : ''}`;
+  const teamValue = deployed.reduce((sum, u) => sum + getSellPrice(game,u), 0);
+  const roundLabel = ended ? `抵达 ${getCurrentNode(game).label} · ${game.wins} 胜 / ${game.losses} 负` : `${getCurrentNode(game).label} · ${escape(battle.enemy)}${combat ? ` · ${combat.turns} 次行动` : ''}`;
   const title = ended ? won ? '远征完成' : '远征结束' : won ? '作战胜利' : '作战失利';
   const reason = combat?.reason === 'timeout' ? '达到行动上限' : battle.won ? '敌方全部退场' : '前台全部退场';
   return `<div class="reference-overlay"><section class="reference-fullscreen reference-result-screen ${won ? 'is-victory' : 'is-defeat'}" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
@@ -94,8 +95,8 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
       </div>`}
     </div>
     <nav class="reference-result-pagination" aria-label="战报视图"><button data-action="result-view" data-view="overview" aria-label="查看战报总览" aria-pressed="${view === 'overview'}" class="${view === 'overview' ? 'active' : ''}"></button><button data-action="result-view" data-view="damage" aria-label="查看伤害统计" aria-pressed="${view === 'damage'}" class="${view === 'damage' ? 'active' : ''}"></button></nav>
-    <div class="reference-result-bottom"><div class="reference-result-secondary">${combat ? '<button data-action="replay"><span>↻</span>回看战斗</button>' : ''}${ended ? '<button data-action="history"><span>▥</span>战斗记录</button>' : ''}</div><button class="reference-confirm-button reference-return-button" data-action="${ended ? 'restart' : 'next'}"><span>${ended ? '开启新的远征' : game.hp <= 0 || game.round === 12 ? '查看远征结算' : '返回货币战争'}</span></button><div class="reference-result-income">${ended ? '经典，仍在继续' : `本回合收入 +${number(battle.income)}`}</div></div>
-    <p class="reference-reward-breakdown">${!ended && battle.rewards ? battle.rewards.map(escape).join('　·　') : ended ? won ? '你已完成全部 12 关远征。' : '调整阵容与投资路线，再次启程。' : ''}</p>
+    <div class="reference-result-bottom"><div class="reference-result-secondary">${combat ? '<button data-action="replay"><span>↻</span>回看战斗</button>' : ''}${ended ? '<button data-action="history"><span>▥</span>战斗记录</button>' : ''}</div><button class="reference-confirm-button reference-return-button" data-action="${ended ? 'restart' : 'next'}"><span>${ended ? '开启新的远征' : game.hp <= 0 || game.round === getRunLength(game) ? '查看远征结算' : '返回货币战争'}</span></button><div class="reference-result-income">${ended ? '经典，仍在继续' : `本回合收入 +${number(battle.income)}`}</div></div>
+    <p class="reference-reward-breakdown">${!ended && battle.rewards ? battle.rewards.map(escape).join('　·　') : ended ? won ? `你已完成${getRunMode(game).name}全部 ${getRunLength(game)} 个节点。` : '调整阵容与投资路线，再次启程。' : ''}</p>
     <span class="reference-screen-signature">经典回响 · 非官方同人</span>
   </section></div>`;
 }

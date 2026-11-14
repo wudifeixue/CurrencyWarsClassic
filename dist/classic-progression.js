@@ -1,7 +1,8 @@
+import {getRunLength} from './classic-flow.js?v=6.0.0';
 // Old Zero-Sum Game persistent bonds. References and simulator boundaries:
 // docs/classic-progression-research.md. No dependency on engine or combat.
-import {CLASSIC_CHARACTERS,CLASSIC_TRAITS} from './classic-roster.js?v=5.0.0';
-import {CLASSIC_EQUIPMENT} from './classic-items.js?v=5.0.0';
+import {CLASSIC_CHARACTERS,CLASSIC_TRAITS} from './classic-roster.js?v=6.0.0';
+import {CLASSIC_EQUIPMENT} from './classic-items.js?v=6.0.0';
 const chars=new Map(CLASSIC_CHARACTERS.map(c=>[c.id,c]));
 const traits=new Map(CLASSIC_TRAITS.map(t=>[t.id,t]));
 const gear=new Map(CLASSIC_EQUIPMENT.map(e=>[e.id,e]));
@@ -52,6 +53,8 @@ const POEMS=[
  {id:'projection',name:'光影之诗',cost:6,description:'获得员工投影仪。',rewards:[item('projector')]},
  {id:'perfect-projection',name:'完美光影之诗',cost:12,description:'获得完美投影仪。',rewards:[item('perfect-projector')]},
  {id:'authority',name:'权力之诗',cost:15,description:'获得特权赋予卡。',rewards:[item('privilege-card')]},
+ {id:'red-poem',name:'红之诗',cost:12,description:'获得一颗红钻。',rewards:[item('red-gem')]},
+ {id:'blue-poem',name:'蓝之诗',cost:12,description:'获得一颗蓝钻。',rewards:[item('blue-gem')]},
  {id:'memory',name:'记忆之诗',cost:2,description:'获得记忆开拓者。',rewards:[hero('8007')]},
  {id:'self',name:'与我有关的诗',cost:5,description:'获得昔涟。',rewards:[hero('1415')]},
  {id:'trio',name:'三重奏',cost:6,description:'获得两张3费聘用书。',rewards:[item('hire-3',2)]},
@@ -341,25 +344,26 @@ const peopleHas=(state,id)=>deployed(state).some(u=>String(u.characterId)===id);
 
 // Strict current-save validation; migration is explicitly a separate operation.
 export function validateProgression(state){
+ const nodeLimit=getRunLength(state);
  const p=state?.progression;if(!p||typeof p!=='object'||Array.isArray(p)||p.version!==1)return false;
  const object=x=>x&&typeof x==='object'&&!Array.isArray(x);
  const integer=(x,min=0,max=1000000000)=>Number.isInteger(x)&&x>=min&&x<=max;
  const list=(x,valid,distinct=true)=>Array.isArray(x)&&x.length<=1000&&x.every(valid)&&(!distinct||new Set(x).size===x.length);
  const id=x=>typeof x==='string'&&x.length>0&&x.length<100;
  const nullableId=x=>x===null||id(x);
- if(!integer(p.rng,0,4294967295)||!list(p.nodeEntries,n=>integer(n,1,12))||!list(p.resolvedBattles,n=>integer(n,1,12))||!list(p.knownUnits,id))return false;
+ if(!integer(p.rng,0,4294967295)||!list(p.nodeEntries,n=>integer(n,1,nodeLimit))||!list(p.resolvedBattles,n=>integer(n,1,nodeLimit))||!list(p.knownUnits,id))return false;
  for(const [key,prop,thresholds]of [['scholar','dna',SCHOLAR_THRESHOLDS],['wolfpack','xp',WOLF_THRESHOLDS],['night','essence',NIGHT_THRESHOLDS]])if(!object(p[key])||!Number.isFinite(p[key][prop])||p[key][prop]<0||p[key][prop]>1e9||p[key].level!==levelAt(p[key][prop],thresholds))return false;
  if(!object(p.day)||!list(p.day.unlocked,x=>DAY_ITEMS.some(e=>e.id===x))||!object(p.day.assignments)||Object.entries(p.day.assignments).some(([key,value])=>!p.day.unlocked.includes(key)||!id(value)))return false;
- if(!object(p.seer)||!integer(p.seer.battles,0,12)||!integer(p.seer.charges,0,12)||!list(p.seer.cards,id=>REVELATION_CARDS.some(c=>c.id===id))||typeof p.seer.threeStarGranted!=='boolean')return false;
- if(!object(p.gamer)||!integer(p.gamer.cost,3,5)||!list(p.gamer.claimedCosts,c=>integer(c,3,5))||!list(p.gamer.accessories,id=>HACKER_COMPONENTS.some(c=>c.id===id))||!integer(p.gamer.copyBattles,0,12)||typeof p.gamer.admin!=='boolean')return false;
+ if(!object(p.seer)||!integer(p.seer.battles,0,nodeLimit)||!integer(p.seer.charges,0,nodeLimit)||!list(p.seer.cards,id=>REVELATION_CARDS.some(c=>c.id===id))||typeof p.seer.threeStarGranted!=='boolean')return false;
+ if(!object(p.gamer)||!integer(p.gamer.cost,3,5)||!list(p.gamer.claimedCosts,c=>integer(c,3,5))||!list(p.gamer.accessories,id=>HACKER_COMPONENTS.some(c=>c.id===id))||!integer(p.gamer.copyBattles,0,nodeLimit)||typeof p.gamer.admin!=='boolean')return false;
  // Missing ownership belongs to the previous v3 save shape and is explicitly
  // assigned during migration; malformed ownership is never silently accepted.
  if(p.gamer.accessoryOwners!==undefined&&(!object(p.gamer.accessoryOwners)||Object.entries(p.gamer.accessoryOwners).some(([key,value])=>!(p.gamer.accessories.includes(key)||(key==='admin'&&p.gamer.admin))||!id(value))))return false;
- if(!object(p.beloved)||!integer(p.beloved.battles,0,12)||!list(p.beloved.poems,id=>POEMS.some(c=>c.id===id),false)||!list(p.beloved.offers,id=>POEMS.some(c=>c.id===id))||p.beloved.offers.length>3||!integer(p.beloved.offerNode,0,12)||!integer(p.beloved.boughtNode,0,12)||!object(p.beloved.buffs)||!integer(p.beloved.nextPerfect,0,8))return false;
+ if(!object(p.beloved)||!integer(p.beloved.battles,0,nodeLimit)||!list(p.beloved.poems,id=>POEMS.some(c=>c.id===id),false)||!list(p.beloved.offers,id=>POEMS.some(c=>c.id===id))||p.beloved.offers.length>3||!integer(p.beloved.offerNode,0,nodeLimit)||!integer(p.beloved.boughtNode,0,nodeLimit)||!object(p.beloved.buffs)||!integer(p.beloved.nextPerfect,0,8))return false;
  if(Object.entries(p.beloved.buffs).some(([key,value])=>!['damageAmp','speedPct','damageReduction'].includes(key)||!Number.isFinite(value)||value<0||value>12))return false;
  if(!object(p.navigator)||!nullableId(p.navigator.targetUid)||!object(p.festival)||!nullableId(p.festival.targetUid))return false;
- if(!object(p.wanderer)||!integer(p.wanderer.node,0,12)||(p.wanderer.blessing!==null&&!BLESSINGS.some(b=>b.id===p.wanderer.blessing)))return false;
- if(!object(p.mentor)||!list(p.mentor.characterIds,id=>['1212','1204','1209'].includes(id))||!integer(p.mentor.swordNodes,0,12)||!list(p.mentor.granted,id=>['feiguang-moon','feiguang-sword'].includes(id)))return false;
+ if(!object(p.wanderer)||!integer(p.wanderer.node,0,nodeLimit)||(p.wanderer.blessing!==null&&!BLESSINGS.some(b=>b.id===p.wanderer.blessing)))return false;
+ if(!object(p.mentor)||!list(p.mentor.characterIds,id=>['1212','1204','1209'].includes(id))||!integer(p.mentor.swordNodes,0,nodeLimit)||!list(p.mentor.granted,id=>['feiguang-moon','feiguang-sword'].includes(id)))return false;
  if(!object(p.grail)||!list(p.grail.unlockedTiers,n=>integer(n,1,4))||!list(p.grail.completed,id=>GRAIL_TRIALS.some(t=>t.id===id)))return false;
  if(!Array.isArray(p.grail.offers)||p.grail.offers.length>4||new Set(p.grail.offers.map(o=>o?.tier)).size!==p.grail.offers.length)return false;
  if(p.grail.offers.some(o=>!object(o)||!p.grail.unlockedTiers.includes(o.tier)||!list(o.options,id=>GRAIL_TRIALS.some(t=>t.id===id&&t.tier===o.tier))||o.options.length!==2))return false;

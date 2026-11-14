@@ -243,5 +243,173 @@
     "localPath": "dist/assets/strategies/classic-feiguang-sword.png",
     "url": "https://patchwiki.biligame.com/images/sr/a/af/aqj3x6rj16x02v463sl0q8t70end87f.png",
     "source": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-express",
+    "name": "列车同行星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/6/65/b52453ctzknko7sadfx1x1fzr3jqzim.png",
+    "path": "assets/strategies/classic-emblem-kit-express.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-scholar",
+    "name": "银河学者星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/4/40/4oduree0867wvxbweachurtz62varsz.png",
+    "path": "assets/strategies/classic-emblem-kit-scholar.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-belobog",
+    "name": "贝洛伯格星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/1/13/c9rol88s1p2afpp983nrz5w4tviu8jj.png",
+    "path": "assets/strategies/classic-emblem-kit-belobog.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-wanderer",
+    "name": "星间旅人星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e1/tgwafwnj9dyke1yj3t6oouo51f48xju.png",
+    "path": "assets/strategies/classic-emblem-kit-wanderer.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-luofu",
+    "name": "仙舟星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5c/1f6v3ahhiriz1k2y3dk9kz8g66hr9ma.png",
+    "path": "assets/strategies/classic-emblem-kit-luofu.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-wolfpack",
+    "name": "狼狩星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/6/62/99ux99dkvuhwosgfflb1arlv0szhga7.png",
+    "path": "assets/strategies/classic-emblem-kit-wolfpack.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-festival",
+    "name": "盛会之星星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a8/a3wz1gv64oqvcsj6kpagk0vpe36en2o.png",
+    "path": "assets/strategies/classic-emblem-kit-festival.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-day",
+    "name": "昼之半神星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c9/hwmftax1huul1lkxzi5tkafwsmbzma1.png",
+    "path": "assets/strategies/classic-emblem-kit-day.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-night",
+    "name": "夜之半神星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/8/8e/s75x499xooomxf80fa5chnr8vu01ps0.png",
+    "path": "assets/strategies/classic-emblem-kit-night.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-follow",
+    "name": "追击星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/b/bf/mr7qyz97kel3o52n842exixq6coih37.png",
+    "path": "assets/strategies/classic-emblem-kit-follow.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-break",
+    "name": "击破星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f8/48vfx4m3udar3c4n6tepc8k7wjz5m13.png",
+    "path": "assets/strategies/classic-emblem-kit-break.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-aoe",
+    "name": "群攻星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/8/86/fi8g27p04eogjmwsflsiesal4z000ca.png",
+    "path": "assets/strategies/classic-emblem-kit-aoe.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-energy",
+    "name": "能量星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/6/68/pzf3s36ulpbzs3kn07owijgucds4x4f.png",
+    "path": "assets/strategies/classic-emblem-kit-energy.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-heal",
+    "name": "治疗星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a9/cswtwzon3gpqhluclgnkpmtmrve1a6i.png",
+    "path": "assets/strategies/classic-emblem-kit-heal.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-blood",
+    "name": "燃血星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/4/43/dgoatvniq5bk6s0v1hdmkhrx9eib1p8.png",
+    "path": "assets/strategies/classic-emblem-kit-blood.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-debuff",
+    "name": "减益星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/9/95/by8jlsb0wig3hshaif4ug19swt43lmz.png",
+    "path": "assets/strategies/classic-emblem-kit-debuff.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-dot",
+    "name": "持续伤害星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e2/1lc0pytf5hyv0oqf2j4fn8khtpx7yy1.png",
+    "path": "assets/strategies/classic-emblem-kit-dot.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-quantum",
+    "name": "量子同频星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/9/95/jeh63lu47w5wqolrbukm322achxjvld.png",
+    "path": "assets/strategies/classic-emblem-kit-quantum.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-shield",
+    "name": "护盾星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/b/be/0mnpml9xp78ysrhcvnm5fu8t8n46b7v.png",
+    "path": "assets/strategies/classic-emblem-kit-shield.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "emblem-kit-sp",
+    "name": "战技点星徽套组",
+    "url": "https://patchwiki.biligame.com/images/sr/2/28/pwgps5bbakgxv8jgc5je2hyeq81dvl4.png",
+    "path": "assets/strategies/classic-emblem-kit-sp.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "equipment-plan-a",
+    "name": "装备方案A",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e2/b6cxam2gcbrk97ku7665xur3uauok3u.png",
+    "path": "assets/strategies/classic-equipment-plan-a.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "equipment-plan-b",
+    "name": "装备方案B",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5b/4v3xtgaeafvr8pka1pzxqyb4cvo71lt.png",
+    "path": "assets/strategies/classic-equipment-plan-b.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "superior-firepower",
+    "name": "优势火力论",
+    "url": "https://patchwiki.biligame.com/images/sr/f/f7/agj3brn4qv5z8nisz3z8ig23alqjvzg.png",
+    "path": "assets/strategies/classic-superior-firepower.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "armaments-chain",
+    "name": "军备供应链",
+    "url": "https://patchwiki.biligame.com/images/sr/3/38/6o6ghxo7j42vwmyqy8w7r2zculmrf79.png",
+    "path": "assets/strategies/classic-armaments-chain.png",
+    "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
   }
 ]

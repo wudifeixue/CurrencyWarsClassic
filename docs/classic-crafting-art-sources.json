@@ -1,0 +1,30 @@
+[
+  {
+    "id": "red-gem",
+    "name": "红钻",
+    "url": "https://patchwiki.biligame.com/images/sr/4/42/2u1q96qnbehmsfl5aothiodopwi83gn.png",
+    "path": "assets/equipment/classic-red-gem.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E7%BA%A2%E9%92%BB"
+  },
+  {
+    "id": "blue-gem",
+    "name": "蓝钻",
+    "url": "https://patchwiki.biligame.com/images/sr/b/b5/jy9fk5wb7wlcv16m191bwp2fjzkd8d5.png",
+    "path": "assets/equipment/classic-blue-gem.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%93%9D%E9%92%BB"
+  },
+  {
+    "id": "trash-bag",
+    "name": "垃圾袋",
+    "url": "https://patchwiki.biligame.com/images/sr/6/68/tfubi1plc8f6cbakh2y7jwl2fi493ln.png",
+    "path": "assets/equipment/classic-trash-bag.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E5%9E%83%E5%9C%BE%E8%A2%8B"
+  },
+  {
+    "id": "wealth-gem",
+    "name": "财富宝钻",
+    "url": "https://patchwiki.biligame.com/images/sr/6/6b/61t8p4n2dqp3hckscoinmra0mypyfsl.png",
+    "path": "assets/equipment/classic-wealth-gem.png",
+    "sourcePage": "https://wiki.biligame.com/sr/%E8%B4%A2%E5%AF%8C%E5%AE%9D%E9%92%BB"
+  }
+]

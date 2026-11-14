@@ -56,8 +56,8 @@ test('accepted Grail refresh goal counts actual paid/free actions and drops only
 });
 test('white-day gear shares three slots, follows its merged owner and is released on sale',()=>{
  const ids=CLASSIC_CHARACTERS.filter(c=>c.traits.includes('day')).slice(0,3).map(c=>c.id);
- const s=setup([unit(ids[0],'survivor','front',1,['knife','flower']),unit(ids[0],'copy','back',1,['star','battery']),unit(ids[1],'other-one','front'),unit(ids[2],'other-two','front')]);
- run(s,{type:'lock'});progression(s,{kind:'day-equip',id:'day-propeller',uid:'copy'});s.inventory=['armor'];reject(s,{type:'equip',uid:'copy',itemIndex:0});
+ const s=setup([unit(ids[0],'survivor','front',1,['blade','garden']),unit(ids[0],'copy','back',1,['chainsaw','joke-engine']),unit(ids[1],'other-one','front'),unit(ids[2],'other-two','front')]);
+ run(s,{type:'lock'});progression(s,{kind:'day-equip',id:'day-propeller',uid:'copy'});s.inventory=['hard-armor'];reject(s,{type:'equip',uid:'copy',itemIndex:0});
  progression(s,{kind:'day-unequip',id:'day-propeller'});run(s,{type:'equip',uid:'copy',itemIndex:0});run(s,{type:'unequip',uid:'copy',itemIndex:2});progression(s,{kind:'day-equip',id:'day-propeller',uid:'copy'});
  buy(s,ids[0]);assert.equal(s.progression.day.assignments['day-propeller'],'survivor');assert.equal(s.units.find(u=>u.uid==='survivor').items.length,2);assert.equal(s.inventory.length,3);
  run(s,{type:'sell',uid:'survivor'});assert.equal(s.progression.day.assignments['day-propeller'],undefined);assert.ok(s.progression.day.unlocked.includes('day-propeller'));
