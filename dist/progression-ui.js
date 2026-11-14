@@ -1,0 +1,11 @@
+import {getProgressionPanels} from './classic-progression.js?v=5.0.0';
+import {getTraitArtPath} from './data.js?v=5.0.0';
+const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function progressionSummary(state) {
+ const panels=getProgressionPanels(state),growth=panels.filter(p=>p.progress);
+ return `<button class="growth-open" data-action="progression-open" title="查看羁绊成长与独立选择"><span>◇ 羁绊成长</span><small>${growth.length?growth.map(p=>`${p.title.split(' · ')[0]} ${p.progress.value}/${p.progress.max}`).join(' · '):'独立羁绊 · 节点成长'}</small></button>`;
+}
+export function progressionScreen(state) {
+ const panels=getProgressionPanels(state),disabled=state.phase!=='prep';
+ return `<div class="modal-backdrop"><section class="modal growth-modal" style="--growth-columns:${panels.length>1?2:1};--growth-width:${panels.length>1?1180:760}px" role="dialog" tabindex="-1" aria-modal="true" aria-label="羁绊成长"><div class="growth-heading"><div><small>零和博弈</small><h2 id="modal-heading">羁绊成长</h2></div><button class="growth-close" data-action="close" aria-label="关闭羁绊成长">×</button></div><div class="growth-grid">${panels.map((p,pi)=>`<section class="growth-card"><h3><img src="${getTraitArtPath(p.id)}" alt="">${esc(p.title)}</h3><p>${esc(p.description)}</p>${p.progress?`<div class="growth-meter"><span>${esc(p.progress.label)}</span><strong>${p.progress.value} / ${p.progress.max}</strong><i style="--progress:${Math.min(100,p.progress.value/p.progress.max*100)}%"></i></div>`:''}${(p.tasks||[]).map(t=>`<div class="growth-task ${t.done?'done':''}"><b>${t.done?'✓ ':''}${esc(t.label)}</b><span>${Math.min(t.value,t.target)} / ${t.target}</span><small>${esc(t.description)}</small></div>`).join('')}<div class="growth-choices">${(p.choices||[]).map((c,ci)=>`<button class="growth-choice ${c.selected?'selected':''}" data-action="progression-select" data-panel="${pi}" data-choice="${ci}" ${disabled||c.disabled?'disabled':''}><b>${esc(c.label)}${c.cost?` <em>◈ ${c.cost}</em>`:''}${c.selected?' ✓':''}</b>${c.description?`<small>${esc(c.description)}</small>`:''}</button>`).join('')}</div></section>`).join('')||'<div class="growth-empty">部署拥有成长或独立羁绊的角色后，可在这里查看进度、领取启示、选择祈愿与指定伙伴。</div>'}</div><footer>成长与选择会随本局存档保存。晶矿奖励返回备战台后点击领取。</footer></section></div>`;
+}

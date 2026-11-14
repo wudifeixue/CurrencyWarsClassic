@@ -1,10 +1,10 @@
-import { CHARACTERS, EQUIPMENT, STRATEGIES, getTraitArtPath } from './data.js?v=4.0.2';
-import { getSynergies } from './engine.js?v=4.0.2';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=5.0.0';
+import { getSynergies } from './engine.js?v=5.0.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
 const character = id => CHARACTERS.find(c => c.id === String(id));
-const equipment = id => EQUIPMENT.find(e => e.id === id);
+const equipment = id => resolveEquipment(id);
 const gem = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 3h16l10 17-10 17H12L2 20Z" fill="#e9b948" stroke="#fff0a7" stroke-width="2"/><path d="m14 9-7 11 7 11h12l7-11-7-11Z" fill="none" stroke="#8f5a25" stroke-width="2"/><path d="m13 18 6-5 8 4-5 3 5 3-8 4-6-5 4-2Z" fill="#fff0a7" stroke="#a37525"/></svg>';
 const check = '<svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#25211b" stroke="#bdaa7c" stroke-width="2"/><path d="m8 15 5 5 9-10" fill="none" stroke="#f4eee0" stroke-width="2"/></svg>';
 const symbols = {
@@ -39,7 +39,7 @@ export function choiceScreen(game, selectedIndex = null) {
       if (!item) return '';
       const chosen = index === selectedIndex;
       return `<div class="reference-choice-column"><button class="reference-choice-card ${chosen ? 'is-selected' : ''}" data-action="choice-select" data-index="${index}" aria-pressed="${chosen}" aria-label="${escape(item.name)}：${escape(item.description)}">
-        <span class="reference-card-face"><span class="reference-card-foil" aria-hidden="true"></span><span class="reference-choice-emblem">${choice.kind === 'strategy' ? strategySymbol(item.id) : `<img src="assets/equipment/classic-${item.id}.png" alt="">`}</span><span class="reference-choice-copy"><strong>${escape(item.name)}</strong><span class="reference-choice-rule"></span><span class="reference-choice-description">${escape(item.description)}</span></span><span class="reference-card-detail" aria-hidden="true"></span></span>
+        <span class="reference-card-face"><span class="reference-card-foil" aria-hidden="true"></span><span class="reference-choice-emblem">${choice.kind === 'strategy' ? strategySymbol(item.id) : `<img src="${getEquipmentArtPath(item.id)}" alt="">`}</span><span class="reference-choice-copy"><strong>${escape(item.name)}</strong><span class="reference-choice-rule"></span><span class="reference-choice-description">${escape(item.description)}</span></span><span class="reference-card-detail" aria-hidden="true"></span></span>
       </button><div class="reference-choice-caption"><span class="reference-rarity-mark">${isStrategy ? '✧' : '◇'}</span>${isStrategy ? `${escape(item.rarity)}投资策略` : '简易装备'}${chosen ? '<span class="reference-selected-caption">已选择</span>' : ''}</div></div>`;
     }).join('')}</div>
     <p class="reference-choice-hint">${hasSelection ? '确认后获得所选奖励' : '选择一项奖励，然后确认'}</p>
@@ -58,7 +58,7 @@ function overviewPanel(game, battle, won, ended) {
   <section class="reference-overview-team"><h3>我的阵容</h3><div class="reference-overview-roster">${game.units.filter(u => u.zone !== 'bench').map(u => {
     const c = character(u.characterId);
     if (!c) return '';
-    return `<div class="reference-overview-unit" title="${escape(c.name)} · ${u.star} 星 · ${u.zone === 'back' ? '后台' : '前台'}"><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c.cost]}"><img src="assets/portraits/${c.id}.png" alt="${escape(c.name)}"><span class="reference-stat-stars">${'★'.repeat(u.star)}</span><span class="reference-stat-position">${u.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${u.items.map(id => `<img src="assets/equipment/classic-${id}.png" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div></div>`;
+    return `<div class="reference-overview-unit" title="${escape(c.name)} · ${u.star} 星 · ${u.zone === 'back' ? '后台' : '前台'}"><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c.cost]}"><img src="assets/portraits/${c.id}.png" alt="${escape(c.name)}"><span class="reference-stat-stars">${'★'.repeat(u.star)}</span><span class="reference-stat-position">${u.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${u.items.map(id => `<img src="${getEquipmentArtPath(id)}" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div></div>`;
   }).join('')}</div></section>
   <div class="reference-overview-lower"><section class="reference-overview-record"><h3>本局记录</h3><p><span>累计收入</span><strong>${gem}${number(cumulativeIncome)}</strong></p><p><span>胜 / 负</span><strong>${game.wins} / ${game.losses}</strong></p></section><section class="reference-overview-strategies"><h3>投资策略</h3><div>${game.strategies.map(id => {const s = STRATEGIES.find(item => item.id === id);return s ? `<span title="${escape(s.name)}：${escape(s.description)}">${strategySymbol(id)}<small>${escape(s.name)}</small></span>` : '';}).join('') || '<p class="reference-empty-overview">尚未获得投资策略</p>'}</div></section></div></div>`;
 }
@@ -89,7 +89,7 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
           const c = character(initial?.characterId || current?.characterId);
           const unit = current || initial;
           const barHeight = Math.max(0, Math.min(100, (s.damage || 0) / max * 100));
-          return `<div class="reference-damage-column" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}"><div class="reference-damage-bar-space"><div class="reference-damage-bar" style="height:${barHeight}%"><span>${number(s.damage)}</span></div></div><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c?.cost || 1]}">${c ? `<img src="assets/portraits/${c.id}.png" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<span class="reference-stat-stars">${'★'.repeat(unit?.star || 1)}</span><span class="reference-stat-position">${initial?.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${(unit?.items || []).map(id => `<img src="assets/equipment/classic-${id}.png" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div><span class="reference-stat-name">${escape(s.name)}</span></div>`;
+          return `<div class="reference-damage-column" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}"><div class="reference-damage-bar-space"><div class="reference-damage-bar" style="height:${barHeight}%"><span>${number(s.damage)}</span></div></div><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c?.cost || 1]}">${c ? `<img src="assets/portraits/${c.id}.png" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<span class="reference-stat-stars">${'★'.repeat(unit?.star || 1)}</span><span class="reference-stat-position">${initial?.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${(unit?.items || []).map(id => `<img src="${getEquipmentArtPath(id)}" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div><span class="reference-stat-name">${escape(s.name)}</span></div>`;
         }).join('')}</div>` : '<div class="reference-no-statistics">这份旧版战报未保存逐角色伤害统计<br><small>下一场战斗将记录完整数据</small></div>'}
       </div>`}
     </div>

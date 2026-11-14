@@ -229,5 +229,19 @@
     "url": "https://patchwiki.biligame.com/images/sr/e/e0/3v93q8i7k7cprokargebv85e9ysfhz5.png",
     "path": "assets/strategies/classic-peace-insurance.png",
     "sourcePage": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "feiguang-moon",
+    "name": "飞光•映月",
+    "localPath": "dist/assets/strategies/classic-feiguang-moon.png",
+    "url": "https://patchwiki.biligame.com/images/sr/9/99/pazz4uj5xnc1bnqa13bnt0vrhozbh7k.png",
+    "source": "https://wiki.biligame.com/sr/投资策略一览"
+  },
+  {
+    "id": "feiguang-sword",
+    "name": "飞光•传剑",
+    "localPath": "dist/assets/strategies/classic-feiguang-sword.png",
+    "url": "https://patchwiki.biligame.com/images/sr/a/af/aqj3x6rj16x02v463sl0q8t70end87f.png",
+    "source": "https://wiki.biligame.com/sr/投资策略一览"
   }
 ]

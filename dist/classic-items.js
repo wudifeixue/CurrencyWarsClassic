@@ -96,6 +96,8 @@ export const CLASSIC_STRATEGIES = [
  strategy('prospector','淘金客','棱彩','每次花费金币刷新商店，获得 2 经验。',{paidRefreshXp:2}),
  strategy('promotion','晋升名额','棱彩','购买经验时，将商店一名随机角色替换成高一费的随机角色，最高五费。',{expShopPromotion:true},[2,3]),
  strategy('peace-insurance','星际和平保险','棱彩','立即获得等于已损失小队生命的金币；之后每次战斗结束恢复 10 点小队生命。',{goldFromLostHp:true,battleHeal:10}),
+ strategy('feiguang-moon','飞光•映月','棱彩','获得镜流和特殊1费景元，为二人增加师徒羁绊；镜流升至2/3星时，景元费用变为3/5费。',{progressionUnlock:'mentor'},[1]),
+ strategy('feiguang-sword','飞光•传剑','棱彩','获得彦卿和景元，为二人增加师徒羁绊；彦卿天河泻附加神君与景元累计伤害的15%，二人每共同进入新节点再提高4%。',{progressionUnlock:'mentor'},[2]),
 ];
 
 // Preserve saved v1-v3 inventory identifiers while replacing their former invented formulas.

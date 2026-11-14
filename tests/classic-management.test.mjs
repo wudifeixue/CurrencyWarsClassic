@@ -124,11 +124,13 @@ test('strategy rewards grant exact starting money, XP, equipment and free refres
     'knife-blessing':{item:'knife'},'pistol-blessing':{item:'pistol'},'star-blessing':{item:'star'},
     'flower-blessing':{item:'flower'},'armor-blessing':{item:'armor'},
   };
-  assert.equal(STRATEGIES.filter(s=>!s.legacy).length,33);
+  assert.equal(STRATEGIES.filter(s=>!s.legacy).length,35);
   for(const [id,e] of Object.entries(expected)){
     const s=choose(createGame(2),id);
     assert.equal(s.gold,16+(e.gold||0),id);assert.equal(xpTotal(s),e.xp||0,id);
     assert.equal(s.freeRefreshes,e.free||0,id);
+    assert.deepEqual(s.inventory,[],id+' must wait for pickup');
+    for(const orb of [...s.loot])run(s,{type:'collect-loot',uid:orb.uid});
     assert.deepEqual(s.inventory,['knife','flower','battery',...(e.item?[e.item]:[])],id);
   }
 });
@@ -246,7 +248,7 @@ test('v1 migration preserves old units, equipment, choices and earned resources 
   old.units[0].characterId='1002';old.units[0].items=['blade','electric'];
   old.phase='choice';old.choiceKind='strategy';old.choices=['discount','recovery','fortress'].map(id=>({kind:'strategy',id}));
   const before=structuredClone(old),migrated=migrateState(old);
-  assert.ok(migrated);assert.equal(migrated.version,2);assert.equal(validateState(migrated),true);
+  assert.ok(migrated);assert.equal(migrated.version,3);assert.equal(validateState(migrated),true);
   for(const key of ['gold','xp','hp','units','inventory','shop','choices','strategies','history','rng'])assert.deepEqual(migrated[key],before[key],key);
   assert.deepEqual(old,before,'migration must not mutate the supplied stored value');
   assert.deepEqual(migrateState(migrated),migrated,'reload is idempotent');

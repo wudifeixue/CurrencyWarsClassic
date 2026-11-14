@@ -186,8 +186,8 @@
 .classic-scene .refresh-button>strong { position:relative; display:flex; gap:5px; align-items:center; font:600 31px var(--number); border-top:1px solid #c0c1d5; padding:4px 25px 0; }
 .classic-scene .refresh-button .icon { width:30px; height:30px; color:#c79737; fill:#eac26288; }
 .classic-scene .refresh-button:disabled { opacity:.6; }
-.classic-scene .equipment-rail { position:absolute; z-index:6; right:35px; top:160px; width:236px; max-height:465px; }
-.classic-scene .equipment-rail .inventory { display:grid; grid-template-columns:repeat(3,74px); grid-auto-rows:74px; gap:5px; padding:0; margin:0; overflow:auto; max-height:465px; justify-content:end; }
+.classic-scene .equipment-rail { position:absolute; z-index:6; right:27px; top:144px; width:90px; max-height:483px; }
+.classic-scene .equipment-rail .inventory { display:grid; grid-template-columns:74px; grid-auto-rows:74px; gap:6px; padding:0 6px 4px 3px; margin:0; overflow:auto; max-height:400px; justify-content:start; }
 .classic-scene .equipment-rail .inventory-item { position:relative; height:74px; width:74px; border-radius:0; border:3px solid #b0a6ac; background:linear-gradient(135deg,#3f3654,#17151f); padding:0; box-shadow:inset 0 0 0 1px #080711; font-size:43px; color:#ffe3a4; overflow:hidden; }
 .classic-scene .equipment-rail .inventory-item img { width:100%; height:100%; object-fit:contain; display:block; }
 .classic-scene .equipment-rail .inventory-item.empty { border-color:#a89eb148; color:#9c90ae55; background:#16121e66; font-size:23px; }
@@ -244,9 +244,9 @@
 .inspector-heading { margin-bottom:12px; }
 
 /* Keep equipment accessible beside the expanded shop, as in the compact original rail. */
-.classic-scene.shop-is-open .equipment-rail { width:74px; }
-.classic-scene.shop-is-open .equipment-rail .inventory { grid-template-columns:74px; max-height:405px; }
-.classic-scene:not(.shop-is-open) .equipment-rail .inventory { direction:rtl; }
+.classic-scene.shop-is-open .equipment-rail { width:90px; }
+.classic-scene.shop-is-open .equipment-rail .inventory { grid-template-columns:74px; max-height:400px; }
+.classic-scene:not(.shop-is-open) .equipment-rail .inventory { direction:ltr; }
 .classic-scene:not(.shop-is-open) .equipment-rail .inventory>* { direction:ltr; }
 .classic-scene:not(.shop-is-open) .refresh-button { display:none; }
 .equipment-art { object-fit:contain; }

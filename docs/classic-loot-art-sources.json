@@ -1,0 +1,44 @@
+[
+  {
+    "id": "chest-basic",
+    "name": "简易武装箱",
+    "localPath": "dist/assets/loot/chest-basic.png",
+    "url": "https://patchwiki.biligame.com/images/sr/2/25/3j97sn7gxou5qosa2cn6qzpzkpmzweh.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "chest-advanced",
+    "name": "进阶武装箱",
+    "localPath": "dist/assets/loot/chest-advanced.png",
+    "url": "https://patchwiki.biligame.com/images/sr/c/cb/jvtcs2l2xrk58kbxoe7se04ifkxwvpq.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "chest-privileged",
+    "name": "特权武装箱",
+    "localPath": "dist/assets/loot/chest-privileged.png",
+    "url": "https://patchwiki.biligame.com/images/sr/7/7a/b81pv64eg17eei1fq9zsa03djcryphh.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "projector",
+    "name": "员工投影仪",
+    "localPath": "dist/assets/loot/projector.png",
+    "url": "https://patchwiki.biligame.com/images/sr/6/6a/5h34jtucjpahjnya0s4dty34fofr8zd.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "perfect-projector",
+    "name": "完美投影仪",
+    "localPath": "dist/assets/loot/perfect-projector.png",
+    "url": "https://patchwiki.biligame.com/images/sr/d/d0/ltbni6v7mh0xnhfhbbprmwwaxufelnj.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "privilege-card",
+    "name": "特权赋予卡",
+    "localPath": "dist/assets/loot/privilege-card.png",
+    "url": "https://patchwiki.biligame.com/images/sr/3/3b/jsi3f3awcru1azwl2ms2a4wov5g8jy9.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  }
+]

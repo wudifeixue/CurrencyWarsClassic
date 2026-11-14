@@ -1,41 +1,73 @@
-export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=4.0.2';
-import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=4.0.2';
+import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=5.0.0';
+import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=5.0.0';
+export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=5.0.0';
+import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=5.0.0';
 export {CLASSIC_SIMULATION_NOTE};
-import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES} from './data.js?v=4.0.2';
+import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=5.0.0';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
-const equipmentMap = new Map(EQUIPMENT.map(e => [e.id, e]));
+const equipmentEntries=u=>(u.items||[]).map(resolveEquipment).filter(Boolean);
+const passiveAmount=(u,p,normal,privileged=normal*2,stack=true)=>equipmentEntries(u).filter(e=>e.passive===p).reduce((value,e)=>stack?value+(e.privileged?privileged:normal):Math.max(value,e.privileged?privileged:normal),0);
 const clone = value => JSON.parse(JSON.stringify(value));
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const characterSpeeds = {'1001':101,'1002':112,'1003':96,'1004':102,'1005':104,'1006':107,'1008':102,'1009':110,'1013':100,'1101':108,'1102':122,'1103':104,'1104':92,'1105':99,'1106':105,'1107':90,'1108':108,'1109':101,'1201':98,'1202':112,'1204':99,'1205':103,'1203':106,'1208':100};
 
+export function getUnitBattleTraits(state,unit){
+  const c=characterMap.get(unit.characterId),traits=new Set(c?.legacy?[...(c.traits||[]),...(unit.extraTraits||[])]:getProgressionUnitTraits(state,unit));
+  for(const id of unit.items||[]){const item=resolveEquipment(id);if(item?.trait)traits.add(item.trait);for(const t of item?.traits||[])traits.add(t);}
+  return [...traits].filter(t=>TRAITS.some(x=>x.id===t));
+}
 export function getBattleSynergies(state) {
-  const unique = new Set(state.units.filter(u => u.zone !== 'bench').map(u => u.characterId));
-  const counts = {};
-  for (const id of unique) for (const t of characterMap.get(id)?.traits || []) counts[t] = (counts[t] || 0) + 1;
-  return TRAITS.filter(t => counts[t.id]).map(t => ({...t, count:counts[t.id], level:t.thresholds.filter(n => counts[t.id] >= n).length, active:counts[t.id] >= t.thresholds[0], next:t.thresholds.find(n => n > counts[t.id]) ?? null})).sort((a,b) => Number(b.active)-Number(a.active) || b.count-a.count);
+  const members={};
+  for(const u of state.units.filter(u=>u.zone!=='bench'))for(const id of getUnitBattleTraits(state,u))(members[id]??=new Set()).add(u.characterId);
+  const progressionCounts=getProgressionTraitCounts(state);
+  for(const id of ['hunters','elation'])if((progressionCounts[id]||0)>(members[id]?.size||0))(members[id]??=new Set()).add(`accessory:${id}`);
+  return TRAITS.filter(t=>members[t.id]?.size).map(t=>{const count=members[t.id].size;return {...t,count,level:t.thresholds.filter(n=>count>=n).length,active:count>=t.thresholds[0],next:t.thresholds.find(n=>n>count)??null};}).sort((a,b)=>Number(b.active)-Number(a.active)||b.count-a.count);
 }
 
 const tierValue=(values,level)=>values[Math.min(values.length-1,Math.max(0,level-1))]||0;
 const starValue=(values,unit)=>tierValue(values,unit.star);
-const belongs=(unit,id)=>characterMap.get(unit.characterId)?.traits?.includes(id)||false;
+const belongs=(unit,id)=>[...(unit.traits||characterMap.get(unit.characterId)?.traits||[]),...(unit.extraTraits||[])].includes(id);
 const isClassic=unit=>Boolean(characterMap.get(unit.characterId)?.sourceVersion);
 const battleStrategy=(state)=>(state.strategies||[]).map(id=>STRATEGIES.find(s=>s.id===id)?.effect?.battle||{});
 
 // Original percentages operate on a shared trial-stat baseline. Fixed original HP/DEF
 // amounts are scaled by 0.1 because this 2D battle has no relic/light-cone account stats.
 export const CLASSIC_FLAT_SCALE=.1;
-export function getBattleStats(state, unit) {
+function withNavigatorEquipment(state,unit){
+  if(unit._navigatorCopied||unit.zone==='bench'||unit.characterId!=='1510')return unit;
+  const target=getProgressionNavigatorPartner(state,unit);
+  const item=target?.items?.[0];if(!resolveEquipment(item))return unit;
+  return {...unit,items:[...unit.items,item],_navigatorCopied:item};
+}
+function occupiedEquipmentSlots(unit){
+  const items=unit.items.slice(0,Math.max(0,unit.items.length-(unit._projectedCount||0)));
+  if(unit._navigatorCopied){const index=items.lastIndexOf(unit._navigatorCopied);if(index>=0)items.splice(index,1);}
+  return items.some(id=>resolveEquipment(id)?.exclusiveSlots)?3:items.length;
+}
+function dayEquipment(state,unit,day){
+  if(!day||unit.zone==='bench'||!getUnitBattleTraits(state,unit).includes('day'))return [];
+  const occupied=occupiedEquipmentSlots(unit),assigned=Object.entries(day.assignments||{}).filter(([,uid])=>uid===unit.uid).map(([id])=>id).slice(0,Math.max(0,3-occupied));
+  if(day.enhanced){const pool=['day-propeller','day-hybrid','day-execution'];let index=0;while(assigned.length+occupied<3){const candidate=pool[index++%pool.length];if(!assigned.includes(candidate)||index>6)assigned.push(candidate);}}
+  return assigned;
+}
+export function getBattleStats(state, unit, options={}) {
+  if(!options.prepared){const prepared={...state,units:state.units.map(u=>withNavigatorEquipment(state,u))};return getBattleStats(prepared,withNavigatorEquipment(state,unit),{...options,prepared:true});}
   const c=characterMap.get(unit.characterId);
   if(!c)return {attack:0,hp:0,speed:100,crit:0,breakBonus:0};
+  const progression=getProgressionBattleModifiers(state),rules=progression.ruleFlags||{};
   const synergies=getBattleSynergies(state), level=id=>synergies.find(t=>t.id===id)?.level||0;
-  const has=id=>belongs(unit,id)||(belongs(unit,'savior')&&level('savior')>0&&!['savior','seer','beloved','magician','gamer','navigator','guardian'].includes(id));
-  const classic=Boolean(c.sourceVersion), referenceBase=c.referenceStars?.[0],referenceStar=c.referenceStars?.find(s=>s.stars===unit.star),strengthKey=unit.zone==='back'?'backStrength':'frontStrength';
+  const unitTraits=getUnitBattleTraits(state,unit);
+  const inherited=new Set(state.units.filter(u=>u.zone==='front').flatMap(u=>getUnitBattleTraits(state,u)).filter(id=>level(id)>0&&TRAITS.find(t=>t.id===id)?.type!=='独立羁绊'));
+  const has=id=>unitTraits.includes(id)||(unitTraits.includes('savior')&&inherited.has(id));
+  const effectiveCost=getEffectiveCharacterCost(state,c.id,unit);
+  const gamerPanel={3:{front:[150,240,330],hp:[.3,.69,1.08],speed:[.2,.32,.44]},4:{front:[200,320,600],hp:[.45,.88,1.32],speed:[.3,.43,.56]},5:{front:[240,400,2500],hp:[.6,1.08,5],speed:[.45,.6,3]}}[effectiveCost],gamerStar=c.id==='1506'&&gamerPanel?{frontStrength:starValue(gamerPanel.front,unit),hpAmplification:starValue(gamerPanel.hp,unit),speedAmplification:starValue(gamerPanel.speed,unit)}:null;
+  const classic=Boolean(c.sourceVersion), referenceBase=c.referenceStars?.[0],referenceStar=gamerStar||c.referenceStars?.find(s=>s.stars===unit.star),strengthKey=unit.zone==='back'?'backStrength':'frontStrength';
   const attackFactor=classic?(referenceBase?.[strengthKey]&&referenceStar?.[strengthKey]?referenceStar[strengthKey]/referenceBase[strengthKey]:starValue([1,1.6,2.2,2.8],unit)):starValue([1,1.85,3.5,5],unit);
   const hpFactor=classic&&referenceBase&&referenceStar?(1+(referenceStar.hpAmplification||0))/(1+(referenceBase.hpAmplification||0)):classic?starValue([1,1.3,1.6,1.9],unit):attackFactor;
   const speedFactor=classic&&referenceBase&&referenceStar?(1+(referenceStar.speedAmplification||0))/(1+(referenceBase.speedAmplification||0)):classic?starValue([1,1.1,1.2,1.3],unit):1;
-  const out={attack:c.attack*attackFactor,hp:c.hp*hpFactor,speed:(c.speed||characterSpeeds[c.id]||100)*speedFactor,crit:.08,critDamage:.5,breakBonus:0,breakEffect:0,frontPower:0,backPower:0,hpPct:0,speedPct:0,damageAmp:0,damageReduction:0,healAmp:referenceBase?.healingStrength&&referenceStar?.healingStrength?referenceStar.healingStrength/referenceBase.healingStrength-1:0,shieldAmp:referenceBase?.shieldStrength&&referenceStar?.shieldStrength?referenceStar.shieldStrength/referenceBase.shieldStrength-1:0,startEnergy:0,followAmp:0,dotAmp:0,ultimateAmp:0};
-  for(const id of unit.items){const e=equipmentMap.get(id);if(!e)continue;out.attack+=e.attack||0;out.hp+=e.hp||0;out.speed+=e.speed||0;for(const key of ['frontPower','backPower','hpPct','speedPct','damageAmp','damageReduction','crit','critDamage','startEnergy','breakEffect','shieldAmp','healAmp'])out[key]+=e[key]||0;out.breakBonus+=e.breakEfficiency||0;}
+  const out={attack:c.attack*attackFactor,hp:c.hp*hpFactor,speed:(c.speed||characterSpeeds[c.id]||100)*speedFactor,crit:.08,critDamage:.5,breakBonus:0,breakEffect:0,frontPower:0,backPower:0,hpPct:0,speedPct:0,damageAmp:0,damageReduction:0,healAmp:referenceBase?.healingStrength&&referenceStar?.healingStrength?referenceStar.healingStrength/referenceBase.healingStrength-1:0,shieldAmp:referenceBase?.shieldStrength&&referenceStar?.shieldStrength?referenceStar.shieldStrength/referenceBase.shieldStrength-1:0,startEnergy:0,followAmp:0,dotAmp:0,ultimateAmp:0,basicSkillDamage:0};
+  for(const id of unit.items){const e=resolveEquipment(id);if(!e)continue;out.attack+=e.attack||0;out.hp+=e.hp||0;out.speed+=e.speed||0;for(const key of ['frontPower','backPower','hpPct','speedPct','damageAmp','damageReduction','crit','critDamage','startEnergy','breakEffect','shieldAmp','healAmp'])out[key]+=e[key]||0;out.breakBonus+=e.breakEfficiency||0;}
   for(const t of synergies){if(!t.active)continue;const l=t.level,member=has(t.id);
     if(t.id==='express'){const p=tierValue([.2,.4,.6],l)*(member&&l>=2?2:1);out.frontPower+=p;out.backPower+=p;}
     if(t.id==='heal'){out.hpPct+=.12;if(member)out.healAmp+=tierValue([.2,.4,.6],l);if(l>=3)out.damageAmp+=.6;}
@@ -55,16 +87,16 @@ export function getBattleStats(state, unit) {
     if(t.id==='aoe'){out.crit+=tierValue([.12,.24,.36,.6],l);out.critDamage+=tierValue([.12,.24,.36,.6],l);}
     if(t.id==='elation')out.crit+=tierValue([.08,.16,.24,.4],l);
     if(t.id==='ipc'){out.backPower+=tierValue([.3,1],l);out.shieldAmp+=tierValue([.1,.25],l);}
-    if(t.id==='ranger'){const p=tierValue([.08,.16,.28,.3],l),back=state.units.filter(u=>u.zone==='back'&&belongs(u,'ranger')).reduce((n,u)=>n+starValue([1,3,6,12],u),0);out.damageAmp+=p*(1+(unit.zone==='front'?back:0));out.speedPct+=p*(1+(unit.zone==='front'?back:0));}
+    if(t.id==='ranger'){const p=tierValue([.08,.16,.28,.3],l),back=state.units.filter(u=>u.zone==='back'&&getUnitBattleTraits(state,u).includes('ranger')).reduce((n,u)=>n+starValue([1,3,6,12],u),0);out.damageAmp+=p*(1+(unit.zone==='front'?back:0));out.speedPct+=p*(1+(unit.zone==='front'?back:0));}
   }
   if(level('wanderer')){const scale=tierValue([1,1.2,1.45,1.75,2.1,2.5,3],level('wanderer'))*(has('wanderer')?2:1),ids=new Set(state.units.filter(u=>u.zone!=='bench').map(u=>u.characterId));if(ids.has('1108'))out.damageReduction+=.1*scale;if(ids.has('1302'))out.frontPower+=.2*scale;if(ids.has('1305'))out.speedPct+=.1*scale;if(ids.has('1203'))out.backPower+=.2*scale;if(ids.has('1004'))out.crit+=.1*scale;if(ids.has('1505'))out.startEnergy+=15*scale;}
   const deployed=state.units.filter(u=>u.zone!=='bench'), positionAllowed=!c.allowedZones||c.allowedZones.includes(unit.zone);
-  for(const owner of deployed)for(const id of owner.items){const p=equipmentMap.get(id)?.passive;if(p==='team-power-25'){out.frontPower+=.25;out.backPower+=.25;}if(p==='team-health-15')out.hpPct+=.15;if(p==='team-reduction-18')out.damageReduction+=.18;if(p==='team-luck-control')out.crit+=.12;}
-  for(const id of unit.items){const p=equipmentMap.get(id)?.passive;
-    if(p==='front-crit-damage'&&unit.zone==='front')out.critDamage+=.1;
-    if(p==='back-crit-damage'&&unit.zone==='back')out.critDamage+=.1;
-    if(p==='adaptive-position'){if(unit.zone==='front')out.damageReduction+=.25;else{out.backPower+=.2;out.speedPct+=.2;}}
-    if(p==='star-scaling'){out.speedPct+=unit.star*.1;out.damageAmp+=unit.star*.1;}
+  for(const owner of deployed){const p=passiveAmount(owner,'team-power-25',.25);out.frontPower+=p;out.backPower+=p;out.hpPct+=passiveAmount(owner,'team-health-15',.15);out.damageReduction+=passiveAmount(owner,'team-reduction-18',.18);out.crit+=passiveAmount(owner,'team-luck-control',.12);}
+  for(const id of unit.items){const e=resolveEquipment(id),p=e?.passive,m=e?.privileged?2:1;
+    if(p==='front-crit-damage'&&unit.zone==='front')out.critDamage+=.1*m;
+    if(p==='back-crit-damage'&&unit.zone==='back')out.critDamage+=.1*m;
+    if(p==='adaptive-position'){if(unit.zone==='front')out.damageReduction+=.25*m;else{out.backPower+=.2*m;out.speedPct+=.2*m;}}
+    if(p==='star-scaling'){out.speedPct+=unit.star*.1*m;out.damageAmp+=unit.star*.1*m;}
   }
   const nonIndependent=synergies.filter(t=>t.active&&t.type!=='独立羁绊').length;
   for(const b of battleStrategy(state)){
@@ -83,12 +115,28 @@ export function getBattleStats(state, unit) {
   if(state.strategies.includes('recovery'))out.damageAmp+=.08;
   if(state.strategies.includes('momentum'))out.damageAmp+=.1;
   if(state.strategies.includes('fortress'))out.hpPct+=.25;
+  for(const extra of [progression.team,progression.units?.[unit.uid]])for(const [key,value]of Object.entries(extra||{}))if(typeof value==='number'&&Number.isFinite(value)){if(key==='breakEfficiency')out.breakBonus+=value;else out[key]=(out[key]||0)+value;}
+  const day=rules.day,ownedDay=dayEquipment(state,unit,day);
+  if(day){
+    for(const owner of deployed)for(const id of dayEquipment(state,owner,day))if(id==='day-hybrid'){out.frontPower+=day.enhanced?.5:.25;out.backPower+=day.enhanced?.5:.25;if(day.enhanced)out.damageAmp+=.1;}
+    for(const id of ownedDay){
+      if(id==='day-propeller'){out.speedPct+=.1;out.breakBonus+=.25;}
+      if(id==='day-hybrid'){out.frontPower+=day.enhanced?.4:.2;out.backPower+=day.enhanced?.4:.2;}
+      if(id==='day-execution'){out.frontPower+=day.enhanced?.2:.1;out.backPower+=day.enhanced?.4:.2;out.speedPct+=day.enhanced?.4:.2;out.breakBonus+=day.enhanced?.5:.25;out.eliteDamage=(out.eliteDamage||0)+(day.enhanced?1:.4);out.eliteBreak=(out.eliteBreak||0)+(day.enhanced?.75:.25);}
+    }
+  }
+  if(!options.skipMentor&&level('mentor')&&unitTraits.includes('mentor')){
+    const shared=deployed.filter(u=>u.uid!==unit.uid&&getUnitBattleTraits(state,u).includes('mentor')).reduce((sum,u)=>{const donor=getBattleStats(state,u,{skipMentor:true}),record=characterMap.get(u.characterId)?.referenceStars?.find(r=>r.stars===u.star);return sum+Math.max(donor.frontPower+(record?.frontStrength||0)/100,donor.backPower+(record?.backStrength||0)/100);},0);
+    out.frontPower+=shared;out.backPower+=shared;
+  }
   const empowerment=positionAllowed&&c.empowerments?.find(e=>e.zone===unit.zone),speedText=empowerment?.skills?.map(s=>s.condition).join(' ')||'';
   const speedMatch=speedText.match(/以([\d%/.]+)的速度/);if(speedMatch){const values=speedMatch[1].split('/').map(v=>parseFloat(v)/100);out.speed*=starValue(values,unit);}
-  for(const id of unit.items)if(equipmentMap.get(id)?.passive==='speed-to-power'){const speed=out.speed*(1+out.speedPct);out.frontPower+=speed/10*.02;out.backPower+=speed/10*.01;}
+  for(const id of unit.items)if(resolveEquipment(id)?.passive==='speed-to-power'){const speed=out.speed*(1+out.speedPct),m=resolveEquipment(id)?.privileged?2:1;out.frontPower+=speed/10*.02*m;out.backPower+=speed/10*.01*m;}
+  if(ownedDay.includes('day-propeller')){const speed=out.speed*(1+out.speedPct);out.frontPower+=speed/10*(day.enhanced?.04:.02);out.backPower+=speed/10*(day.enhanced?.02:.01);if(day.enhanced)out.damageAmp+=speed/10*.01;}
+  out.dayEquipment=ownedDay;out.gamerAdmin=rules.gamer?.uid===unit.uid&&rules.gamer.admin;
   out.attack=Math.round(out.attack*(1+(unit.zone==='back'?out.backPower:out.frontPower)));
-  out.hp=Math.round(out.hp*(1+out.hpPct));out.speed=Math.max(35,Math.round(out.speed*(1+out.speedPct)));out.crit=clamp(out.crit,0,.95);out.damageReduction=clamp(out.damageReduction,0,.8);
-  if(unit.items.some(id=>equipmentMap.get(id)?.passive==='health-to-crit'))out.crit=Math.min(.95,out.crit+Math.min(.4,Math.max(0,out.hp-5000*CLASSIC_FLAT_SCALE)/(1000*CLASSIC_FLAT_SCALE)*.02));
+  out.hp=Math.round(out.hp*(1+out.hpPct));out.speed=Math.max(35,Math.round(out.speed*(1+out.speedPct)));out.crit=clamp(out.crit,0,1);out.damageReduction=clamp(out.damageReduction,0,.99);
+  for(const e of equipmentEntries(unit).filter(e=>e.passive==='health-to-crit')){const m=e.privileged?2:1;out.crit=Math.min(1,out.crit+Math.min(.4*m,Math.max(0,out.hp-5000*CLASSIC_FLAT_SCALE)/(1000*CLASSIC_FLAT_SCALE)*.02*m));}
   out.defense=out.hp*.15; // Trial DEF proxy; displayed as an explicit 2D approximation.
   out.positionAllowed=positionAllowed;
   return out;
@@ -119,27 +167,43 @@ export function simulateCombat(state, options={}) {
   let rng=((state.seed>>>0)^Math.imul(state.round,2654435761))>>>0 || 1;
   const random=()=>{rng^=rng<<13;rng^=rng>>>17;rng^=rng<<5;rng>>>=0;return rng/4294967296;};
   // Dice chooses two derived items for this encounter, never mutating the save.
+  const carriedItems=new Map(state.units.map(u=>[u.uid,[...(u.items||[])]]));
   state=clone(state);
-  for(const u of state.units)if(u.items.includes('comet')){const pool=EQUIPMENT.filter(e=>e.tier===2&&e.id!=='comet');const first=pool.splice(Math.floor(random()*pool.length),1)[0];u.items=['comet',first.id,pool[Math.floor(random()*pool.length)].id];}
+  state.units=state.units.map(u=>withNavigatorEquipment(state,u));
+  const progression=getProgressionBattleModifiers(state),rules=progression.ruleFlags||{};
+  for(const u of state.units)if(u.items.some(id=>resolveEquipment(id)?.baseId==='comet'||id==='comet')){
+    // A copied dice is a modification, not permission to replace real equipment.
+    // Generated gear only fills vacant ordinary slots; assigned daylight gear stays.
+    const carried=carriedItems.get(u.uid)||[],daySlots=dayEquipment(state,u,rules.day).length;
+    const vacancies=Math.min(2,Math.max(0,3-carried.length-daySlots));
+    const prefix=u.items.includes('privileged:comet')?'privileged:':'';
+    const pool=EQUIPMENT.filter(e=>e.tier===2&&e.id!=='comet'&&(!e.unique||!equipmentEntries(u).some(owned=>(owned.baseId||owned.id)===e.id)));
+    u._diceDerived=[];
+    for(let i=0;i<vacancies&&pool.length;i++){const item=pool.splice(Math.floor(random()*pool.length),1)[0];const id=prefix+item.id;u.items.push(id);u._diceDerived.push(id);}
+  }
   const synergies=getBattleSynergies(state), trait=id=>synergies.find(t=>t.id===id)?.level||0;
-  const member=(u,id)=>belongs(u,id)||(belongs(u,'savior')&&trait(id)>0&&!['savior','guardian','seer','beloved','gamer','navigator','magician'].includes(id));
+  const inherited=new Set(state.units.filter(u=>u.zone==='front').flatMap(u=>getUnitBattleTraits(state,u)).filter(id=>trait(id)>0&&TRAITS.find(t=>t.id===id)?.type!=='独立羁绊'));
+  const member=(u,id)=>belongs(u,id)||(belongs(u,'savior')&&inherited.has(id));
   const battleEffects=battleStrategy(state);
   const strategy=id=>state.strategies.includes(id);
   const allies=state.units.filter(u=>u.zone!=='bench').map(u=>{
     const c=characterMap.get(u.characterId), s=getBattleStats(state,u);
-    return {...s,id:u.uid,characterId:c.id,name:c.name,side:'ally',zone:u.zone,maxHp:s.hp,hp:s.hp,traits:[...c.traits],element:c.element,role:c.role,items:[...u.items],star:u.star,shield:0,energy:20,toughness:0,maxToughness:0,statuses:[],weaknesses:[],archetype:'character'};
+    return {...s,id:u.uid,characterId:c.id,name:c.name,side:'ally',zone:u.zone,navigatorCopied:u._navigatorCopied||null,temporaryItems:[...(u._diceDerived||[])],maxHp:s.hp,hp:s.hp,traits:getUnitBattleTraits(state,u),extraTraits:[...(u.extraTraits||[])],element:c.element,role:c.role,items:[...u.items],star:u.star,shield:0,energy:20,toughness:0,maxToughness:0,statuses:[],weaknesses:[],archetype:'character'};
   });
   const enemies=clone(options.enemyLineup||getEnemyLineup(state.round)).map((e,i)=>({shield:0,energy:20,toughness:60,maxToughness:60,statuses:[],weaknesses:[],zone:'front',...e,id:e.id||`enemy-${i}`,side:'enemy',maxHp:e.maxHp||e.hp,hp:e.hp??e.maxHp,crit:.04,items:[],element:'物理',archetype:e.archetype||'raider'}));
   const units=[...allies,...enemies];
+  const metrics=createCombatMetrics(units);
+  for(const [id,row] of Object.entries(metrics.byUnit))row.items=carriedItems.get(id)||row.items;
+  const metric=(u,key,value=1)=>{if(u?.side!=='ally'||!Number.isFinite(value))return;if(metrics.byUnit[u.id])metrics.byUnit[u.id][key]=(metrics.byUnit[u.id][key]||0)+value;if(typeof metrics[key]==='number')metrics[key]+=value;};
   for(const u of units){u.next=10000/u.speed;u.acted=0;u.counters=0;u.charges=0;u.autoHeal=0;u.revives=0;u.seeleReset=false;u.hertaTriggered=new Set();u.jingStacks=5;u.itemCharges=0;u.lastProcTurn=-1;u.ultimateCount=0;u.controlResists=0;u.totalAttackHits=0;u.field=0;u.damage=0;u.healing=0;u.shielding=0;u.kills=0;}
   const maxSp=5+(trait('sp')?tierValue([2,3,4,5],trait('sp')):0)+allies.filter(a=>a.positionAllowed&&a.characterId==='1306').reduce((n,a)=>n+starValue([2,3,4,5],a),0)+(allies.some(a=>a.positionAllowed&&a.zone==='back'&&a.characterId==='1508')?2:0);
   let time=0, turn=0, allySp=3, enemySp=5, context=null, reactions=[], winner=null, energyConsumed=0, belobogCharge=6, breakCharge=0, consecutiveAllies=0, bloodPool=0;
   let lastEnergyTime=0;
-  const passive=(u,p)=>u.items.some(id=>equipmentMap.get(id)?.passive===p);
+  const passive=(u,p)=>u.items.some(id=>resolveEquipment(id)?.passive===p);
   const valid=(u,id)=>u.hp>0&&u.characterId===id&&u.positionAllowed!==false;
   const passiveBack=new Set(['1013','1205','1208','1223','1202','1217','1306','1314','1221','1403']);
   const ability=actor=>characterMap.get(actor.characterId)?.empowerments?.find(e=>e.zone===actor.zone)||characterMap.get(actor.characterId)?.empowerments?.[0];
-  function skillPoints(amount){const before=allySp;allySp=clamp(allySp+amount,0,maxSp);for(const rin of allies.filter(a=>valid(a,'1508')))rin.gems=(rin.gems||0)+Math.abs(allySp-before);return allySp-before;}
+  function skillPoints(amount){const before=allySp;allySp=clamp(allySp+amount,0,maxSp);const actor=context?.actor;const changed=allySp-before;if(changed<0){metrics.skillPointsSpent-=changed;if(actor&&metrics.byUnit[actor.id])metrics.byUnit[actor.id].skillPointsSpent-=changed;}if(changed>0){metrics.skillPointsRestored+=changed;if(actor&&metrics.byUnit[actor.id])metrics.byUnit[actor.id].skillPointsRestored+=changed;}for(const rin of allies.filter(a=>valid(a,'1508')))rin.gems=(rin.gems||0)+Math.abs(allySp-before);if(changed<0&&actor&&passive(actor,'skill-point-refund')&&(actor.pointRefunds||0)<passiveAmount(actor,'skill-point-refund',3,6,false)){actor.pointRefunds=(actor.pointRefunds||0)+1;skillPoints(1);}return changed;}
 
   const events=[];
   const alive=side=>units.filter(u=>u.side===side&&u.hp>0);
@@ -151,7 +215,7 @@ export function simulateCombat(state, options={}) {
   const lowAlly=u=>front(u.side).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0]||alive(u.side)[0];
   const strongest=u=>front(u.side).filter(a=>a.id!==u.id).sort((a,b)=>b.attack-a.attack)[0]||front(u.side)[0]||u;
   const damageTargets=u=>front(opponents(u));
-  const snapshot=()=>units.map(u=>({id:u.id,name:u.name,side:u.side,characterId:u.characterId,zone:u.zone,maxHp:u.maxHp,hp:Math.round(u.hp),shield:Math.round(u.shield),energy:Math.round(u.energy),speed:Math.round(effectiveSpeed(u)),attack:Math.round(effectiveAttack(u)),toughness:u.toughness,maxToughness:u.maxToughness,weaknesses:[...u.weaknesses],statuses:u.statuses.map(s=>({type:s.type,label:s.label,stacks:s.stacks||1,turns:s.turns})),nextAction:Math.round(Math.max(0,u.next-time))}));
+  const snapshot=()=>units.map(u=>({id:u.id,name:u.name,side:u.side,characterId:u.characterId,zone:u.zone,maxHp:u.maxHp,hp:Math.round(u.hp),shield:Math.round(u.shield),energy:Math.round(u.energy),speed:Math.round(effectiveSpeed(u)),attack:Math.round(effectiveAttack(u)),toughness:u.toughness,maxToughness:u.maxToughness,weaknesses:[...u.weaknesses],temporaryItems:[...(u.temporaryItems||[])],statuses:u.statuses.map(s=>({type:s.type,label:s.label,stacks:s.stacks||1,turns:s.turns})),nextAction:Math.round(Math.max(0,u.next-time))}));
   function effectiveAttack(u){return Math.max(1,(u.attack+(status(u,'attackFlat')?.value||0))*(1+(status(u,'attackUp')?.value||0)-(status(u,'attackDown')?.value||0)));}
   function effectiveSpeed(u){return Math.max(35,u.speed*(1+(status(u,'haste')?.value||0)-(status(u,'slow')?.value||0)));}
   function addStatus(u,type,label,value,turns=2,source=null,stack=false){
@@ -161,8 +225,9 @@ export function simulateCombat(state, options={}) {
     if(u.side==='enemy'&&source?.side==='ally'&&['exposed','slow','frozen','burn','shock','wind','arcana','implanted','attackDown'].includes(type)){
       for(const acheron of allies.filter(a=>valid(a,'1308')))if(u.markTurn!==turn){u.markTurn=turn;const mark=status(u,'acheron');if(mark)mark.stacks=Math.min(9,mark.stacks+1);else u.statuses.push({type:'acheron',label:'飞雷紫',value:0,turns:99,stacks:1,sourceId:acheron.id,appliedTurn:turn});energy(acheron,10);}
     }
+    if(u.side==='enemy'&&source?.side==='ally'&&['exposed','slow','frozen','burn','shock','wind','arcana','ocean','implanted','attackDown','lihuo','bait'].includes(type))metric(source,'negativeApplications');
     const existing=status(u,type);
-    if(existing){existing.turns=Math.max(existing.turns,turns);existing.value=Math.max(existing.value,value);if(stack)existing.stacks=Math.min(type==='arcana'?50:type==='ocean'?99:5,(existing.stacks||1)+1);if(source)existing.sourceId=source.id;existing.appliedTurn=turn;}
+    if(existing){existing.turns=Math.max(existing.turns,turns);existing.value=Math.max(existing.value,value);if(stack)existing.stacks=Math.min(type==='arcana'?50+(rules.seer?.arcanaExtraCap||0):type==='ocean'?99:5,(existing.stacks||1)+1);if(source)existing.sourceId=source.id;existing.appliedTurn=turn;}
     else u.statuses.push({type,label,value,turns,stacks:1,sourceId:source?.id,appliedTurn:turn});
     if(source?.side==='ally'&&u.side==='ally'&&source!==u)targetChange(u,'buff',1);
   }
@@ -170,70 +235,72 @@ export function simulateCombat(state, options={}) {
   function note(text){if(context)context.notes.push(text);}
   function energy(u,amount){if(u.hp<=0)return;const gain=clamp(u.energy+amount,0,100)-u.energy;u.energy+=gain;targetChange(u,'energy',gain);}
   function supportEffects(source,target){
-    if(passive(source,'protective-support'))addStatus(target,'guard','痛觉阻断',.15,2,source);
-    if(passive(source,'ally-skill-confidence')){addStatus(target,'attackUp','信心注入',.3,2,source);addStatus(target,'guard','信心减伤',.1,2,source);}
+    if(passive(source,'protective-support'))addStatus(target,'guard','痛觉阻断',passiveAmount(source,'protective-support',.15,.3,false),2,source);
+    if(passive(source,'ally-skill-confidence')){addStatus(target,'attackUp','信心注入',passiveAmount(source,'ally-skill-confidence',.3,.6,false),2,source);addStatus(target,'guard','信心减伤',passiveAmount(source,'ally-skill-confidence',.1,.2,false),2,source);}
   }
-  function heal(source,target,amount){if(!target||target.hp<=0||amount<=0)return 0;const gain=Math.min(target.maxHp-target.hp,Math.round(amount*(1+(source.healAmp||0))));target.hp+=gain;source.healing+=gain;targetChange(target,'heal',gain);supportEffects(source,target);return gain;}
+  function heal(source,target,amount){if(!target||target.hp<=0||amount<=0)return 0;const gain=Math.min(target.maxHp-target.hp,Math.round(amount*(1+(source.healAmp||0))));target.hp+=gain;source.healing+=gain;metric(source,'healing',gain);targetChange(target,'heal',gain);supportEffects(source,target);return gain;}
   function shield(source,target,amount,duration=3){if(!target||target.hp<=0)return;
     if(target.side==='ally'&&trait('blood')&&member(target,'blood')){heal(source,target,target.maxHp*.02+1000*CLASSIC_FLAT_SCALE);note('燃血：护盾转化为治疗');return;}
-    const gain=Math.max(0,Math.min(target.maxHp-target.shield,Math.round(amount*(1+(source.shieldAmp||0)))));target.shield+=gain;if(gain>0)(target.shieldLayers??=[]).push({amount:gain,expires:target.acted+duration});source.shielding+=gain;targetChange(target,'shield',gain);supportEffects(source,target);
+    const gain=Math.max(0,Math.min(target.maxHp-target.shield,Math.round(amount*(1+(source.shieldAmp||0)))));target.shield+=gain;if(gain>0)(target.shieldLayers??=[]).push({amount:gain,expires:target.acted+duration});source.shielding+=gain;metric(source,'shielding',gain);targetChange(target,'shield',gain);supportEffects(source,target);
   }
-  function consumeHp(actor,amount){const loss=Math.max(0,Math.min(actor.hp-1,Math.round(amount)));actor.hp-=loss;targetChange(actor,'damage',loss);bloodPool+=loss;triggerBlood(actor,loss);return loss;}
+  function consumeHp(actor,amount){const loss=Math.max(0,Math.min(actor.hp-1,Math.round(amount)));actor.hp-=loss;metric(actor,'hpLost',loss);metrics.allyHpLost+=loss;targetChange(actor,'damage',loss);bloodPool+=loss;triggerBlood(actor,loss);return loss;}
   function triggerBlood(target,loss){
     if(!loss||target.side!=='ally')return;
     if(target.characterId==='1404')target.charges=Math.min(200,target.charges+loss/target.maxHp*300);
-    for(const blade of allies.filter(a=>valid(a,'1205')&&a.zone==='back'&&target.zone==='front'))if(blade.bloodTurn!==turn){blade.bloodTurn=turn;const damage=Math.min(blade.hp-1,Math.round(blade.maxHp*.15));blade.hp-=damage;targetChange(blade,'damage',damage);blade.charges++;if(blade.charges>=5){blade.charges=0;reactions.push({type:'blade',sourceId:blade.id});}}
+    for(const blade of allies.filter(a=>valid(a,'1205')&&a.zone==='back'&&target.zone==='front'))if(blade.bloodTurn!==turn){blade.bloodTurn=turn;const damage=Math.min(blade.hp-1,Math.round(blade.maxHp*.15));blade.hp-=damage;metric(blade,'hpLost',damage);metrics.allyHpLost+=damage;targetChange(blade,'damage',damage);blade.charges++;if(blade.charges>=5){blade.charges=0;reactions.push({type:'blade',sourceId:blade.id});}}
     for(const f of allies.filter(a=>valid(a,'1208')&&a.zone==='back'))if(target.hp/target.maxHp<.3&&f.revives>0){f.revives--;for(const a of front('ally'))heal(f,a,(a.maxHp-a.hp)*starValue([.6,.8,1],f));}
   }
   function event(actor,kind,skill,fn,text=''){
     if(events.length>=249)return;
-    const before=context;context={targets:[],notes:[],kind};fn();if(actor&&passive(actor,'ally-skill-confidence')&&['skill','support','ultimate'].includes(kind))for(const t of [...context.targets]){const ally=units.find(u=>u.id===t.id);if(ally?.side===actor.side)supportEffects(actor,ally);}if(actor&&['basic','skill','support','ultimate','followup'].includes(kind))afterAttack(actor,kind);
+    const before=context;context={targets:[],notes:[],kind,actor,explicitAttacks:0};fn();if(actor&&passive(actor,'ally-skill-confidence')&&['skill','support','ultimate'].includes(kind))for(const t of [...context.targets]){const ally=units.find(u=>u.id===t.id);if(ally?.side===actor.side)supportEffects(actor,ally);}if(actor&&['basic','skill','support','ultimate','followup'].includes(kind))afterAttack(actor,kind);
     const current=context;
     const effects=current.targets.map(t=>{const target=units.find(u=>u.id===t.id);const list=[];if(t.damage)list.push(`${t.damage} 伤害`);if(t.absorbed)list.push(`护盾吸收 ${t.absorbed}`);if(t.heal)list.push(`治疗 ${t.heal}`);if(t.shield)list.push(`护盾 +${t.shield}`);if(t.energy>0)list.push(`能量 +${t.energy}`);return list.length?`${target.name}：${list.join('，')}`:'';}).filter(Boolean);
     events.push({index:events.length,time:Math.round(time),turn,actorId:actor?.id||null,actorName:actor?.name||'战场',kind,skill,text:[text||`${actor?.name||'战场'}${actor?.zone==='back'?'从后台协同，':''}施放「${skill}」`,...effects,...current.notes].filter(Boolean).join('；'),targets:current.targets,snapshot:snapshot(),skillPoints:allySp});context=before;
   }
   function rawDamage(source,target,amount,{dot=false,follow=false,breakHit=false,toughness=20,canReact=true,trueDamage=false,nonlethal=false,guaranteedCrit=false}={}){
     if(!target||target.hp<=0||(!dot&&source.hp<=0)||!Number.isFinite(amount))return 0;
-    const preRatio=target.hp/target.maxHp, beforeShield=target.shield;
-    let modifier=trueDamage?1:1+(source.damageAmp||0)+(status(source,'damageUp')?.value||0)+(status(target,'exposed')?.value||0)+(status(target,'broken')?.value||0);
+    const preRatio=target.hp/target.maxHp, beforeHp=target.hp,beforeShield=target.shield;
+    let modifier=trueDamage?1:1+(source.damageAmp||0)+(status(source,'damageUp')?.value||0)+(status(source,'mentorDamage')?.value||0)+(rules.enemyVulnerability&&source.side==='ally'?rules.enemyVulnerability:0)+(status(target,'exposed')?.value||0)+(status(target,'broken')?.value||0);
     if(!trueDamage){
       if(source.side==='ally'&&trait('quantum'))modifier+=tierValue([.15,.3,.6,1],trait('quantum'));
       if(dot)modifier*=1+(source.dotAmp||0)+(status(target,'dotExposed')?.value||0);
+      if(['basic','skill'].includes(context?.kind))modifier*=1+(source.basicSkillDamage||0);
+      if(target.boss||target.archetype==='guard')modifier+=source.eliteDamage||0;
       if(follow)modifier*=1+(source.followAmp||0)+(status(source,'followUp')?.value||0);
       if(context?.kind==='ultimate')modifier*=1+(source.ultimateAmp||0)+(status(target,'ultExposed')?.value||0);
       if(source.side==='ally'&&['basic','skill'].includes(context?.kind)&&trait('sp'))modifier*=1+tierValue([.12,.24,.48,.8],trait('sp'))*(member(source,'sp')?2:1);
-      if(passive(source,'healthy-frontline')&&source.zone==='front'&&source.hp/source.maxHp>.7)modifier+=.3;
-      if(passive(source,'elite-execution')&&(target.boss||['guard','aurumaton','svarog','doomsday'].includes(target.archetype)))modifier+=.4;
+      if(source.zone==='front')for(const e of equipmentEntries(source).filter(e=>e.passive==='healthy-frontline'))if(source.hp/source.maxHp>(e.privileged?.5:.7))modifier+=e.privileged?.6:.3;
+      if(passive(source,'elite-execution')&&(target.boss||['guard','aurumaton','svarog','doomsday'].includes(target.archetype)))modifier+=passiveAmount(source,'elite-execution',.4);
       if(!dot&&!breakHit&&(guaranteedCrit||random()<Math.min(1,(source.crit||0)+(status(source,'critUp')?.value||0)))){modifier*=1+(source.critDamage??.5)+(status(source,'critDamageUp')?.value||0);note('幸运一击');}
-      modifier*=1-clamp((target.damageReduction||0)+(status(target,'guard')?.value||0),0,.9);
+      modifier*=1-clamp((target.damageReduction||0)+(status(target,'guard')?.value||0),0,.99);
     }
     let hit=Math.max(1,Math.round(amount*modifier));
     const yunli=target.side==='ally'&&canReact&&!dot&&allies.find(a=>valid(a,'1221')&&a.zone==='back'&&a.charges>0&&a.protectTurn!==turn);
     if(yunli){yunli.charges--;yunli.protectTurn=turn;hit=0;note('云璃剑盾抵挡本次攻击');reactions.push({type:'yunli',sourceId:yunli.id,targetId:source.id});}
     const absorbed=Math.min(target.shield,hit);target.shield-=absorbed;hit-=absorbed;let drain=absorbed;for(const layer of target.shieldLayers||[]){const used=Math.min(layer.amount,drain);layer.amount-=used;drain-=used;}if(target.shieldLayers)target.shieldLayers=target.shieldLayers.filter(l=>l.amount>0);
-    const hpDamage=Math.max(0,Math.min(nonlethal?target.hp-1:target.hp,hit));target.hp-=hpDamage;source.damage+=hpDamage+absorbed;
+    const hpDamage=Math.max(0,Math.min(nonlethal?target.hp-1:target.hp,hit));target.hp-=hpDamage;source.damage+=hpDamage+absorbed;metric(source,'damage',hpDamage+absorbed);metric(source,'hpDamage',hpDamage);metric(source,'overkillDamage',Math.max(0,hit-beforeHp));metric(target,'damageTaken',hpDamage);metric(target,'shieldAbsorbed',absorbed);if(target.side==='ally'){metric(target,'hpLost',hpDamage);metrics.allyHpLost+=hpDamage;}
     targetChange(target,'damage',hpDamage);if(absorbed)targetChange(target,'absorbed',absorbed);
     if(!dot&&!breakHit)energy(target,8);
     if(target.side==='ally'&&hpDamage>0){bloodPool+=hpDamage;triggerBlood(target,hpDamage);}
-    if(!dot&&!breakHit&&passive(source,'vulnerability-35'))addStatus(target,'exposed','装备易伤',.35,2,source);
-    if(target.hp<=0){target.hp=0;target.shield=0;target.statuses=[];source.kills++;note(`${target.name}退场`);
-      if(passive(source,'kill-damage-25'))source.damageAmp=(source.damageAmp||0)+.25;
+    if(!dot&&!breakHit&&passive(source,'vulnerability-35'))addStatus(target,'exposed','装备易伤',passiveAmount(source,'vulnerability-35',.35,.7,false),2,source);
+    if(target.hp<=0){target.hp=0;target.shield=0;target.statuses=[];source.kills++;metric(source,'kills');note(`${target.name}退场`);
+      if(passive(source,'kill-damage-25')&&!source.killGearTriggered){source.killGearTriggered=true;source.damageAmp=(source.damageAmp||0)+passiveAmount(source,'kill-damage-25',.25);}
       if(source.characterId==='1102'&&!source.seeleReset){source.seeleReset=true;source.next=Math.min(source.next,time+1);note('希儿「再现」：立即追加行动');}
       for(const h of allies.filter(a=>valid(a,'1013'))){h.attack*=1.01;}
     }
     if(!dot&&!breakHit&&target.hp>0&&target.maxToughness>0&&!status(target,'broken')&&(target.weaknesses.includes(source.element)||status(target,'implanted'))){
-      const elite=passive(source,'elite-execution')&&(target.boss||target.archetype==='guard')?.25:0;
-      target.toughness=Math.max(0,target.toughness-Math.round(toughness*(1+(source.breakBonus||0)+elite)));
-      if(target.toughness===0){addStatus(target,'broken','弱点击破',.2,1,source);target.next+=35;note(`${target.name}被弱点击破，行动延后`);reactions.push({type:'break',sourceId:source.id,targetId:target.id});}
+      const elite=passive(source,'elite-execution')&&(target.boss||target.archetype==='guard')?passiveAmount(source,'elite-execution',.25):0;
+      target.toughness=Math.max(0,target.toughness-Math.round(toughness*(1+(source.breakBonus||0)+elite+((target.boss||target.archetype==='guard')?(source.eliteBreak||0):0))));
+      if(target.toughness===0){metric(source,'toughnessBroken');addStatus(target,'broken','弱点击破',.2,1,source);target.next+=35;note(`${target.name}被弱点击破，行动延后`);reactions.push({type:'break',sourceId:source.id,targetId:target.id});}
     }
     if(canReact&&!dot&&!breakHit){
       if(source.side==='ally'&&trait('break')&&member(source,'break')&&status(target,'broken'))rawDamage(source,target,source.attack*(toughness/20)*tierValue([1.2,1.8,3,5],trait('break'))*(1+(source.breakEffect||0)),{breakHit:true,canReact:false,toughness:0});
       if(source.characterId==='1310'&&source.positionAllowed!==false)rawDamage(source,target,source.attack*(toughness/20)*starValue([.5,1,2.5],source)*(1+(source.breakEffect||0)),{breakHit:true,canReact:false,toughness:0});
-      if(passive(target,'shield-retaliation')&&beforeShield>0&&source.hp>1)rawDamage(target,source,beforeShield*2.5,{trueDamage:true,nonlethal:true,canReact:false,toughness:0});
+      if(passive(target,'shield-retaliation')&&beforeShield>0&&source.hp>1)rawDamage(target,source,beforeShield*passiveAmount(target,'shield-retaliation',2.5),{trueDamage:true,nonlethal:true,canReact:false,toughness:0});
       if(target.characterId==='1107'&&target.hp>0)reactions.push({type:'counter',sourceId:target.id,targetId:source.id});
       if(!follow&&target.side==='ally'&&target.hp>0){
         for(const healer of allies.filter(a=>valid(a,'1203')&&a.autoHeal<=0))if(target.hp/target.maxHp<.5){healer.autoHeal=2;reactions.push({type:'autoheal',sourceId:healer.id,targetId:target.id});}
-        for(const shielder of allies.filter(a=>a.hp>0&&passive(a,'emergency-shield')&&a.itemCharges<5))if(target.zone==='front'&&target.hp/target.maxHp<.5){shielder.itemCharges++;shield(shielder,target,shielder.defense*3,2);}
+        for(const shielder of allies.filter(a=>a.hp>0&&passive(a,'emergency-shield')&&a.itemCharges<passiveAmount(a,'emergency-shield',5,10,false)))if(target.zone==='front'&&target.hp/target.maxHp<.5){shielder.itemCharges++;shield(shielder,target,shielder.defense*passiveAmount(shielder,'emergency-shield',3,6,false),2);}
       }
     }
     if(!isClassic(target)&&target.characterId==='1205'&&hpDamage>0){target.charges++;if(target.charges>=5){target.charges=0;reactions.push({type:'blade',sourceId:target.id});}}
@@ -244,12 +311,14 @@ export function simulateCombat(state, options={}) {
   function aoe(actor,mult,opts={}){for(const target of damageTargets(actor))hit(actor,target,mult,opts);}
   function buffAll(actor,type,label,value,turns=2){for(const a of alive(actor.side))addStatus(a,type,label,value,turns,actor);note(`${label}生效`);}
   function applyDot(actor,target,type,label,mult,turns=3,stack=false){if(target&&target.hp>0){addStatus(target,type,label,effectiveAttack(actor)*mult*(isClassic(actor)?1:actor.zone==='back'?(strategy('backline')?1:.72):1),turns,actor,stack);note(`${target.name}获得${label}${stack?'层数':''}`);}}
-  function detonate(actor,target,factor=1){if(!target||target.hp<=0)return;for(const d of [...target.statuses].filter(s=>['burn','shock','wind','arcana','ocean','activation'].includes(s.type))){const owner=units.find(u=>u.id===d.sourceId)||actor;rawDamage(owner,target,d.value*(d.stacks||1)*factor,{dot:true,canReact:false,toughness:0});}note('引爆已有持续伤害');}
+  function dotDamage(owner,d){return d.type==='arcana'?d.value+effectiveAttack(owner)*starValue([.2,.25,1],owner)*(rules.seer?.arcanaMultiplier||1)*Math.max(0,(d.stacks||1)-1):d.value*(d.stacks||1);}
+  function detonate(actor,target,factor=1){if(!target||target.hp<=0)return;for(const d of [...target.statuses].filter(s=>['burn','shock','wind','arcana','ocean','activation'].includes(s.type))){const owner=units.find(u=>u.id===d.sourceId)||actor;rawDamage(owner,target,dotDamage(owner,d)*factor,{dot:true,canReact:false,toughness:0});}note('引爆已有持续伤害');}
   function allySkill(actor,ultimate=false,back=false){
     const c=actor.characterId,target=livingTarget(actor),weak=lowAlly(actor),carry=strongest(actor),self=actor;
     const scale=back?(strategy('backline')?1:.72):1;
     if(actor.positionAllowed===false){if(!back){hit(actor,target,1,{toughness:20});note('站位未激活赋能，仅普通攻击');}return;}
-    if(isClassic(actor)&&classicAction(actor,{ultimate,back,c:characterMap.get(c),target,weak,carry,hit,aoe,rawDamage,heal,shield,energy,buffAll,addStatus,applyDot,detonate,alive:alive(actor.side),front:front(actor.side),targets:damageTargets(actor),livingTarget,random,consumeHp,skillPoints,note,advance:(u,p)=>u.next=Math.max(time+1,u.next-(10000/effectiveSpeed(u))*p),trait,time,sourceSkills:ability(actor)?.skills||[],sp:()=>allySp}))return;
+    if(ultimate&&actor.characterId==='1209'&&state.strategies.includes('feiguang-sword')&&rules.mentor){const jing=allies.find(a=>a.characterId==='1204');if(jing?.damage>0){for(const enemy of damageTargets(actor))rawDamage(actor,enemy,jing.damage*rules.mentor.swordEchoRatio,{trueDamage:true,canReact:false,toughness:0});note(`飞光·传剑附加景元累计伤害的${Math.round(rules.mentor.swordEchoRatio*100)}%`);}}
+    if(isClassic(actor)&&classicAction(actor,{ultimate,back,c:characterMap.get(c),target,weak,carry,hit,aoe,rawDamage,heal,shield,energy,buffAll,addStatus,applyDot,detonate,alive:alive(actor.side),front:front(actor.side),targets:damageTargets(actor),livingTarget,random,consumeHp,skillPoints,note,advance:(u,p)=>u.next=Math.max(time+1,u.next-(10000/effectiveSpeed(u))*p),trait,time,sourceSkills:ability(actor)?.skills||[],sp:()=>allySp,recordAttack:()=>recordAttack(actor),rules}))return;
     if(ultimate){
       switch(c){
         case '1001':aoe(actor,1.15,{toughness:40});for(const t of damageTargets(actor))if(random()<.3)addStatus(t,'frozen','冻结',1,1,actor);break;
@@ -321,14 +390,43 @@ export function simulateCombat(state, options={}) {
       case '1208':buffAll(actor,'guard','穷观阵',.18,3);buffAll(actor,'critUp','鉴知',.12,3);heal(actor,actor,actor.maxHp*.12);break;
     }
   }
+  function applyRuntimeEquipment(target,id,reason='临时装备'){
+    const equipment=resolveEquipment(id);if(!equipment)return false;
+    if(equipment.unique&&target.items.includes(id))return false;
+    const runtimeState=()=>({...state,units:state.units.map(u=>{const a=allies.find(a=>a.id===u.uid);return a?{...u,items:[...a.items],_projectedCount:a.projectedCount||0}:u;})});
+    const beforeState=runtimeState(),before=new Map(allies.map(a=>[a.id,getBattleStats(beforeState,beforeState.units.find(u=>u.uid===a.id))]));
+    target.items.push(id);target.projectedCount=(target.projectedCount||0)+1;(target.temporaryItems??=[]).push(id);
+    const afterState=runtimeState();
+    for(const a of alive('ally')){
+      const prior=before.get(a.id),next=getBattleStats(afterState,afterState.units.find(u=>u.uid===a.id));
+      a.attack*=next.attack/Math.max(1,prior.attack);a.speed*=next.speed/Math.max(1,prior.speed);
+      const hpBefore=a.maxHp;a.maxHp=Math.round(a.maxHp*next.hp/Math.max(1,prior.hp));a.hp=clamp(a.hp+a.maxHp-hpBefore,1,a.maxHp);a.defense=a.maxHp*.15;
+      for(const key of ['crit','critDamage','breakBonus','breakEffect','damageAmp','damageReduction','healAmp','shieldAmp','followAmp','dotAmp','ultimateAmp'])a[key]=(a[key]||0)+(next[key]||0)-(prior[key]||0);
+    }
+    metrics.projectedEquipment.push({turn,time:Math.round(time),uid:target.id,characterId:target.characterId,itemId:id,reason});
+    note(`${target.name}获得${reason}「${equipment.name}」，战后消失`);return true;
+  }
+  function projectEquipment(actor){
+    const choices=[...alive('ally')];for(let i=choices.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[choices[i],choices[j]]=[choices[j],choices[i]];}
+    for(const a of choices.slice(0,3)){
+      let pool=a.zone==='back'?['orbital','catapult','electric']:['blade','firestorm','boots'];
+      if(a.role==='守护')pool=['cover-gun','revenge-armor','hard-armor'];else if(a.role==='治疗')pool=['bastion','garden','absolute-heat'];else if(member(a,'break'))pool=['wormhole-drill','cannon','boots'];
+      const eligible=pool.filter(id=>!resolveEquipment(id)?.unique||!a.items.includes(id));
+      if(eligible.length)applyRuntimeEquipment(a,eligible[Math.floor(random()*eligible.length)],'魔术师投影');
+    }
+  }
+  function recordAttack(actor){
+    metric(actor,'attacks');if(context)context.explicitAttacks++;
+    if(valid(actor,'1015')&&trait('magician')){actor.projectionCharge=(actor.projectionCharge||0)+1;if(actor.projectionCharge>=6){actor.projectionCharge-=6;projectEquipment(actor);}}
+  }
   function afterAttack(actor,kind){
     if(actor.side!=='ally'||!context)return;
     const attacked=context.targets.filter(t=>(t.damage||0)+(t.absorbed||0)>0).map(t=>units.find(u=>u.id===t.id)).filter(t=>t?.side==='enemy');
     if(!attacked.length)return;
-    actor.totalAttackHits++;
+    actor.totalAttackHits++;if(!context.explicitAttacks)recordAttack(actor);if(kind==='followup')metric(actor,'followups');
     const first=attacked.find(t=>t.hp>0)||livingTarget(actor),regular=kind!=='followup';
-    if(passive(actor,'firestorm'))addStatus(actor,'attackUp','火力风暴潮',.08*actor.totalAttackHits,99,actor);
-    if(passive(actor,'percent-true-damage')&&actor.dissolverTurn!==turn){actor.dissolverTurn=turn;const t=attacked[Math.floor(random()*attacked.length)];rawDamage(actor,t,t.maxHp*.03,{trueDamage:true,canReact:false,toughness:0});}
+    if(passive(actor,'firestorm'))addStatus(actor,'attackUp','火力风暴潮',passiveAmount(actor,'firestorm',.08)*actor.totalAttackHits,99,actor);
+    if(passive(actor,'percent-true-damage')&&actor.dissolverTurn!==turn){actor.dissolverTurn=turn;const t=attacked[Math.floor(random()*attacked.length)];rawDamage(actor,t,t.maxHp*passiveAmount(actor,'percent-true-damage',.03,.06,false),{trueDamage:true,canReact:false,toughness:0});}
     if(status(actor,'epic'))for(const t of attacked){const recorded=context.targets.find(x=>x.id===t.id);rawDamage(actor,t,(recorded?.damage||0)*status(actor,'epic').value,{trueDamage:true,canReact:false,toughness:0});}
     if(regular&&trait('follow')&&member(actor,'follow')){reactions.push({type:'trait-follow',sourceId:actor.id,targetId:first?.id});addStatus(actor,'followUp','连续行动',Math.min(tierValue([.2,.4,.6,1.2],trait('follow')),consecutiveAllies*tierValue([.05,.1,.15,.3],trait('follow'))),1,actor);}
     if(trait('debuff')&&member(actor,'debuff'))for(const t of attacked.filter(t=>t.hp>0&&t.statuses.some(s=>['exposed','slow','frozen','burn','shock','wind','arcana','ocean','implanted'].includes(s.type)))){addStatus(t,'lihuo','离火',tierValue([.1,.2,.3,.5],trait('debuff')),99,actor,true);addStatus(t,'attackDown','离火削弱',tierValue([.03,.04,.05,.06],trait('debuff'))*(status(t,'lihuo')?.stacks||1),99,actor);}
@@ -356,37 +454,39 @@ export function simulateCombat(state, options={}) {
   }
   function afterAction(actor,kind,artificialUltimate=false){
     if(actor.side!=='ally'){consecutiveAllies=0;for(const a of allies){if(valid(a,'1105')&&a.zone==='back')energy(a,10);if(valid(a,'1221'))energy(a,10);if(valid(a,'1104')){a.charges++;if(a.charges>=4){a.charges-=4;reactions.push({type:'gepard',sourceId:a.id});}}}return;}
-    consecutiveAllies++;
-    if(kind==='ultimate'){
+    consecutiveAllies++;metric(actor,'actions');
+    if(kind==='ultimate'){metric(actor,'ultimates');if(!actor.perpetualFree&&!artificialUltimate)metric(actor,'naturalUltimates');
       if(!actor.perpetualFree&&!artificialUltimate){actor.ultimateCount++;energyConsumed+=100;}actor.perpetualFree=false;
       for(const saber of allies.filter(a=>valid(a,'1014')&&a!==actor)){saber.saberBounces=Math.min(starValue(saber.zone==='back'?[4,6,8]:[4,8,12],saber),(saber.saberBounces||0)+starValue(saber.zone==='back'?[1,1,1]:[1,2,3],saber));saber.charges+=starValue([5,6,7],saber);}
       for(const gil of allies.filter(a=>valid(a,'1509')&&a!==actor)){energy(gil,30);gil.ultimateAmp+=starValue([.25,.3,.35,.4],gil);}
 
-      if(passive(actor,'ultimate-team-speed')){skillPoints(1);buffAll(actor,'haste','流星飞翼',.15,2);}
-      if(passive(actor,'ultimate-luck'))actor.crit=Math.min(1,actor.crit+.1*(actor.ultimateCount<=5?1:0));
-      if(passive(actor,'team-action-heal'))energy(actor,10);
+      if(passive(actor,'ultimate-team-speed')){skillPoints(passiveAmount(actor,'ultimate-team-speed',1));buffAll(actor,'haste','流星飞翼',passiveAmount(actor,'ultimate-team-speed',.15),2);}
+      if(passive(actor,'ultimate-luck'))actor.crit=Math.min(1,actor.crit+passiveAmount(actor,'ultimate-luck',.1)*((actor.itemUltimateCount=(actor.itemUltimateCount||0)+1)<=5?1:0));
+      if(passive(actor,'team-action-heal'))energy(actor,passiveAmount(actor,'team-action-heal',10,20,false));
       if(!artificialUltimate&&passive(actor,'perpetual-ultimate')&&actor.ultimateCount>0&&actor.ultimateCount%3===0)reactions.push({type:'item-ultimate',sourceId:actor.id});
-      if(trait('energy'))for(const a of front('ally').slice(0,1))energy(a,3);
+    if(trait('energy'))for(const a of front('ally').slice(0,1))energy(a,3);
       if(energyConsumed>=500&&trait('energy')>=2){energyConsumed-=500;reactions.push({type:'energy-wave',sourceId:actor.id});}
       for(const u of allies.filter(a=>valid(a,'1403'))){energy(u,20);u.charges++;if(u.charges>=2){u.charges=0;reactions.push({type:'tribbie',sourceId:u.id});}}
     }
-    for(const u of alive('ally'))if(passive(u,'team-action-heal'))heal(u,u,u.maxHp*.2);
+    for(const u of alive('ally'))if(passive(u,'team-action-heal'))heal(u,u,u.maxHp*passiveAmount(u,'team-action-heal',.2,.4,false));
+    if(trait('mentor')>=2&&member(actor,'mentor')&&['skill','ultimate'].includes(kind))for(const a of alive('ally').filter(a=>a!==actor&&member(a,'mentor'))){a.next=Math.max(time+1,a.next-10000/effectiveSpeed(a)*.3);a.inheritance=Math.min(99,(a.inheritance||0)+(kind==='ultimate'?3:2));addStatus(a,'mentorDamage','师徒·传承',a.inheritance*.1,99,actor);note(`${a.name}获得${kind==='ultimate'?3:2}层传承，行动提前30%`);}
     if(trait('belobog')&&member(actor,'belobog')){belobogCharge++;if(belobogCharge>=10){belobogCharge=0;reactions.push({type:'engine',sourceId:actor.id});}}
     if(trait('hunters')&&member(actor,'hunters')){
       const leaders=allies.filter(a=>a.hp>0&&member(a,'hunters')).sort((a,b)=>b.items.length-a.items.length).slice(0,trait('hunters')>=3?2:1);
       for(const lead of leaders){lead.hunterCharge=(lead.hunterCharge||0)+1;const needed=({'1205':4,'1005':4,'1006':5,'1310':6,'1506':7,'1507':6}[lead.characterId]||5);if(lead.hunterCharge>=needed){lead.hunterCharge=0;lead.next=Math.min(lead.next,time+1);note(`${lead.name}通缉令充能完成，行动提前`);}}
     }
-    if(trait('guardian')&&actor.zone==='front'){const bronya=allies.find(a=>valid(a,'1101'));if(bronya){bronya.guardianCharge=(bronya.guardianCharge??4)+1;if(bronya.guardianCharge>=8){bronya.guardianCharge=0;reactions.push({type:'guardian',sourceId:bronya.id});}}}
+    if(trait('guardian')&&actor.zone==='front'){const bronya=allies.find(a=>valid(a,'1101'));if(bronya){bronya.guardianCharge=(bronya.guardianCharge??rules.guardian?.initialCharge??4)+1;if(bronya.guardianCharge>=(rules.guardian?.chargeThreshold||8)){bronya.guardianCharge=0;reactions.push({type:'guardian',sourceId:bronya.id});}}}
     for(const b of battleEffects)if(b.damageAfterTime&&time>=b.damageAfterTime)for(const a of alive('ally'))addStatus(a,'damageUp','延迟收益',b.delayedDamage,99,a);
   }
-  function setBattleTime(next){time=Math.max(time,next);for(const u of alive('ally'))if(passive(u,'action-value-energy'))energy(u,(time-lastEnergyTime)*2);lastEnergyTime=time;}
+  function setBattleTime(next){time=Math.max(time,next);for(const u of alive('ally'))if(passive(u,'action-value-energy'))energy(u,(time-lastEnergyTime)*passiveAmount(u,'action-value-energy',2,4,false));lastEnergyTime=time;}
   function beforeAction(actor){
     if(actor.shieldLayers){const expired=actor.shieldLayers.filter(l=>l.expires<=actor.acted).reduce((n,l)=>n+l.amount,0);actor.shield=Math.max(0,actor.shield-expired);actor.shieldLayers=actor.shieldLayers.filter(l=>l.expires>actor.acted);if(expired)note('到期护盾消失');}
     if(actor.side==='ally'){
-      if(passive(actor,'accelerating-boots'))addStatus(actor,'haste','反重力加速',actor.acted*.15,99,actor);
-      if(passive(actor,'energy-each-turn'))energy(actor,10);
-      if(passive(actor,'skill-point-refund'))skillPoints(1);
-      if(passive(actor,'turn-team-shield'))for(const a of front('ally'))shield(actor,a,actor.maxHp*.3,2);
+      if(passive(actor,'accelerating-boots'))addStatus(actor,'haste','反重力加速',actor.acted*passiveAmount(actor,'accelerating-boots',.15),99,actor);
+      if(passive(actor,'energy-each-turn'))energy(actor,passiveAmount(actor,'energy-each-turn',10,20,false));
+      actor.pointRefunds=0;if(passive(actor,'skill-point-refund')){skillPoints(1);actor.pointRefunds++;}
+      if(passive(actor,'turn-team-shield'))for(const a of front('ally'))shield(actor,a,actor.maxHp*passiveAmount(actor,'turn-team-shield',.3),2);
+      if(actor.zone==='front'&&rules.scholar){const source=allies.find(a=>a.hp>0&&member(a,'scholar'));if(source){heal(source,actor,actor.maxHp*rules.scholar.frontHealRatio);note(`猫猫糕 Lv.${rules.scholar.level} 回合治疗`);}}
       if(actor.zone==='front')for(const unit of allies){
         if(valid(unit,'1202'))energy(unit,10);
         if(valid(unit,'1217')){energy(unit,8);const amount=unit.maxHp*starValue([.045,.051,.058,.065],unit)+starValue([12,13.8,15.6,17.4],unit);heal(unit,actor,amount);heal(unit,lowAlly(unit),amount);}
@@ -437,7 +537,7 @@ export function simulateCombat(state, options={}) {
       else if(r.type==='engine')event(source,'followup','贝洛伯格·创世引擎',()=>{const accumulated=allies.filter(a=>member(a,'belobog')).reduce((sum,a)=>sum+a.damage,0);for(const t of front('enemy'))rawDamage(source,t,source.attack*tierValue([6,12],trait('belobog'))+accumulated*tierValue([.25,.4],trait('belobog')),{trueDamage:true,canReact:false});const leader=allies.filter(a=>a.hp>0&&member(a,'belobog')).sort((a,b)=>b.damage-a.damage)[0];if(leader)leader.next=Math.min(leader.next,time+1);});
       else if(r.type==='energy-wave')event(source,'followup','能量·过载放电',()=>aoe(source,tierValue([0,8,18,120],trait('energy')),{breakHit:true,canReact:false}));
       else if(r.type==='break-wave')event(source,'break','击破·冲击波',()=>{for(const t of front('enemy')){rawDamage(source,t,tierValue([0,600,1500,3000],trait('break'))*CLASSIC_FLAT_SCALE,{trueDamage:true,canReact:false});addStatus(t,'exposed','冲击波',.5,2,source);}});
-      else if(r.type==='guardian')event(source,'followup','大守护者·集结',()=>{for(const t of front('enemy'))rawDamage(source,t,(source.attack*12+source.maxHp*2.4)*starValue([1,1.5,10],source),{follow:true,canReact:false});});
+      else if(r.type==='guardian')event(source,'followup','大守护者·集结',()=>{for(const t of front('enemy'))rawDamage(source,t,(source.attack*12+source.maxHp*2.4)*(rules.guardian?.damageMultiplier||starValue([1,1.5,10],source)),{follow:true,guaranteedCrit:true,canReact:false});});
       else if(r.type==='item-ultimate')event(source,'ultimate','永动机·终结技激活',()=>{allySkill(source,true,source.zone==='back');afterAction(source,'ultimate',true);note('此终结技不计入永动机自然次数');});
       checkWinner();if(winner)break;
     }
@@ -446,14 +546,15 @@ export function simulateCombat(state, options={}) {
   function checkWinner(){if(!front('ally').length)winner='enemy';else if(!front('enemy').length)winner='ally';return winner;}
   const schedules=[];
   function applyOpening(){
+    if(rules.festival?.initialSP){skillPoints(rules.festival.initialSP);note('盛会巨星·花火：初始战技点增加');}
     for(const a of allies){
-      energy(a,a.startEnergy||0);
+      energy(a,a.startEnergy||0);if(a.navigatorCopied){(a.temporaryItems??=[]).push(a.navigatorCopied);note(`${a.name}复制领航伙伴首件装备`);}if(a.dayEquipment?.length)note(`${a.name}穿戴${a.dayEquipment.length}件${rules.day?.enhanced?'强化':''}白昼装备`);
       if(passive(a,'perpetual-ultimate')){a.energy=100;a.perpetualFree=true;note(`${a.name}：永动机开场激活终结技`);}
       if(passive(a,'backline-catapult')&&a.zone==='back')a.next*=.5;
       if(passive(a,'adaptive-position')&&a.zone==='front')addStatus(a,'taunt','自适应外骨骼',1,99,a);
-      if(passive(a,'shield-retaliation'))for(const t of front('ally'))shield(a,t,a.defense*3,2);
-      if(passive(a,'team-luck-control'))for(const t of allies)t.controlResists+=4;
-      if(passive(a,'enemy-weaken-20'))for(const t of enemies)addStatus(t,'attackDown','闪光手榴弹',.2,99,a);
+      if(passive(a,'shield-retaliation'))for(const t of front('ally'))shield(a,t,a.defense*passiveAmount(a,'shield-retaliation',3),2);
+      if(passive(a,'team-luck-control'))for(const t of allies)t.controlResists+=passiveAmount(a,'team-luck-control',4);
+      if(passive(a,'enemy-weaken-20'))for(const t of enemies)addStatus(t,'attackDown','闪光手榴弹',passiveAmount(a,'enemy-weaken-20',.2,.4,false),99,a);
       if(trait('ranger')>=4&&member(a,'ranger'))a.next=1;
       if(trait('break')&&a.zone==='front')a.breakEffect+=trait('break')>=3?.3:0;
       if(!a.positionAllowed)continue;
@@ -461,7 +562,7 @@ export function simulateCombat(state, options={}) {
       if(a.characterId==='1001')for(const t of allies)t.damageAmp+=star([.4,.5,.6,.7]);
       if(a.characterId==='1203'){a.field=99;for(const t of allies)t.damageAmp+=star([.3,.6,1.2]);}
       if(a.characterId==='1304')for(const t of allies)t.damageAmp+=star([.3,.45,.6,.75]);
-      if(a.characterId==='1307'){for(const t of allies)t.damageAmp+=star([.72,.9,1.2]);for(const t of enemies)applyDot(a,t,'arcana','奥迹',star([3,3.75,15]),99,true);}
+      if(a.characterId==='1307'){for(const t of allies)t.damageAmp+=star([.72,.9,1.2]);for(const t of enemies){applyDot(a,t,'arcana','奥迹',star([3,3.75,15]),99,true);const d=status(t,'arcana');if(d)d.stacks=Math.max(d.stacks,rules.seer?.arcanaInitialStacks||1);}if(rules.seer?.assertionHpRatio){for(const t of enemies)rawDamage(a,t,t.maxHp*rules.seer.assertionHpRatio,{trueDamage:true,canReact:false});note('启示卡·断言：开场按敌人生命上限造成真实伤害');}}
       if(a.characterId==='1208'){a.revives=1;for(const t of front('ally'))t.damageReduction+=star([.1,.15,.2]);for(const t of allies)t.critDamage+=star([.18,.24,.3])+star([.06,.08,.1])*trait('quantum');}
       if(a.characterId==='1306')for(const t of enemies)addStatus(t,'exposed','虚构事实',star([.24,.32,.4,.48]),99,a);
       if(a.characterId==='1301'&&a.zone==='back')for(const t of enemies)addStatus(t,'exposed','酩酊',star([.08,.12,.16,.2]),99,a);
@@ -478,7 +579,7 @@ export function simulateCombat(state, options={}) {
       if(a.characterId==='1212'){a.crit+=.5;a.critDamage+=star([2.2,2.6,3]);}
       if(a.characterId==='1405'){a.critDamage+=star([1.4,1.8,2.4]);for(const t of allies)t.damageAmp+=star([.25,.3,.4]);}
       if(a.characterId==='1408')a.attack*=1+allies.filter(t=>t.zone==='front'&&t!==a).reduce((sum,t)=>sum+t.star,0)*star([.4,.8,1.2]);
-      if(a.characterId==='1406')a.recordedDamage=star([4000,20000,100000,200000]);
+      if(a.characterId==='1406')a.recordedDamage=star([4000,20000,100000,200000])*CLASSIC_FLAT_SCALE;
       if(a.characterId==='1509'){const count=allies.reduce((n,t)=>n+t.items.length,0);for(const t of allies)t.critDamage+=count*.02*(t===a?1+star([2,3,4,5]):1);}
       if(a.characterId==='1504')a.charges=2;
       if(a.characterId==='1218')energy(a,50);
@@ -487,6 +588,7 @@ export function simulateCombat(state, options={}) {
       if(a.characterId==='1204')schedules.push({type:'jing',sourceId:a.id,next:10000/star([300,300,500]),interval:10000/star([300,300,500])});
       if(a.characterId==='1220')a.followAmp+=0;
     }
+    if(rules.wolfpack){const owner=allies.find(a=>member(a,'wolfpack'));if(owner){schedules.push({type:'wolfpack',sourceId:owner.id,next:10000/rules.wolfpack.speed,interval:10000/rules.wolfpack.speed,form:rules.wolfpack});metrics.summons.push({kind:'wolfpack',name:rules.wolfpack.name,level:rules.wolfpack.level,speed:rules.wolfpack.speed});if(rules.wolfpack.extraWolf)schedules.push({type:'wolfpack',sourceId:owner.id,next:10000/200,interval:10000/200,form:{name:'狼卒',speed:200,attackScale:10}});note(`狼狩召唤 ${rules.wolfpack.name} Lv.${rules.wolfpack.level}`);}}
     for(const b of battleEffects)if(b.fastestCount)for(const a of [...allies].sort((a,b)=>b.speed-a.speed).slice(0,b.fastestCount)){a.speed*=1+b.fastestSpeed;a.next/=1+b.fastestSpeed;}
     if(trait('energy'))for(const a of front('ally').slice(0,1))energy(a,30*(member(a,'energy')?2:1));
     if(trait('break'))for(const t of enemies){t.maxToughness=Math.max(1,Math.round(t.maxToughness*(1-tierValue([.1,.2,.3,.99],trait('break')))));t.toughness=t.maxToughness;}
@@ -500,6 +602,7 @@ export function simulateCombat(state, options={}) {
     const source=units.find(u=>u.id===schedule.sourceId);schedule.next+=schedule.interval;
     if(!source||source.hp<=0)return;
     if(schedule.type==='jing'){reactions.push({type:'lightning',sourceId:source.id});flushReactions();return;}
+    if(schedule.type==='wolfpack')event(source,'followup',`狼狩·${schedule.form.name}`,()=>{const form=schedule.form,oldElement=source.element;source.element=form.element==='thunder'?'雷':'物理';const target=livingTarget(source),victims=form.target==='all'?front('enemy'):[target].filter(Boolean);for(const t of victims)hit(source,t,form.attackScale,{follow:true,canReact:false});if(form.splashScale)for(const t of front('enemy').filter(t=>t!==target).slice(0,2))hit(source,t,form.splashScale,{follow:true,canReact:false});if(form.secondAttackScale)for(const t of form.target==='all'?front('enemy'):[livingTarget(source)].filter(Boolean))hit(source,t,form.secondAttackScale,{follow:true,canReact:false});if(form.vulnerability)for(const t of front('enemy'))addStatus(t,'exposed','狼王震慑',form.vulnerability,2,source);source.element=oldElement;note('狼灵使用持有者试用攻击面板，形态速度与倍率按原表');});
     if(schedule.type==='train')event(source,'followup','列车同行·轨道驰援',()=>aoe(source,2,{follow:true,canReact:false}));
     if(schedule.type==='luofu')event(source,'followup','仙舟·神君协战',()=>{aoe(source,tierValue([3,6,9,12],trait('luofu')),{follow:true,canReact:false});const hits=tierValue([3,6,8,10],trait('luofu'));for(let i=0;i<hits;i++)hit(source,livingTarget(source),.5,{follow:true,canReact:false,toughness:10});});
     if(schedule.type==='blood'&&bloodPool>0)event(source,'followup','燃血·生命洪流',()=>{const amount=Math.min(bloodPool*tierValue([5,10,20,40],trait('blood')),tierValue([40000,80000,160000,320000],trait('blood'))*CLASSIC_FLAT_SCALE);bloodPool=0;for(const t of front('enemy'))rawDamage(source,t,amount,{trueDamage:true,canReact:false});if(trait('blood')>=3)for(const t of front('ally'))heal(source,t,t.maxHp*tierValue([0,0,.3,.5],trait('blood')));});
@@ -517,7 +620,7 @@ export function simulateCombat(state, options={}) {
     actor.next=time+10000/effectiveSpeed(actor);
     if(actor.side==='enemy'||actor.items.length||actor.zone==='front')event(actor,'prepare','回合开始',()=>beforeAction(actor));
     const dots=actor.statuses.filter(s=>['burn','shock','wind','arcana','ocean','activation'].includes(s.type));
-    if(dots.length)event(actor,'dot','持续伤害结算',()=>{for(const d of dots){const source=units.find(u=>u.id===d.sourceId);if(source){rawDamage(source,actor,d.value*(d.stacks||1),{dot:true,canReact:false,toughness:0});if(d.type==='arcana'&&!source.field)d.stacks=Math.max(1,Math.floor(d.stacks/2));}}},`${actor.name}行动前结算持续伤害`);
+    if(dots.length)event(actor,'dot','持续伤害结算',()=>{for(const d of dots){const source=units.find(u=>u.id===d.sourceId);if(source){rawDamage(source,actor,dotDamage(source,d),{dot:true,canReact:false,toughness:0});if(d.type==='arcana'&&!source.field)d.stacks=1;}}},`${actor.name}行动前结算持续伤害`);
     if(checkWinner())break;
     if(actor.hp<=0)continue;
     if(status(actor,'regen'))event(actor,'heal','持续治疗',()=>{const regen=status(actor,'regen');heal(units.find(u=>u.id===regen.sourceId)||actor,actor,regen.value);});
@@ -541,7 +644,6 @@ export function simulateCombat(state, options={}) {
       else {if(actor.side==='ally'){
         if(actor.zone==='front'){skillPoints(-1);for(const a of allies.filter(a=>valid(a,'1306')))energy(a,3);}
         allySkill(actor,false,actor.zone==='back');
-        if(actor.zone==='front'&&passive(actor,'skill-point-refund'))skillPoints(1);
       }else enemyAction(actor,false);energy(actor,actor.zone==='back'?30:30);}
       afterAction(actor,kind);
     });
@@ -549,6 +651,7 @@ export function simulateCombat(state, options={}) {
     if(actor.field>0&&actor.field<99)actor.field--;
     for(const s of actor.statuses)if(s.type!=='broken'&&s.appliedTurn!==turn)s.turns--;
     actor.statuses=actor.statuses.filter(s=>s.turns>0);
+    if(actor.characterId==='1101'&&!status(actor,'guardianMarch'))for(const a of allies)if(a.guardianHpBoost){a.maxHp=Math.round(a.maxHp/(1+a.guardianHpBoost));a.hp=Math.min(a.hp,a.maxHp);a.defense=a.maxHp*.15;a.guardianHpBoost=0;}
     actor.next=Math.min(actor.next,time+10000/effectiveSpeed(actor));
     for(const a of allies)if(a!==actor&&a.zone==='back'&&a.energy>=100&&passiveBack.has(a.characterId))a.next=Math.max(time+1,Math.min(a.next,time+1));
     flushReactions();
@@ -557,5 +660,5 @@ export function simulateCombat(state, options={}) {
   if(!winner)winner='enemy';
   event(null,'end','战斗结束',()=>{},winner==='ally'?'敌方全灭，本场战斗胜利。':reason==='timeout'?'行动达到上限，未能及时击败敌方，本场战斗失败。':'前台全员退场，本场战斗失败。');
   if(events.length)events[events.length-1].winner=winner;
-  return {version:2,simulationNote:CLASSIC_SIMULATION_NOTE,initialSkillPoints:3,maxSkillPoints:maxSp,maxEnergy:100,units:initial,events,winner,turns:turn,reason,skillPoints:allySp,stats:units.map(u=>({id:u.id,name:u.name,side:u.side,damage:Math.round(u.damage),healing:Math.round(u.healing),shielding:Math.round(u.shielding),kills:u.kills})),final:snapshot()};
+  return {metrics:finishCombatMetrics(metrics,units,winner,time),version:2,simulationNote:CLASSIC_SIMULATION_NOTE,initialSkillPoints:3,maxSkillPoints:maxSp,maxEnergy:100,units:initial,events,winner,turns:turn,reason,skillPoints:allySp,stats:units.map(u=>({id:u.id,name:u.name,side:u.side,damage:Math.round(u.damage),healing:Math.round(u.healing),shielding:Math.round(u.shielding),kills:u.kills})),final:snapshot()};
 }

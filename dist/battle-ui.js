@@ -1,4 +1,4 @@
-import { CHARACTERS } from './data.js?v=4.0.2';
+import { CHARACTERS } from './data.js?v=5.0.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -56,7 +56,7 @@ export function combatMarkup(playback, enemyName, round) {
       ${back.length?`<div class="combat-backline"><span class="backline-label">后台<br>协同</span>${back.map(u=>battleUnit(u,current,true)).join('')}</div>`:''}
     </div>
     <aside class="combat-feed"><h2>战斗记录 <small>实时结算</small></h2><div class="feed-events">${seenEvents.map((event,i)=>`<article class="feed-event ${i===0?'latest':''} ${event.kind}"><span class="feed-kind">${escape(kindLabels[event.kind]||'行动')} <small>#${event.index??playback.cursor-i}</small></span><h3>${escape(event.actorName || '战场')}</h3><p>${escape(event.text)}</p></article>`).join('')||'<p class="feed-placeholder">技能、装备和羁绊的触发会记录在这里。</p>'}</div><div class="combat-rule">胜负由前台生存与实际伤害决定。后台不受攻击；前台全灭即失败。</div></aside></div>
-    <footer class="combat-controls"><div class="playback-progress"><span>${done?combat.winner==='ally'?'胜利 · 敌方已清除':combat.reason==='timeout'?'战败 · 超过行动上限':'战败 · 前台已倒下':`当前行动 ${playback.cursor}`}</span><div><i style="width:${percent(playback.cursor,combat.events.length)}%"></i></div>${done?`<small>全队累计伤害 ${number(totalDamage)}</small>`:'<small>可暂停查看生命、护盾与状态变化</small>'}</div><div class="playback-buttons"><button class="secondary-button" data-action="playback-toggle" ${done?'disabled':''}>${playback.playing?'Ⅱ 暂停':'▶ 播放'}</button><button class="secondary-button" data-action="playback-step" ${done?'disabled':''}>单步 ›</button><button class="secondary-button playback-speed" data-action="playback-speed">${playback.speed}× 速度</button><button class="primary-button" data-action="${done?'playback-finish':'playback-skip'}">${done?'查看结算 →':'跳过回放 »'}</button></div></footer>
+    <footer class="combat-controls"><div class="playback-progress"><span>${done?combat.winner==='ally'?'胜利 · 敌方已清除':combat.reason==='timeout'?'战败 · 超过行动上限':'战败 · 前台已倒下':`当前行动 ${playback.cursor}`}</span><div><i style="width:${percent(playback.cursor,combat.events.length)}%"></i></div>${done?`<small>全队累计伤害 ${number(totalDamage)}</small>`:'<small>可暂停查看生命、护盾与状态变化</small>'}</div><div class="playback-buttons"><button class="secondary-button" data-action="playback-toggle" ${done?'disabled':''}>${playback.playing?'Ⅱ 暂停':'▶ 播放'}</button><button class="secondary-button" data-action="playback-step" ${done?'disabled':''}>单步 ›</button><button class="secondary-button playback-speed" data-action="playback-speed">${playback.speed}× 速度</button>${done?'<span class="playback-finishing">正在结算…</span>':'<button class="primary-button" data-action="playback-skip">跳过回放 »</button>'}</div></footer>
   </section></div></div>`;
 }
 

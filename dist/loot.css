@@ -1,0 +1,76 @@
+/* Right-side crystal ore and inventory; gameplay remains in engine.js. */
+.classic-scene .loot-field{position:absolute;z-index:6;right:136px;top:169px;width:220px;color:#f8f7ff;text-align:center}
+.loot-field-heading{height:31px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;letter-spacing:2px;text-shadow:0 2px 4px #161448}
+.loot-field-heading b{font:500 15px var(--number);min-width:22px;line-height:22px;border:1px solid #ddd6ff66;border-radius:50%;background:#17164466}
+.loot-orbs{display:grid;grid-template-columns:repeat(2,1fr);align-items:center;justify-items:center;gap:11px 5px;max-height:379px;padding:13px 6px 20px;overflow:auto;scrollbar-width:thin;scrollbar-color:#c8c1f085 transparent}
+.loot-orb{--orb-color:#dbeaff;--orb-shadow:#80a9e3;position:relative;width:76px;height:80px;border:0;background:transparent;padding:0;isolation:isolate;cursor:pointer;animation:ore-float 3s ease-in-out var(--orb-delay,0s) infinite}
+.loot-orb.quality-blue{--orb-color:#66dfff;--orb-shadow:#127fea;width:86px;height:90px}
+.loot-orb.quality-gold{--orb-color:#ffe373;--orb-shadow:#dc8d08;width:94px;height:98px}
+.loot-orb.quality-prismatic{--orb-color:#a7faff;--orb-shadow:#ac4dff;width:124px;height:128px;grid-column:1/-1}
+.orb-sphere{position:absolute;inset:3px 3px 9px;border-radius:50%;background:radial-gradient(circle at 29% 22%,#fff 0, #ffffffa6 4%,transparent 17%),radial-gradient(circle at 67% 75%,#fff9 0,transparent 31%),radial-gradient(circle at 37% 32%,#ffffffbf,var(--orb-color) 40%,var(--orb-shadow) 76%,#362e8544 100%);box-shadow:inset -4px -7px 11px #1e2e6633,inset 2px 3px 8px #fff,0 0 3px 1px #fff8,0 0 17px color-mix(in srgb,var(--orb-color) 65%,transparent);overflow:hidden;transition:filter .15s,transform .15s}
+.quality-white .orb-sphere{background:radial-gradient(circle at 28% 20%,#fff 0 5%,#fff6 14%,transparent 25%),radial-gradient(circle at 45% 43%,#fff6,#d6e5ee8c 55%,#86a4d4a1 82%,#b5d6ff)}
+.quality-prismatic .orb-sphere{background:radial-gradient(circle at 28% 20%,#fff 0 4%,#fffc 6%,transparent 20%),radial-gradient(circle at 80% 30%,#e6a8ff 0,transparent 42%),radial-gradient(circle at 25% 76%,#60efff 0,transparent 40%),conic-gradient(from 24deg,#8083fa,#d385fa,#ffb2f8,#aeffe7,#42ddff,#7775ed);box-shadow:inset -4px -8px 12px #55459a44,inset 2px 3px 8px #fff,0 0 4px 1px #fff9,0 0 26px #9b92ffbb}
+.orb-shine{position:absolute;left:13%;top:12%;width:58%;height:26%;border-radius:50%;transform:rotate(-35deg);background:linear-gradient(#fffe,#fff0)}
+.orb-cloud{position:absolute;inset:20%;border-radius:50%;filter:blur(3px);background:radial-gradient(circle at 20% 70%,#fff9 0 15%,transparent 27%),radial-gradient(circle at 75% 35%,#fff8 0 12%,transparent 26%),radial-gradient(circle at 60% 80%,#fff7 0 12%,transparent 24%)}
+.orb-particles{position:absolute;inset:0;background:radial-gradient(circle at 22% 52%,white 0 1px,transparent 2px),radial-gradient(circle at 60% 22%,white 0 2px,transparent 4px),radial-gradient(circle at 68% 66%,white 0 1.5px,transparent 3px),radial-gradient(circle at 43% 80%,#fff9 0 1px,transparent 3px),radial-gradient(circle at 81% 47%,#fffc 0 1px,transparent 2px);animation:ore-shimmer 2s ease-in-out infinite alternate}
+.orb-halo{position:absolute;inset:5%;background:var(--orb-color);border-radius:50%;filter:blur(19px);opacity:.37}
+.orb-floor{position:absolute;z-index:-1;left:20%;right:20%;height:9%;bottom:-5%;border-radius:50%;background:#15134699;filter:blur(3px)}
+.orb-label{position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);white-space:nowrap;font-size:15px;line-height:24px;padding:0 7px;background:#17172cca;border:1px solid #ded5ff66;opacity:0;pointer-events:none;transition:opacity .15s}
+.loot-orb:hover .orb-sphere,.loot-orb:focus-visible .orb-sphere{filter:brightness(1.15);transform:scale(1.09)}
+.loot-orb:hover .orb-label,.loot-orb:focus-visible .orb-label{opacity:1}
+.loot-field-hint{font-size:14px;color:#ded9fa;margin:5px 0;text-shadow:0 2px 5px #21185c}
+.classic-scene.shop-is-open .loot-field{top:417px;width:88px;right:136px}
+.shop-is-open .loot-field-heading{font-size:14px;height:22px;letter-spacing:0}
+.shop-is-open .loot-orbs{grid-template-columns:1fr;gap:10px;max-height:183px;padding:12px 5px 15px}
+.shop-is-open .loot-orb{width:54px;height:58px}.shop-is-open .loot-orb.quality-blue{width:62px;height:66px}.shop-is-open .loot-orb.quality-gold{width:68px;height:72px}.shop-is-open .loot-orb.quality-prismatic{width:78px;height:82px}
+.shop-is-open .loot-field-hint{font-size:12px;margin:4px -4px}
+.classic-scene .equipment-rail .inventory{scrollbar-color:#aaa3d0 #1b173a66;scrollbar-width:thin;align-content:start}
+.classic-scene .equipment-rail .inventory-item.tier-2{border-color:#d3b766;background:linear-gradient(135deg,#8b642f,#2b2030)}
+.classic-scene .equipment-rail .inventory-item.loot-chest{border-color:#d8bb6e;background:linear-gradient(135deg,#6358a3,#221831)}
+.classic-scene .equipment-rail .inventory-item.loot-consumable{border-color:#9ab8df;background:linear-gradient(135deg,#516eae,#1d203b)}
+.inventory-count{position:absolute;right:2px;bottom:0;font:600 22px/1.1 var(--number);color:white;text-shadow:-1px -1px #111,1px 1px #111,0 2px 4px #000;min-width:23px;text-align:center;background:#1118}
+.inventory-kind{position:absolute;bottom:0;left:0;right:0;font-size:12px;line-height:17px;letter-spacing:2px;background:#141128c9;color:#f9ecbe}
+.inventory-empty{font-size:14px;color:#c4bbdf99;writing-mode:vertical-rl;letter-spacing:4px;margin:12px auto;padding:0}
+.consumable-glyph{display:block;width:72%!important;height:72%!important;margin:10% auto;color:#ffe0a2;filter:drop-shadow(0 2px 3px #16132f)}
+.consumable-cost{position:absolute;right:5px;bottom:16px;font:600 22px var(--number);color:#fff}
+.consumable-detail-art{width:92px;height:92px;position:relative;display:block;margin:8px auto 20px;background:linear-gradient(135deg,#5363a7,#201a38);border:2px solid #b9b5da}
+.consumable-detail-art img{width:100%;height:100%;object-fit:contain}
+.equip-target.is-selected{border-color:#e9d492;box-shadow:0 0 0 1px #e9d492}
+.chest-screen{background:radial-gradient(ellipse at 50% -10%,#6765eb,#302b8b 49%,#131323 94%);color:#f6f4ff}
+.chest-screen-pattern{position:absolute;inset:0;background:repeating-linear-gradient(55deg,transparent 0 3px,#fff03a06 3px 5px),linear-gradient(32deg,transparent 49.8%,#b1b2ff18 50%,transparent 50.2%),linear-gradient(-32deg,transparent 49.8%,#b1b2ff18 50%,transparent 50.2%);background-size:auto,400px 500px,400px 500px;pointer-events:none}
+.chest-return{position:absolute;right:0;top:32px;display:flex;align-items:center;gap:20px;border:1px solid #9b96d2;border-right:0;padding:14px 52px 14px 23px;background:#17162ce6;color:#fff;font-size:25px;clip-path:polygon(0 0,100% 0,100% 100%,16px 100%,0 calc(100% - 16px))}
+.chest-return svg{width:30px;height:30px}
+.chest-heading{position:absolute;top:101px;left:280px;right:280px;display:flex;gap:31px;align-items:center;justify-content:center}
+.chest-heading h1{font-size:31px;font-weight:500;letter-spacing:4px;white-space:nowrap;margin:0}
+.chest-heading>span{height:1px;flex:1;background:#dedaff80;position:relative}.chest-heading>span:after{content:'';position:absolute;right:0;top:-2px;width:4px;height:4px;background:#fff}
+.chest-intro{position:absolute;top:154px;left:0;right:0;text-align:center;font-size:21px;color:#dedafa;letter-spacing:4px;margin:0}
+.chest-options{position:absolute;left:210px;right:210px;top:250px;height:515px;display:grid;grid-template-columns:repeat(var(--option-count,3),minmax(0,1fr));gap:33px;align-items:stretch;overflow:auto;padding:12px}
+.chest-option{position:relative;display:flex;flex-direction:column;align-items:center;padding:35px 22px 35px;border:3px solid #aaa2cf77;background:linear-gradient(#6260b8b3,#262542 52%,#111118 100%);color:#fff;text-align:left;box-shadow:0 0 0 4px #11101b;transition:border-color .15s,transform .15s;min-width:0}
+.chest-option.tier-2{background:linear-gradient(#8c774fb3,#37303f 52%,#111118 100%)}
+.chest-option:hover,.chest-option:focus-visible{border-color:#fff}.chest-option.selected{border-color:white;box-shadow:0 0 0 3px #fff9,0 0 25px #bcb0ff77;transform:translateY(-4px)}
+.chest-option-image{width:145px;height:145px;padding:12px;background:radial-gradient(#e7e2ff33,transparent 72%);display:block}
+.chest-option-image img{height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 4px 8px #151129)}
+.chest-option-name{font-size:26px;line-height:1.5;text-align:center;margin-top:20px;letter-spacing:1px}
+.chest-option-rule{height:1px;width:100%;background:#c9bbda;margin:15px 0}
+.chest-option-description{font-size:20px;line-height:1.55;color:#cfcbdc;overflow:auto}
+.chest-selected-mark{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:25px;color:#fff;opacity:0}.selected .chest-selected-mark{opacity:1}
+.chest-retain-note{position:absolute;top:803px;left:0;right:0;text-align:center;color:#d6d2ec;font-size:19px}
+.chest-actions{position:absolute;top:912px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:35px}
+.chest-actions .reference-confirm-button{position:relative;left:auto;top:auto;transform:none;width:420px;height:61px;font-size:24px}
+.chest-cancel{border:1px solid #c3bfd7;border-radius:30px;padding:13px 45px;background:#17172b90;color:#eeebfa;font-size:23px}.chest-cancel:hover{background:#403963}
+.chest-actions button:focus-visible,.chest-return:focus-visible{outline:3px solid #fff;outline-offset:5px}
+.loot-collection-effect{position:fixed;z-index:2000;pointer-events:none;width:0;height:0;isolation:isolate}
+.loot-burst-ring{position:absolute;width:70px;height:70px;left:-35px;top:-35px;border:3px solid var(--loot-color);border-radius:50%;box-shadow:0 0 25px var(--loot-color);animation:loot-ring .55s ease-out forwards}
+.loot-burst-spark{position:absolute;left:-2px;top:-2px;width:4px;height:4px;background:#fff;border-radius:50%;box-shadow:0 0 8px var(--loot-color);animation:loot-spark .65s ease-out forwards;transform:rotate(var(--spark-angle)) translateX(0)}
+.loot-drop-token{position:absolute;left:0;top:0;width:55px;height:55px;padding:3px;background:#28233be6;border:2px solid var(--loot-color);box-shadow:0 0 12px var(--loot-color);transform:translate(-50%,-50%)}
+.loot-drop-token>img{width:100%;height:100%;object-fit:contain}.loot-drop-token>span{position:absolute;top:100%;left:50%;transform:translateX(-50%);font:500 12px/1.5 sans-serif;white-space:nowrap;color:#fff;background:#161324cf;padding:2px 5px;margin-top:5px}
+@keyframes ore-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes ore-shimmer{from{opacity:.5;transform:rotate(-4deg)}to{opacity:1;transform:rotate(4deg)}}
+@keyframes loot-ring{to{transform:scale(2.4);opacity:0}}
+@keyframes loot-spark{to{transform:rotate(var(--spark-angle)) translateX(var(--spark-distance));opacity:0}}
+@media(prefers-reduced-motion:reduce){.loot-orb,.orb-particles,.loot-burst-ring,.loot-burst-spark{animation:none}.chest-option,.orb-sphere{transition:none}}
+.loot-resource-symbol{display:grid;place-items:center;width:100%;height:100%;font:600 19px var(--number);color:#fff3ad}
+.inventory-item:has(> .is-privileged),.equipped-icon:has(> .is-privileged),.item-slot:has(> .is-privileged){position:relative;border-color:#ffe79a!important;box-shadow:0 0 8px #ffcc5877}
+.inventory-item:has(> .is-privileged):after,.equipped-icon:has(> .is-privileged):after,.item-slot:has(> .is-privileged):after,.chest-option-image:has(> .is-privileged):after{content:'✦';position:absolute;right:0;top:-3px;color:#fff2a0;text-shadow:0 1px 2px #62370e,0 0 5px #efa72b;font-size:20px;line-height:1;pointer-events:none}
+.chest-option-image:has(> .is-privileged){position:relative}
+.playback-finishing{display:inline-flex;align-items:center;justify-content:center;min-width:120px;color:#eddfa7;padding:12px 18px}

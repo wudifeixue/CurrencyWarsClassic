@@ -32,6 +32,7 @@ test('invalid actions are atomic, and phase restrictions cannot be bypassed',()=
 
 test('three copies merge automatically, preserve deployment and return excess items',()=>{
   const s=createGame(2),dan=s.units.find(u=>u.characterId==='1013');
+  for(const orb of [...s.loot])run(s,{type:'collect-loot',uid:orb.uid});
   run(s,{type:'equip',uid:dan.uid,itemIndex:0});
   run(s,{type:'buy',index:0});
   const copy=s.units.find(u=>u.characterId==='1013'&&u.uid!==dan.uid);
@@ -58,6 +59,7 @@ test('merge cascades from one star into three stars',()=>{
 
 test('equipment raises power, can be removed, sold or combined without duplication',()=>{
   const s=createGame(7),unit=s.units[0],base=getTeamPower(s);
+  for(const orb of [...s.loot])run(s,{type:'collect-loot',uid:orb.uid});
   run(s,{type:'equip',uid:unit.uid,itemIndex:0});assert.ok(getTeamPower(s)>base);
   run(s,{type:'unequip',uid:unit.uid,itemIndex:0});assert.equal(getTeamPower(s),base);
   s.inventory=['skates','battery'];run(s,{type:'combine',indexA:0,indexB:1});assert.deepEqual(s.inventory,['electric']);
