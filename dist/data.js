@@ -1,7 +1,8 @@
-import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES } from './legacy-data.js?v=4.0.1';
-import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=4.0.1';
-import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=4.0.1';
-export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=4.0.1';
+import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=4.0.2';
+export { LEGACY_TRAITS };
+import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=4.0.2';
+import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=4.0.2';
+export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=4.0.2';
 export { CLASSIC_SOURCE_SEASON };
 
 const oldCharacters = new Map(OLD_CHARACTERS.map(c => [c.id,c]));
@@ -25,6 +26,7 @@ const classicIds=new Set(CLASSIC_ROSTER.map(c=>c.id));
 // Existing runs retain their old, now out-of-pool units instead of losing saved progress.
 export const CHARACTERS = [...CLASSIC_ROSTER, ...OLD_CHARACTERS.filter(c=>!classicIds.has(c.id)).map(c=>({...c,legacy:true,allowedZones:['front','back'],empowerments:[],portrait:`assets/portraits/${c.id}.png`,simulationDescription:'旧存档保留角色；不再出现在经典商店中。'}))];
 export const TRAITS = CLASSIC_TRAITS;
+export const getTraitArtPath = id => ['grail','gamer','mentor','elation','navigator'].includes(id)||!TRAITS.some(t=>t.id===id)?`assets/traits/${id}.svg`:`assets/traits/classic-${id}.png`;
 export const EQUIPMENT = CLASSIC_EQUIPMENT;
 export const RECIPES = CLASSIC_RECIPES;
 const strategyIds=new Set(CLASSIC_STRATEGIES.map(s=>s.id));

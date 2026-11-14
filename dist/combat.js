@@ -1,7 +1,7 @@
-export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=4.0.1';
-import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=4.0.1';
+export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=4.0.2';
+import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=4.0.2';
 export {CLASSIC_SIMULATION_NOTE};
-import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES} from './data.js?v=4.0.1';
+import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES} from './data.js?v=4.0.2';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
 const equipmentMap = new Map(EQUIPMENT.map(e => [e.id, e]));

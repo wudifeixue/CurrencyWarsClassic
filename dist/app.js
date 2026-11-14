@@ -1,8 +1,8 @@
-import { choiceScreen, resultScreen } from './reference-screens.js?v=4.0.1';
-import { combatMarkup } from './battle-ui.js?v=4.0.1';
-import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=4.0.1';
-import { CHARACTERS, CLASSIC_ROSTER, TRAITS, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY } from './data.js?v=4.0.1';
-import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getCharacter, getEquipment } from './engine.js?v=4.0.1';
+import { choiceScreen, resultScreen } from './reference-screens.js?v=4.0.2';
+import { combatMarkup } from './battle-ui.js?v=4.0.2';
+import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=4.0.2';
+import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY } from './data.js?v=4.0.2';
+import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getCharacter, getEquipment } from './engine.js?v=4.0.2';
 
 const paths = {
  star:'M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z',
@@ -36,11 +36,11 @@ const paths = {
 const icon = (name,cls='') => name==='coin'?`<img class="icon coin-icon ${cls}" src="assets/ui/coin.svg" alt="金币" draggable="false">`:`<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.star}"/></svg>`;
 const esc = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = value => Number(value).toLocaleString('zh-CN');
-const traitName = id => TRAITS.find(t=>t.id===id)?.name||id;
+const traitName = id => TRAITS.find(t=>t.id===id)?.name||LEGACY_TRAITS.find(t=>t.id===id)?.name||id;
 const rarity = ['','#b8bec8','#6cc2ad','#758afa','#ae84ed','#e4c871'];
 const portrait = c => `assets/portraits/${c.id}.png`;
 const itemArt = (id,cls='') => `<img class="equipment-art ${cls}" src="assets/equipment/classic-${id}.png" alt="" draggable="false">`;
-const traitArt = id => `<img src="assets/traits/${['grail','gamer','mentor','elation','navigator'].includes(id)?id+'.svg':'classic-'+id+'.png'}" alt="" draggable="false">`;
+const traitArt = id => `<img src="${getTraitArtPath(id)}" alt="" draggable="false">`;
 const saveKey = 'currency-wars-classic-v1';
 let saveAvailable=true, recovered=false;
 function loadGame(){try{const raw=localStorage.getItem(saveKey);if(raw){const saved=JSON.parse(raw);const migrated=migrateState(saved);if(migrated)return migrated;recovered=true;}}catch{recovered=true;}return createGame();}

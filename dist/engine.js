@@ -1,6 +1,6 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT} from './data.js?v=4.0.1';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=4.0.1';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=4.0.1';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT} from './data.js?v=4.0.2';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=4.0.2';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=4.0.2';
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const equipment = new Map(EQUIPMENT.map(e=>[e.id,e]));

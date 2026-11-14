@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, STRATEGIES } from './data.js?v=4.0.1';
-import { getSynergies } from './engine.js?v=4.0.1';
+import { CHARACTERS, EQUIPMENT, STRATEGIES, getTraitArtPath } from './data.js?v=4.0.2';
+import { getSynergies } from './engine.js?v=4.0.2';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -54,7 +54,7 @@ function overviewPanel(game, battle, won, ended) {
   const cumulativeIncome = game.history.reduce((sum, b) => sum + (b.income || 0), 0);
   return `<div class="reference-overview-grade"><h2>${ended ? won ? '远征完成' : '远征结束' : won ? '对局胜利' : '对局失利'}</h2><div class="reference-earned-wins"><span>${game.wins}</span><small>胜场</small></div><p><span>经典远征</span><i></i>第 ${game.round} 关</p><div class="reference-expedition-progress"><strong>已完成 ${completed} / 12 关</strong><span><i style="width:${completed / 12 * 100}%"></i></span></div></div>
   <div class="reference-overview-content"><div class="reference-overview-banner"><span>经典回响 <i>◇</i> 远征战报</span><strong>小队生命值 <b>♥</b> ${number(game.hp)}</strong></div>
-  <section class="reference-overview-traits"><h3>羁绊信息</h3><div>${active.map(s => `<span class="reference-overview-trait" title="${escape(s.name)}：${escape(s.description)}"><img src="assets/traits/${['grail','gamer','mentor','elation','navigator'].includes(s.id)?s.id+'.svg':'classic-'+s.id+'.png'}" alt="${escape(s.name)}"><b>${s.count}</b></span>`).join('') || '<p class="reference-empty-overview">尚未激活羁绊</p>'}</div></section>
+  <section class="reference-overview-traits"><h3>羁绊信息</h3><div>${active.map(s => `<span class="reference-overview-trait" title="${escape(s.name)}：${escape(s.description)}"><img src="${getTraitArtPath(s.id)}" alt="${escape(s.name)}"><b>${s.count}</b></span>`).join('') || '<p class="reference-empty-overview">尚未激活羁绊</p>'}</div></section>
   <section class="reference-overview-team"><h3>我的阵容</h3><div class="reference-overview-roster">${game.units.filter(u => u.zone !== 'bench').map(u => {
     const c = character(u.characterId);
     if (!c) return '';
