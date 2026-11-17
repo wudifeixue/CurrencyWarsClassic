@@ -1,12 +1,12 @@
-import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.3.0';
+import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.4.0';
 export { LEGACY_TRAITS };
-import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.3.0';
-import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.3.0';
-import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.3.0';
-import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.3.0';
-import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.3.0';
+import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.4.0';
+import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.4.0';
+import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.4.0';
+import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.4.0';
+import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.4.0';
 export { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES };
-export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.3.0';
+export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.4.0';
 export { CLASSIC_SOURCE_SEASON };
 
 const oldCharacters = new Map(OLD_CHARACTERS.map(c => [c.id,c]));
@@ -45,10 +45,12 @@ export function resolveEquipment(id) {
   if(!base||privileged&&!PRIVILEGED_EQUIPMENT[baseId])return undefined;
   return privileged?{...base,...PRIVILEGED_EQUIPMENT[baseId].stats,id,baseId,privileged:true,tier:3,name:`${base.name}·特权`,description:PRIVILEGED_EQUIPMENT[baseId].description}:base;
 }
+const EMBLEM_ART=new Set(['luofu','debuff','break','express','grail','night','sp','shield','dot','wanderer','day','elation','heal','blood','wolfpack','festival','aoe','energy','belobog','follow','quantum','scholar']);
 export function getEquipmentArtPath(id) {
   if(id==='wealth-gem')return 'assets/equipment/classic-wealth-gem.png';
   const item=resolveEquipment(id);
-  return item?.trait?getTraitArtPath(item.trait):`assets/equipment/classic-${item?.baseId||id}.png`;
+  // 星徽 use their own badge art (old client item icons, via BWIKI/Fandom), not the bond glyph.
+  return item?.trait?(EMBLEM_ART.has(item.trait)?`assets/equipment/classic-emblem-${item.trait}.png`:getTraitArtPath(item.trait)):`assets/equipment/classic-${item?.baseId||id}.png`;
 }
 export const RECIPES = {...CLASSIC_RECIPES,...SPECIAL_CRAFTING_RECIPES};
 const strategyIds=new Set(CLASSIC_STRATEGIES.map(s=>s.id));

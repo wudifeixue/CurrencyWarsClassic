@@ -1,5 +1,6 @@
-import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.3.0';
-import {getConsumable} from './loot.js?v=6.3.0';
+import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.4.0';
+import {getConsumable} from './loot.js?v=6.4.0';
+import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.4.0';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);
@@ -11,15 +12,21 @@ const itemImage=id=>{const e=item(id);return `<img class="${e?.privileged?'is-pr
 const arrow='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg>';
 
 export function chestType(chest){
+  if(chest.kind==='role')return 'role';
   if(['privileged','prismatic'].includes(chest.quality)||chest.options?.some(id=>item(id)?.privileged))return 'privileged';
   return chest.quality==='advanced'||chest.options?.some(id=>item(id)?.tier===2)?'advanced':'basic';
 }
-export const chestName=chest=>({basic:'简易武装箱',advanced:'进阶武装箱',privileged:'特权武装箱'})[chestType(chest)];
-export const chestArt=chest=>`<img src="assets/loot/chest-${chestType(chest)}.png" alt="" draggable="false">`;
+export const chestName=chest=>chest.kind==='role'?`${chest.cost}费聘用书`:({basic:'简易武装箱',advanced:'进阶武装箱',privileged:'特权武装箱'})[chestType(chest)];
+const roleColors=['','#b4b4b4','#6cce9f','#7196ff','#927fe7','#ffd471'];
+// No original 聘用书 icon was found; this letter is drawn for the site, tinted with the cost colour.
+export const chestArt=chest=>chest.kind==='role'?`<svg class="role-letter" viewBox="0 0 64 64" aria-hidden="true" style="--cost:${roleColors[chest.cost]||'#fff'}"><rect x="10" y="6" width="44" height="52" rx="5"/><path d="M19 20h26M19 28h26M19 36h16"/><circle cx="43" cy="45" r="8"/><text x="43" y="49" text-anchor="middle">${chest.cost}</text></svg>`:`<img src="assets/loot/chest-${chestType(chest)}.png" alt="" draggable="false">`;
+// Old client GridFightForge descriptions.
+export const chestDescription=chest=>chest.kind==='role'?`点击开启进行角色招募，从四名${chest.cost}费角色中选择一名获得。该道具使用后消失。`:`点击开启${chestName(chest)}，从四件${({basic:'简易',advanced:'进阶',privileged:'特权'})[chestType(chest)]}装备中选择一件获得。该道具使用后消失。`;
 
 export function consumableArt(id){
-  if(['projector','perfect-projector','privilege-card'].includes(id))return `<img src="assets/loot/${id}.png" alt="" draggable="false">`;
-  if(['wrench','precision-wrench'].includes(id))return `<svg class="consumable-glyph ${id==='precision-wrench'?'is-precision':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 3.5a5 5 0 0 0-4.300 7.200L3.500 17.400a2.200 2.200 0 0 0 3.100 3.100l6.700-6.700a5 5 0 0 0 6.900-5.800l-3 3-2.800-.700-.700-2.800 3-3a5 5 0 0 0-2.200-1Z"/>${id==='precision-wrench'?'<path d="M5.200 18.800h.01"/>':''}</svg>${id==='precision-wrench'?'<b class="consumable-cost">∞</b>':''}`;
+  // Original item icons where the old client art is available (BWIKI / Fandom item tables).
+  const file=['projector','perfect-projector','privilege-card','wrench','precision-wrench','smelter'].includes(id)?`assets/loot/${id}.png`:id==='wealth-gem'?'assets/equipment/classic-wealth-gem.png':id?.startsWith('trait-')&&item(id)?getEquipmentArtPath(id):null;
+  if(file)return `<img src="${esc(file)}" alt="" draggable="false">`;
   const glyph=id==='wealth-gem'?'<path d="m12 2 9 6-9 14L3 8Zm-9 6h18M7 3l5 19 5-19"/>':id.startsWith('hire-')?'<path d="M5 2h12l3 3v17H5ZM8 8h9M8 12h9M8 16h5"/><circle cx="16" cy="18" r="3"/>':id.startsWith('trait-')?'<path d="m12 2 10 10-10 10L2 12Z"/><path d="m12 7 5 5-5 5-5-5Z"/>':'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1"/><circle cx="16" cy="8" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/>';
   return `<svg class="consumable-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${glyph}</svg>${id.startsWith('hire-')?`<b class="consumable-cost">${esc(id.slice(5))}</b>`:''}`;
 }
@@ -40,19 +47,43 @@ export function lootField(game){
 }
 
 export function inventoryContents(game){
-  const chests=(game.chests||[]).map(chest=>`<button class="inventory-item loot-chest chest-${chestType(chest)}" data-key="chest-${esc(chest.uid)}" data-action="open-chest" data-uid="${esc(chest.uid)}" data-tip-title="${chestName(chest)}" data-tip="点击打开并三选一；返回不会消耗箱子。" aria-label="打开${chestName(chest)}">${chestArt(chest)}<span class="inventory-kind">自选</span></button>`);
+  // Chests are not inventory items: they wait on the bench (see app.js benchChest).
   const consumables=(game.consumables||[]).map(c=>{const info=getConsumable(c.id);return `<button class="inventory-item loot-consumable" data-key="consumable-${esc(c.uid)}" data-action="consumable" data-uid="${esc(c.uid)}" data-tip-title="${esc(info?.name||c.id)}" data-tip="${esc(info?.description||'')}" ${info?.requiresTarget?'data-tip-extra="拖到角色身上使用，或点击选择角色"':''} aria-label="${info?.passive?'查看':'使用'}${esc(info?.name||c.id)}">${consumableArt(c.id)}<span class="inventory-kind">道具</span></button>`;});
   const items=groupedInventory(game.inventory).map(({id,index,amount})=>{const e=item(id);return `<button class="inventory-item tier-${e.tier} ${e.privileged?'is-privileged':''}" data-key="item-${esc(id)}" data-action="item" data-index="${index}" data-tip-kind="item" data-tip-id="${esc(id)}" data-tip-extra="${amount>1?`共 ${amount} 件 · `:''}拖到角色身上穿戴，或点击选择角色" aria-label="装备${esc(e.name)}${amount>1?`，共${amount}件`:''}">${itemImage(id)}${amount>1?`<span class="inventory-count">${amount}</span>`:''}</button>`;});
-  return [...chests,...consumables,...items].join('')||'<p class="inventory-empty">仓库<br>暂无装备</p>';
+  return [...consumables,...items].join('')||'<p class="inventory-empty">物品栏<br>暂无装备</p>';
 }
 
-export function chestScreen(game,selected=null){
+const recipeOf=id=>{const base=item(id)?.baseId||id;const entry=Object.entries(RECIPES).find(([,result])=>result===base);return entry?entry[0].split('+'):null;};
+// Every id that appears in a recipe, in the order the recipe table lists them.
+const MATERIALS=[...new Set(Object.keys(RECIPES).flatMap(key=>key.split('+')))];
+export const itemKind=e=>!e?'':e.privileged?'特权装备':e.trait?'稀有装备 · 星徽':e.craftingMaterial?'稀有装备 · 合成材料':e.tier===1?'简易装备':'进阶装备';
+// 可合成列表 for one 物品栏 entry: every partner it combines with, the result, and where an owned
+// partner sits in the inventory (another copy of the same item counts).
+export function craftOptions(inventory,index){
+  const id=inventory[index];if(!isCraftingMaterial(id))return [];
+  return MATERIALS.map(partner=>{const result=getCraftResult(id,partner);if(!result)return null;return {partner,result,partnerIndex:inventory.findIndex((x,i)=>x===partner&&i!==index)};}).filter(Boolean);
+}
+// The item card the old client opens when an item is clicked: name, type, description, then the
+// 可合成列表 (owned partners outlined and clickable) or, for crafted items, the 合成路线.
+export function itemDetailCard(game,index){
+  const id=game.inventory[index],e=item(id);if(!e)return '';
+  const amount=game.inventory.filter(x=>x===id).length,options=craftOptions(game.inventory,index),recipe=recipeOf(id);
+  const rows=options.map(o=>{const r=item(o.result),owned=o.partnerIndex>=0,inner=`<span class="craft-plus">＋</span><span class="craft-icon">${itemImage(o.partner)}</span><span class="craft-plus">＝</span><span class="craft-icon is-result">${itemImage(o.result)}</span><span class="craft-name">${esc(r?.name||o.result)}</span>`;
+    return owned?`<button class="craft-row is-owned" data-action="combine-with" data-index="${index}" data-partner="${o.partnerIndex}" aria-label="与${esc(item(o.partner)?.name)}合成${esc(r?.name)}">${inner}</button>`:`<div class="craft-row" title="还没有${esc(item(o.partner)?.name)}">${inner}</div>`;}).join('');
+  return `<aside class="item-card" data-key="item-card" role="dialog" aria-label="${esc(e.name)}"><button class="popover-close item-card-close" data-action="item-close" aria-label="关闭">×</button><header class="item-card-head"><span class="item-card-art tier-${e.tier}">${itemImage(id)}</span><div><h2>${esc(e.name)}</h2><small>${itemKind(e)}${amount>1?` · 共 ${amount} 件`:''}</small></div></header><p class="item-card-desc">${esc(e.description)}</p>${rows?`<div class="item-card-section"><h3>可合成列表</h3>${rows}</div>`:''}${recipe?`<div class="item-card-section"><h3>合成路线</h3><div class="craft-route">${recipe.map(x=>`<span class="craft-icon">${itemImage(x)}</span>`).join('<span class="craft-plus">＋</span>')}</div></div>`:''}<p class="item-card-hint">拖到角色身上穿戴${rows?'；拖到另一件装备上合成':''}</p></aside>`;
+}
+const traitNames=ids=>ids.map(id=>TRAITS.find(t=>t.id===id)?.name).filter(Boolean).join(' · ');
+// The forge choice as in the old client: a panel over the board with four cards; clicking a card
+// takes it at once. 返回 keeps the chest on the bench with the same four options.
+export function chestScreen(game){
   const chest=(game.chests||[]).find(c=>c.uid===game.activeChest);if(!chest)return '';
-  const selectedId=Number.isInteger(selected)?chest.options[selected]:null;
-  return `<div class="reference-overlay"><section class="reference-fullscreen chest-screen chest-${chestType(chest)}" role="dialog" aria-modal="true" aria-labelledby="modal-heading" tabindex="-1"><div class="chest-screen-pattern" aria-hidden="true"></div><button class="chest-return" data-action="cancel-chest">${arrow}返回备战界面</button><header class="chest-heading"><span></span><h1 id="modal-heading">${chestName(chest)}</h1><span></span></header><p class="chest-intro">选择一件装备</p><div class="chest-options" style="--option-count:${chest.options.length}">${chest.options.map((id,index)=>{
-    const e=item(id);if(!e)return '';
-    return `<button class="chest-option ${selected===index?'selected':''} tier-${e.tier}" data-action="chest-select" data-index="${index}" aria-pressed="${selected===index}" aria-label="选择${esc(e.name)}"><span class="chest-option-image">${itemImage(id)}</span><span class="chest-option-name">${esc(e.name)}</span><span class="chest-option-rule"></span><span class="chest-option-description">${esc(e.description)}</span><span class="chest-selected-mark" aria-hidden="true">✓</span></button>`;
-  }).join('')}</div><p class="chest-retain-note">返回后武装箱仍保留，可以稍后再选。</p><div class="chest-actions"><button class="chest-cancel" data-action="cancel-chest">暂不选择</button><button class="reference-confirm-button" data-action="choose-chest" ${!selectedId?'disabled':''}><span>确认选择${selectedId?` · ${esc(item(selectedId)?.name)}`:''}</span></button></div></section></div>`;
+  const role=chest.kind==='role',costColor=['','#b8bec8','#6cc2ad','#758afa','#ae84ed','#e4c871'];
+  const cards=chest.options.map((id,index)=>{
+    if(role){const c=person(id);if(!c)return '';return `<button class="forge-card is-role" data-action="choose-chest" data-index="${index}" style="--rarity:${costColor[c.cost]}" aria-label="招募${esc(c.name)}"><span class="forge-card-art"><img src="assets/portraits/${esc(c.id)}.png" alt="" draggable="false"></span><span class="forge-card-name">${esc(c.name)}</span><span class="forge-card-meta">${c.cost}费 · ${esc(traitNames(c.traits||[]))}</span></button>`;}
+    const e=item(id);if(!e)return '';const recipe=recipeOf(id);
+    return `<button class="forge-card tier-${e.tier} ${e.privileged?'is-privileged':''}" data-action="choose-chest" data-index="${index}" aria-label="选择${esc(e.name)}"><span class="forge-card-art">${itemImage(id)}</span><span class="forge-card-name">${esc(e.name)}</span><span class="forge-card-meta">${esc(e.description)}</span>${recipe?`<span class="forge-card-recipe" aria-label="合成路线">${recipe.map(itemImage).join('<b>＋</b>')}</span>`:''}</button>`;
+  }).join('');
+  return `<div class="forge-overlay"><section class="forge-panel chest-${chestType(chest)}" role="dialog" aria-modal="true" aria-labelledby="modal-heading" tabindex="-1"><header class="forge-heading"><h1 id="modal-heading">${esc(chestName(chest))}</h1><p>${role?'选择一名角色加入备战席':'选择一件装备放入物品栏'}</p><button class="forge-return" data-action="cancel-chest">${arrow}返回</button></header><div class="forge-cards" style="--option-count:${chest.options.length}">${cards}</div><p class="forge-note">点击卡片即可获得；返回后${role?'聘用书':'武装箱'}仍留在备战席，选项不变。</p></section></div>`;
 }
 
 function rewardVisual(content){

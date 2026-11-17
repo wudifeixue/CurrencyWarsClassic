@@ -1,4 +1,4 @@
-import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=6.3.0';
+import {EQUIPMENT,TRAITS,CHARACTERS,CLASSIC_ROSTER,BENCH_CAPACITY,resolveEquipment} from './data.js?v=6.4.0';
 
 export const LOOT_QUALITIES=['white','blue','gold','prismatic'];
 const consumables={
@@ -11,11 +11,12 @@ const consumables={
   'privilege-card':{name:'特权赋予卡',description:'将所选角色第一件普通进阶装备升级为同名特权装备。',requiresTarget:true,icon:'✦'},
   'reroll-dice':{name:'装备重铸骰',description:'重铸所选角色第一件普通进阶装备，保持装备品级。',requiresTarget:true,icon:'⚄'},
   'privilege-dice':{name:'特权重铸骰',description:'重铸所选角色第一件特权装备，保持特权品级。',requiresTarget:true,icon:'⚅'},
-  smelter:{name:'冶金炉',description:'取下所选角色的全部装备，各自重铸为同类型随机装备并返回仓库。',requiresTarget:true,icon:'♜'},
+  smelter:{name:'冶金炉',description:'取下所选角色的全部装备，各自重铸为同类型随机装备并放回物品栏。',requiresTarget:true,icon:'♜'},
   'wealth-gem':{name:'财富宝钻',description:'拥有时团队规模上限+1；每3个备战阶段产出1金币。无需使用。',requiresTarget:false,passive:true,icon:'◆'},
-  'hire-3':{name:'3费员工招聘券',description:'获得一名随机3费1星角色。',requiresTarget:false,icon:'Ⅲ'},
-  'hire-4':{name:'4费员工招聘券',description:'获得一名随机4费1星角色。',requiresTarget:false,icon:'Ⅳ'},
-  'hire-5':{name:'5费员工招聘券',description:'获得一名随机5费1星角色。',requiresTarget:false,icon:'Ⅴ'},
+  // New rewards arrive as 聘用书 on the bench (see makeRoleChest); these entries only finish old saves.
+  'hire-3':{name:'3费聘用书',description:'获得一名随机3费1星角色。',requiresTarget:false,icon:'Ⅲ'},
+  'hire-4':{name:'4费聘用书',description:'获得一名随机4费1星角色。',requiresTarget:false,icon:'Ⅳ'},
+  'hire-5':{name:'5费聘用书',description:'获得一名随机5费1星角色。',requiresTarget:false,icon:'Ⅴ'},
 };
 export function getConsumable(id) {
   if(consumables[id])return {id,...consumables[id]};
@@ -29,15 +30,26 @@ export function lootRandom(state) {
   let x=state.rng>>>0;x^=x<<13;x^=x>>>17;x^=x<<5;state.rng=x>>>0;
   return state.rng/4294967296;
 }
+// Old client forge table (GridFightForge): every 武装箱 and 聘用书 offers four choices. They are grid
+// items that sit in a bench slot until opened (see the engine's bench slots).
+export const FORGE_CHOICES=4;
 export function makeChest(state,quality='basic',options) {
   if(quality==='privilege')quality='privileged';
   const tier=['advanced','gold','prismatic','privileged'].includes(quality)?2:1;
   if(!options) {
     const pool=EQUIPMENT.filter(e=>e.tier===tier).map(e=>e.id);options=[];
-    while(options.length<3&&pool.length)options.push(pool.splice(Math.floor(lootRandom(state)*pool.length),1)[0]);
+    while(options.length<FORGE_CHOICES&&pool.length)options.push(pool.splice(Math.floor(lootRandom(state)*pool.length),1)[0]);
     if(['prismatic','privileged'].includes(quality))options=options.map(id=>`privileged:${id}`);
   }
   return {uid:`chest-${state.nextLootUid++}`,kind:'equipment',quality,options:[...options]};
+}
+// 聘用书: "点击后进行角色招募，从四名N费角色中选择一名获得。"
+export function makeRoleChest(state,cost,options) {
+  if(!options) {
+    const pool=CLASSIC_ROSTER.filter(c=>c.cost===cost).map(c=>c.id);options=[];
+    while(options.length<FORGE_CHOICES&&pool.length)options.push(pool.splice(Math.floor(lootRandom(state)*pool.length),1)[0]);
+  }
+  return {uid:`chest-${state.nextLootUid++}`,kind:'role',quality:'basic',cost,options:[...options]};
 }
 export function queueRewards(state,rewards,source='战利品') {
   for(const reward of rewards||[]) {
@@ -71,7 +83,10 @@ export function validReward(r) {
   return true;
 }
 export function validChest(c) {
-  return !!c&&typeof c.uid==='string'&&c.kind==='equipment'&&Array.isArray(c.options)&&c.options.length===3&&c.options.every(id=>resolveEquipment(id));
+  if(!c||typeof c.uid!=='string'||!Array.isArray(c.options)||c.options.length<3||c.options.length>FORGE_CHOICES)return false;
+  if(c.slot!==undefined&&(!Number.isInteger(c.slot)||c.slot<0||c.slot>=BENCH_CAPACITY))return false;
+  if(c.kind==='role')return Number.isInteger(c.cost)&&c.cost>=1&&c.cost<=5&&c.options.every(id=>CHARACTERS.some(ch=>ch.id===id));
+  return c.kind==='equipment'&&c.options.every(id=>resolveEquipment(id));
 }
 export function validateLoot(state) {
   if(!Number.isInteger(state.nextLootUid)||state.nextLootUid<1||!Number.isInteger(state.bonusMaxHp)||state.bonusMaxHp<0)return false;

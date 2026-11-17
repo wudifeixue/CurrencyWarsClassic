@@ -1,10 +1,10 @@
-import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.3.0';
-import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.3.0';
-import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.3.0';
-export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.3.0';
-import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.3.0';
+import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.4.0';
+import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.4.0';
+import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.4.0';
+export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.4.0';
+import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.4.0';
 export {CLASSIC_SIMULATION_NOTE};
-import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.3.0';
+import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.4.0';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
 const equipmentEntries=u=>(u.items||[]).map(resolveEquipment).filter(Boolean);
@@ -199,6 +199,12 @@ export function simulateCombat(state, options={}) {
   for(const u of units){u.next=10000/u.speed;u.acted=0;u.counters=0;u.charges=0;u.autoHeal=0;u.revives=0;u.seeleReset=false;u.hertaTriggered=new Set();u.jingStacks=5;u.itemCharges=0;u.lastProcTurn=-1;u.ultimateCount=0;u.controlResists=0;u.totalAttackHits=0;u.field=0;u.damage=0;u.healing=0;u.shielding=0;u.kills=0;}
   const maxSp=5+(trait('sp')?tierValue([2,3,4,5],trait('sp')):0)+allies.filter(a=>a.positionAllowed&&a.characterId==='1306').reduce((n,a)=>n+starValue([2,3,4,5],a),0)+(allies.some(a=>a.positionAllowed&&a.zone==='back'&&a.characterId==='1508')?2:0);
   let time=0, turn=0, allySp=3, enemySp=5, context=null, reactions=[], winner=null, energyConsumed=0, belobogCharge=6, breakCharge=0, consecutiveAllies=0, bloodPool=0;
+  // Countdown battles (rules revision 4): the old client never knocks a character down. A fatal blow
+  // restores the character and takes reviveLoss turns off the remaining countdown; one turn is 100
+  // action value. How much HP comes back is not published ("回复部分生命值"); the site uses 50%.
+  const countdown=options.countdown&&Number.isFinite(options.countdown.turns)&&options.countdown.turns>0?options.countdown:null;
+  let limit=countdown?countdown.turns*100:Infinity, revives=0;
+  const REVIVE_HP=.5, RECORD_CAP=249;
   let lastEnergyTime=0;
   const passive=(u,p)=>u.items.some(id=>resolveEquipment(id)?.passive===p);
   const valid=(u,id)=>u.hp>0&&u.characterId===id&&u.positionAllowed!==false;
@@ -252,11 +258,15 @@ export function simulateCombat(state, options={}) {
     for(const f of allies.filter(a=>valid(a,'1208')&&a.zone==='back'))if(target.hp/target.maxHp<.3&&f.revives>0){f.revives--;for(const a of front('ally'))heal(f,a,(a.maxHp-a.hp)*starValue([.6,.8,1],f));}
   }
   function event(actor,kind,skill,fn,text=''){
-    if(events.length>=249)return;
+    // Without a countdown the replay cap also ends the fight. With one, the fight keeps running past
+    // the cap so the result is complete; only the replay stops recording (the end is always kept).
+    const record=events.length<RECORD_CAP||kind==='end'&&countdown;
+    if(!record&&!countdown)return;
     const before=context;context={targets:[],notes:[],kind,actor,explicitAttacks:0};fn();if(actor&&passive(actor,'ally-skill-confidence')&&['skill','support','ultimate'].includes(kind))for(const t of [...context.targets]){const ally=units.find(u=>u.id===t.id);if(ally?.side===actor.side)supportEffects(actor,ally);}if(actor&&['basic','skill','support','ultimate','followup'].includes(kind))afterAttack(actor,kind);
+    if(!record){context=before;return;}
     const current=context;
     const effects=current.targets.map(t=>{const target=units.find(u=>u.id===t.id);const list=[];if(t.damage)list.push(`${t.damage} 伤害`);if(t.absorbed)list.push(`护盾吸收 ${t.absorbed}`);if(t.heal)list.push(`治疗 ${t.heal}`);if(t.shield)list.push(`护盾 +${t.shield}`);if(t.energy>0)list.push(`能量 +${t.energy}`);return list.length?`${target.name}：${list.join('，')}`:'';}).filter(Boolean);
-    events.push({index:events.length,time:Math.round(time),turn,actorId:actor?.id||null,actorName:actor?.name||'战场',kind,skill,text:[text||`${actor?.name||'战场'}${actor?.zone==='back'?'从后台协同，':''}施放「${skill}」`,...effects,...current.notes].filter(Boolean).join('；'),targets:current.targets,snapshot:snapshot(),skillPoints:allySp});context=before;
+    events.push({index:events.length,time:Math.round(time),turn,actorId:actor?.id||null,actorName:actor?.name||'战场',kind,skill,text:[text||`${actor?.name||'战场'}${actor?.zone==='back'?'从后台协同，':''}施放「${skill}」`,...effects,...current.notes].filter(Boolean).join('；'),targets:current.targets,snapshot:snapshot(),skillPoints:allySp,...(countdown?{countdown:Math.max(0,Math.round(limit-time))/100}:{})});context=before;
   }
   function rawDamage(source,target,amount,{dot=false,follow=false,breakHit=false,toughness=20,canReact=true,trueDamage=false,nonlethal=false,guaranteedCrit=false}={}){
     if(!target||target.hp<=0||(!dot&&source.hp<=0)||!Number.isFinite(amount))return 0;
@@ -284,7 +294,11 @@ export function simulateCombat(state, options={}) {
     if(!dot&&!breakHit)energy(target,8);
     if(target.side==='ally'&&hpDamage>0){bloodPool+=hpDamage;triggerBlood(target,hpDamage);}
     if(!dot&&!breakHit&&passive(source,'vulnerability-35'))addStatus(target,'exposed','装备易伤',passiveAmount(source,'vulnerability-35',.35,.7,false),2,source);
-    if(target.hp<=0){target.hp=0;target.shield=0;target.statuses=[];source.kills++;metric(source,'kills');note(`${target.name}退场`);
+    if(target.hp<=0&&countdown&&target.side==='ally'){
+      target.hp=Math.max(1,Math.round(target.maxHp*REVIVE_HP));revives++;limit-=countdown.reviveLoss*100;metric(target,'revives');
+      note(`${target.name}受到致命攻击，战斗倒计时减少！`);
+    }
+    else if(target.hp<=0){target.hp=0;target.shield=0;target.statuses=[];source.kills++;metric(source,'kills');note(`${target.name}退场`);
       if(passive(source,'kill-damage-25')&&!source.killGearTriggered){source.killGearTriggered=true;source.damageAmp=(source.damageAmp||0)+passiveAmount(source,'kill-damage-25',.25);}
       if(source.characterId==='1102'&&!source.seeleReset){source.seeleReset=true;source.next=Math.min(source.next,time+1);note('希儿「再现」：立即追加行动');}
       for(const h of allies.filter(a=>valid(a,'1013'))){h.attack*=1.01;}
@@ -610,12 +624,13 @@ export function simulateCombat(state, options={}) {
   }
   const initial=snapshot();
   event(null,'start','开场准备',applyOpening,'双方进入战场，护盾、初始能量与羁绊生效');
-  const maxActions=clamp(options.maxActions||100,1,180);
-  while(turn<maxActions&&events.length<235&&!checkWinner()){
+  const maxActions=countdown?20000:clamp(options.maxActions||100,1,180);
+  while(turn<maxActions&&(countdown||events.length<235)&&!checkWinner()){
     const activeAllies=alive('ally').filter(a=>a.zone==='front'||(a.positionAllowed!==false&&(!passiveBack.has(a.characterId)||(a.energy>=100&&(ability(a)?.skills||[]).some(s=>s.type==='终结技')))));
     const candidates=[...front('enemy'),...activeAllies].sort((a,b)=>a.next-b.next||a.id.localeCompare(b.id));
     const actor=candidates[0],scheduled=schedules.filter(s=>units.some(u=>u.id===s.sourceId&&u.hp>0)).sort((a,b)=>a.next-b.next)[0];
     if(!actor&&!scheduled)break;
+    if(countdown&&Math.min(actor?.next??Infinity,scheduled?.next??Infinity)>limit){time=Math.max(time,limit);break;}
     if(scheduled&&scheduled.next<(actor?.next??Infinity)){setBattleTime(scheduled.next);turn++;scheduledAction(scheduled);continue;}
     setBattleTime(actor.next);turn++;actor.acted++;actor.seeleReset=false;actor.autoHeal=Math.max(0,actor.autoHeal-1);
     actor.next=time+10000/effectiveSpeed(actor);
@@ -659,7 +674,7 @@ export function simulateCombat(state, options={}) {
   }
   const reason=checkWinner()?'elimination':'timeout';
   if(!winner)winner='enemy';
-  event(null,'end','战斗结束',()=>{},winner==='ally'?'敌方全灭，本场战斗胜利。':reason==='timeout'?'行动达到上限，未能及时击败敌方，本场战斗失败。':'前台全员退场，本场战斗失败。');
+  event(null,'end','战斗结束',()=>{},winner==='ally'?'敌方全灭，本场战斗胜利。':reason==='timeout'?(countdown?'倒计时结束，未能击败全部敌人。':'行动达到上限，未能及时击败敌方，本场战斗失败。'):'前台全员退场，本场战斗失败。');
   if(events.length)events[events.length-1].winner=winner;
-  return {metrics:finishCombatMetrics(metrics,units,winner,time),version:2,simulationNote:CLASSIC_SIMULATION_NOTE,initialSkillPoints:3,maxSkillPoints:maxSp,maxEnergy:100,units:initial,events,winner,turns:turn,reason,skillPoints:allySp,stats:units.map(u=>({id:u.id,name:u.name,side:u.side,damage:Math.round(u.damage),healing:Math.round(u.healing),shielding:Math.round(u.shielding),kills:u.kills})),final:snapshot()};
+  return {...(countdown?{countdown:countdown.turns,countdownLeft:Math.max(0,Math.round(limit-time))/100,revives}:{}),metrics:finishCombatMetrics(metrics,units,winner,time),version:2,simulationNote:CLASSIC_SIMULATION_NOTE,initialSkillPoints:3,maxSkillPoints:maxSp,maxEnergy:100,units:initial,events,winner,turns:turn,reason,skillPoints:allySp,stats:units.map(u=>({id:u.id,name:u.name,side:u.side,damage:Math.round(u.damage),healing:Math.round(u.healing),shielding:Math.round(u.shielding),kills:u.kills})),final:snapshot()};
 }

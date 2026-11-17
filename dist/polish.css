@@ -388,3 +388,36 @@ body.dragging-unit .classic-scene .sell-zone { opacity:1; pointer-events:auto; t
 .consumable-glyph.is-precision { color:#ffe8a3; }
 .drag-ghost.drag-tool { color:#eaf3ff; display:grid; place-items:center; }
 .drag-ghost.drag-tool svg { width:70%; height:70%; }
+
+/* v6.4 — 挑战职级 picker (A0–A8) and the rank rules in effect. */
+.run-mode-screen .run-modes { top:222px; }
+.run-mode-screen .run-mode-card { min-height:0; height:428px; overflow:hidden; padding:22px 34px; }
+.run-mode-screen .run-mode-card.selected, .run-mode-screen .run-mode-card:hover { transform:none; }
+.run-mode-screen .run-mode-symbol { font-size:58px; line-height:64px; }
+.run-mode-screen .run-mode-card h2 { font-size:33px; margin:8px 0 10px; }
+.run-mode-screen .run-mode-card p { font-size:19px; line-height:1.55; margin:0; }
+.run-mode-screen .run-mode-card ul { margin:12px 0 0; font-size:18px; }
+.run-mode-screen .run-mode-card li { margin:6px 0; }
+.run-mode-screen .run-mode-check { bottom:18px; }
+.run-mode-screen .run-difficulty.run-ranks { top:670px; left:150px; right:150px; gap:10px; }
+.run-ranks > span { margin-right:10px; white-space:nowrap; }
+.run-ranks button { display:flex; flex-direction:column; align-items:center; min-width:112px; padding:6px 10px; line-height:1.2; }
+.run-ranks button b { font:600 21px var(--number,Arial); }
+.run-ranks button small { font-size:14px; }
+.run-rank-effects { position:absolute; top:740px; left:250px; right:250px; height:140px; overflow:auto; padding:8px 18px; border:1px solid #ffffff1f; background:#1611249c; font-size:14px; line-height:20px; color:#ddd6ee; scrollbar-width:thin; }
+.run-rank-effects strong { display:block; margin-bottom:4px; color:#ffe7b0; font-weight:500; }
+.run-rank-effects ul { margin:0; padding:0; list-style:none; columns:3; column-gap:26px; }
+.run-rank-effects li { break-inside:avoid; margin:0 0 3px; }
+.run-rank-effects li b { display:inline-block; min-width:30px; color:#d8c58d; font-weight:500; }
+.run-rank-effects li.is-off { color:#8f88a3; }
+.run-rank-effects li em { margin-left:6px; font-style:normal; font-size:12px; color:#8f88a3; border:1px solid #5d5670; padding:0 4px; }
+.run-mode-screen .run-mode-note { top:888px; font-size:15px; }
+.run-mode-screen > .reference-confirm-button { top:918px; }
+.run-mode-screen .run-replace-note { top:1004px; }
+.run-rank-effects ul { columns:2; }
+.run-rank-effects li { font-size:15px; }
+.run-rank-off { margin:4px 0 0; font-size:13px; color:#8f88a3; }
+.run-rank-effects { top:736px; height:154px; }
+.run-mode-screen .run-mode-note { top:897px; }
+.run-mode-screen > .reference-confirm-button { top:926px; }
+.run-mode-screen .run-replace-note { top:1008px; }

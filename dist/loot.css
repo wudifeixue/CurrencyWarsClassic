@@ -74,3 +74,79 @@
 .inventory-item:has(> .is-privileged):after,.equipped-icon:has(> .is-privileged):after,.item-slot:has(> .is-privileged):after,.chest-option-image:has(> .is-privileged):after{content:'✦';position:absolute;right:0;top:-3px;color:#fff2a0;text-shadow:0 1px 2px #62370e,0 0 5px #efa72b;font-size:20px;line-height:1;pointer-events:none}
 .chest-option-image:has(> .is-privileged){position:relative}
 .playback-finishing{display:inline-flex;align-items:center;justify-content:center;min-width:120px;color:#eddfa7;padding:12px 18px}
+
+/* v6.4 — 武装箱 / 聘用书 wait in a bench slot (grid items in the old client) and open with 开启. */
+.classic-scene .bench .bench-chest{position:relative;height:128px;padding:0;border:2px solid #d8bb6e;border-radius:4px;background:radial-gradient(circle at 50% 38%,#6d64c4 0,#2b2552 62%,#181430 100%);box-shadow:0 0 14px #ffd98a33,inset 0 0 18px #0008;cursor:pointer;overflow:hidden;color:#fff;font:inherit}
+.classic-scene .bench .bench-chest.chest-advanced{border-color:#e9c56b;background:radial-gradient(circle at 50% 38%,#9a7840 0,#3c2c2a 64%,#1b1418 100%)}
+.classic-scene .bench .bench-chest.chest-privileged{border-color:#ffe38f;background:radial-gradient(circle at 50% 38%,#c08ad8 0,#4a2c5e 62%,#1d1226 100%);box-shadow:0 0 18px #ffd7ff55,inset 0 0 18px #0008}
+.classic-scene .bench .bench-chest.chest-role{border-color:#a9c7ff;background:radial-gradient(circle at 50% 38%,#4f6fb0 0,#202a4f 64%,#121630 100%)}
+.bench-chest-art{position:absolute;inset:8px 8px 34px;display:flex;align-items:center;justify-content:center}
+.bench-chest-art img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 4px 6px #0009);animation:cw-chest-bob 2.6s ease-in-out infinite}
+.bench-chest-open{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);padding:2px 14px;border-radius:3px;background:#242430e6;border:1px solid #ffffff55;font-size:15px;letter-spacing:2px;white-space:nowrap}
+.classic-scene .bench .bench-chest:hover{border-color:#fff;box-shadow:0 0 20px #fff6}
+.classic-scene .bench .bench-chest:hover .bench-chest-open{background:#f2f0ff;color:#1d1b33}
+.classic-scene .bench .bench-chest.is-drag-source{opacity:.35}
+.role-letter{width:76%;height:76%;fill:#f6f3ea;stroke:#3b3550;stroke-width:2.4;filter:drop-shadow(0 4px 6px #0009)}
+.role-letter path{fill:none;stroke:#8d87a6;stroke-width:3;stroke-linecap:round}
+.role-letter circle{fill:var(--cost);stroke:#fff;stroke-width:2}
+.role-letter text{fill:#1b1830;stroke:none;font:700 11px Arial,sans-serif}
+.drag-ghost.drag-chest{display:flex;align-items:center;justify-content:center;border-radius:6px;background:#2b2552cc;border:2px solid #d8bb6e}
+.drag-ghost.drag-chest img,.drag-ghost.drag-chest svg{width:80%;height:80%;object-fit:contain}
+@keyframes cw-chest-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+/* The forge choice panel: four cards over the dimmed board, as in the in-game tutorial picture. */
+.forge-overlay{position:fixed;inset:0;z-index:100;background:#0d0c1fb8;backdrop-filter:blur(3px);overflow:hidden}
+.forge-panel{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform:translate(-50%,-50%) scale(var(--reference-scale,1));transform-origin:center;color:#f7f6ff;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+.forge-panel button{font:inherit;cursor:pointer}
+.forge-heading{position:absolute;top:70px;left:0;right:0;text-align:center}
+.forge-heading h1{margin:0;font-size:34px;font-weight:500;letter-spacing:4px}
+.forge-heading p{margin:10px 0 0;font-size:21px;color:#d8d5f2}
+.forge-return{position:absolute;right:70px;top:4px;display:flex;align-items:center;gap:12px;padding:12px 28px;border:1px solid #d6d2f0;border-radius:30px;background:#17172b99;color:#fff;font-size:22px}
+.forge-return svg{width:24px;height:24px}
+.forge-return:hover,.forge-return:focus-visible{background:#f2f0ff;color:#1d1b33;outline:none}
+.forge-cards{position:absolute;top:210px;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:repeat(var(--option-count,4),300px);gap:36px;padding:34px 40px;background:linear-gradient(#141428f2,#0f0f1ff2);border:1px solid #ffffff2e;box-shadow:0 20px 60px #0009}
+.forge-card{position:relative;display:flex;flex-direction:column;align-items:center;height:470px;padding:26px 20px 18px;border:2px solid #d8b864;background:linear-gradient(#1d5865 0,#123947 52%,#0c1a24 100%);color:#fff;text-align:center;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.forge-card.tier-2{background:linear-gradient(#5b4a2a 0,#2f2620 52%,#121016 100%)}
+.forge-card.is-privileged{border-color:#ffe6a2;background:linear-gradient(#6a3f86 0,#331f45 52%,#140c1c 100%)}
+.forge-card.is-role{border-color:var(--rarity,#d8b864);background:linear-gradient(#2e3f72 0,#1a2346 55%,#0e1224 100%)}
+.forge-card:hover,.forge-card:focus-visible{transform:translateY(-8px);border-color:#fff;box-shadow:0 0 0 2px #fff,0 18px 34px #0008;outline:none}
+.forge-card-art{width:150px;height:150px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff40;background:#0b0f18}
+.forge-card-art img{width:88%;height:88%;object-fit:contain}
+.forge-card.is-role .forge-card-art{width:170px;height:170px;border:3px solid var(--rarity,#fff);background:#111}
+.forge-card.is-role .forge-card-art img{width:100%;height:100%;object-fit:cover}
+.forge-card-name{margin-top:18px;font-size:26px;letter-spacing:1px}
+.forge-card-meta{margin-top:12px;font-size:17px;line-height:1.5;color:#d3d0e4;overflow:auto;max-height:150px}
+.forge-card-recipe{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:10px;color:#9cf0f7}
+.forge-card-recipe img{width:40px;height:40px;object-fit:contain;border:1px solid #9cf0f766;background:#0b0f18}
+.forge-note{position:absolute;top:800px;left:0;right:0;text-align:center;color:#cfcbe6;font-size:19px}
+
+/* Item card (物品栏 click): name, type, description, 可合成列表 — modelled on the old client's tutorial pictures. */
+.classic-scene .item-card{position:absolute;z-index:32;right:132px;top:150px;width:452px;max-height:820px;overflow:auto;padding:22px 22px 18px;background:linear-gradient(#1c1b25f5,#121119f5);border:1px solid #ffffff2a;box-shadow:0 18px 50px #000a;color:#f2f0fa;text-align:left;scrollbar-width:thin}
+.item-card-close{position:absolute;right:10px;top:8px;width:34px;height:34px;border:0;background:none;color:#cfcbe0;font-size:26px;cursor:pointer}
+.item-card-head{display:flex;gap:16px;align-items:center;padding-right:30px}
+.item-card-art{flex:0 0 76px;height:76px;display:flex;align-items:center;justify-content:center;border:2px solid #8d87a6;background:#0b0b12}
+.item-card-art.tier-2{border-color:#d3b766}
+.item-card-art img{width:90%;height:90%;object-fit:contain}
+.item-card-head h2{margin:0;font-size:26px;font-weight:600}
+.item-card-head small{display:inline-block;margin-top:6px;padding:2px 9px;background:#b38a3d;color:#1b160d;font-size:15px;font-weight:600}
+.item-card-desc{margin:16px 0 4px;font-size:18px;line-height:1.55;color:#dcd8ea}
+.item-card-section{margin-top:14px;border-top:1px solid #ffffff22;padding-top:6px}
+.item-card-section h3{margin:4px 0 10px;text-align:center;font-size:16px;font-weight:500;color:#bdb8d4;letter-spacing:2px}
+.craft-row{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 8px;padding:6px 10px;border:2px solid transparent;background:#ffffff08;color:#e9e6f5;font:inherit;text-align:left}
+.craft-row.is-owned{border-color:#fff;background:#ffffff14;cursor:pointer}
+.craft-row.is-owned:hover,.craft-row.is-owned:focus-visible{background:#ffffff2a;outline:none}
+.craft-row:not(.is-owned){opacity:.62}
+.craft-plus{font-size:22px;color:#cfcbe0;width:18px;text-align:center}
+.craft-icon{flex:0 0 48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff33;background:#0b0b12}
+.craft-icon.is-result{flex-basis:54px;height:54px;border-color:#d3b766}
+.craft-icon img{width:88%;height:88%;object-fit:contain}
+.craft-name{font-size:18px;line-height:1.25}
+.craft-route{display:flex;align-items:center;justify-content:center;gap:12px}
+.craft-route .craft-icon{flex-basis:60px;height:60px}
+.item-card-hint{margin:12px 0 0;font-size:15px;color:#a9a4c2;text-align:center}
+.classic-scene .equipment-rail .inventory-item.drop-hover{box-shadow:0 0 0 3px #fff,0 0 18px #ffe3a4;transform:scale(1.06)}
+.classic-scene .equipment-rail .inventory-item.drop-invalid{box-shadow:0 0 0 3px #ff6b6b}
+.classic-scene .equipment-heading{cursor:default}
+.forge-panel .forge-return{font-size:22px}
+.forge-panel .forge-card{font-size:16px}
+.forge-panel .forge-card.is-role{height:360px}

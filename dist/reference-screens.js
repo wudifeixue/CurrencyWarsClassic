@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.3.0';
-import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.3.0';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.4.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.4.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -33,6 +33,7 @@ export function choiceScreen(game, selectedIndex = null) {
   return `<div class="reference-overlay"><section class="reference-fullscreen reference-choice-screen" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
     <div class="reference-mesh" aria-hidden="true"></div>
     <div class="reference-choice-stage">${getCurrentNode(game).label} · ${isStrategy ? '投资机遇' : '装备补给'}</div>
+    ${isStrategy && (game.flow?.rules || 1) >= 4 ? '<button class="reference-choice-return" data-action="choice-hide">← 返回备战</button>' : ''}
     <header class="reference-choice-heading"><i></i><h1 id="modal-heading">${isStrategy ? '请选择投资策略' : '请选择补给装备'}</h1><i></i></header>
     <div class="reference-choice-cards">${game.choices.map((choice, index) => {
       const item = choice.kind === 'strategy' ? STRATEGIES.find(s => s.id === choice.id) : equipment(choice.id);
@@ -81,6 +82,7 @@ function settlementPanel(game, battle, won) {
   const maxLevel = !getLevelXp(game);
   return `<div class="settle">
     <div class="settle-progress" role="img" aria-label="挑战进度 ${progress}%"><span>挑战进度</span><div class="settle-progress-bar"><i style="width:${progress}%"></i>${battle.minProgress ? `<b style="left:${battle.minProgress}%" title="最低进度要求 ${battle.minProgress}%"></b>` : ''}</div><strong>${progress}%</strong></div>
+    ${Number.isFinite(battle.countdown) ? `<p class="settle-countdown">倒计时 ${battle.countdown} · 受到致命攻击 ${battle.revives || 0} 次${battle.minProgress ? ` · 最低进度要求 ${battle.minProgress}%` : ''}</p>` : ''}
     <div class="settle-emblems">
       <div class="settle-emblem settle-hp ${battle.damage ? 'is-loss' : ''}"><span class="settle-heart">${heart}</span><div><small>小队生命值</small><strong>${number(game.hp)}</strong>${battle.damage ? `<em>失去小队生命值 −${number(battle.damage)}</em>${parts ? `<p>${parts}</p>` : ''}` : battle.healing ? `<em class="is-gain">回复 +${number(battle.healing)}</em>` : '<p>未损失小队生命值</p>'}</div></div>
       <div class="settle-emblem settle-level"><span class="settle-level-badge"><small>Lv.</small>${game.level}</span><div><small>获取经验</small><strong>+${number(battle.xpGain)}</strong><p>${maxLevel ? '已达到最高等级' : `当前 ${game.xp} / ${getLevelXp(game)} · 进入下个节点时计入`}</p></div></div>
@@ -112,11 +114,11 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
   const max = Math.max(1, ...rows.map(s => s.damage || 0));
   const deployed = game.units.filter(u => u.zone !== 'bench');
   const teamValue = deployed.reduce((sum, u) => sum + getSellPrice(game,u), 0);
-  const roundLabel = ended ? `抵达 ${getCurrentNode(game).label} · ${game.wins} 胜 / ${game.losses} 负` : `${getCurrentNode(game).label} · ${escape(battle.enemy)}${combat ? ` · ${combat.turns} 次行动` : ''}`;
+  const roundLabel = ended ? `抵达 ${getCurrentNode(game).label} · ${game.wins} 胜 / ${game.losses} 负` : `${getCurrentNode(game).label} · ${escape(battle.enemy)}${combat ? Number.isFinite(combat.countdown) ? ` · 倒计时 ${combat.countdown}，致命攻击 ${combat.revives||0} 次` : ` · ${combat.turns} 次行动` : ''}`;
   // Runs on the verified rules settle each node on the "挑战完成" page; older saves keep the previous report.
   const settle = !ended && Number.isFinite(battle.baseIncome);
   const title = ended ? won ? '远征完成' : '远征结束' : settle ? won ? '挑战完成' : '挑战失败' : won ? '作战胜利' : '作战失利';
-  const reason = combat?.reason === 'timeout' ? '达到行动上限' : battle.won ? '敌方全部退场' : '前台全部退场';
+  const reason = combat?.reason === 'timeout' ? (Number.isFinite(combat.countdown) ? '倒计时结束' : '达到行动上限') : battle.won ? '敌方全部退场' : '前台全部退场';
   return `<div class="reference-overlay"><section class="reference-fullscreen reference-result-screen ${won ? 'is-victory' : 'is-defeat'}" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
     <div class="reference-victory-prism" aria-hidden="true"><span></span></div>
     <header class="reference-result-heading"><h1 id="modal-heading">${title}</h1><p>${roundLabel}</p></header>
