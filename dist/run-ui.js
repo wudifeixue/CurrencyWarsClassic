@@ -1,5 +1,5 @@
-import { getRunMode, getCurrentNode, getRunLength, getRunNodes } from './engine.js?v=6.1.0';
-import { resolveEquipment, getEquipmentArtPath, CHARACTERS } from './data.js?v=6.1.0';
+import { getRunMode, getCurrentNode, getRunLength, getRunNodes } from './engine.js?v=6.2.0';
+import { resolveEquipment, getEquipmentArtPath, CHARACTERS } from './data.js?v=6.2.0';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const modes=[{id:'standard',name:'标准博弈',tag:'经营 · 构筑 · 三个位面',desc:'完整经历招募、投资、补给与遭遇战。在三个首领之间经营利息、扩充团队，逐步完成阵容。',mark:'◇',features:['三个位面 · 23 个节点','保留利息与连胜收益','投资环境影响整局运营']},{id:'overclock',name:'超频博弈',tag:'快节奏 · 高资源',desc:'缩短筹备路线，提高金币与经验收益。利息不再生效，更快形成高星、高人口阵容。',mark:'ϟ',features:['三个位面 · 压缩路线','更多金币与经验 · 无利息','每个位面保留投资、补给与首领']}];
 export function modeScreen(game,selected='standard',difficulty=0,fresh=false){

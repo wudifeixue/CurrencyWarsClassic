@@ -1,9 +1,9 @@
 // Zero-Sum Game route structure. Sources and explicitly adapted values are in
-// docs/classic-flow-research.md. No weekly/account rewards are simulated here.
-import {CHARACTERS,resolveEquipment} from './data.js?v=6.1.0';
+// docs/classic-flow-research.md and docs/classic-opening-research.md. No weekly/account rewards are simulated here.
+import {CHARACTERS,resolveEquipment} from './data.js?v=6.2.0';
 export const RUN_MODES=Object.freeze([
-  {id:'standard',name:'标准博弈',description:'三个位面，23个节点。奖励、投资、补给、遭遇与首领依次推进；保留利息，经营完整阵容。',nodeCount:23,interest:true,startGold:16,nodeGold:0,nodeXp:2},
-  {id:'overclock',name:'超频博弈',description:'更短的三个位面，无利息，每节点自动获得更多金币和经验。网页流程压缩为12节点。',nodeCount:12,interest:false,startGold:36,nodeGold:12,nodeXp:6},
+  {id:'standard',name:'标准博弈',description:'三个位面，23个节点。奖励、投资、补给、遭遇与首领依次推进；保留利息，经营完整阵容。',nodeCount:23,interest:true,nodeGold:0,nodeXp:2},
+  {id:'overclock',name:'超频博弈',description:'更短的三个位面，无利息，每节点自动获得更多金币和经验。网页流程压缩为12节点。',nodeCount:12,interest:false,nodeGold:12,nodeXp:6},
 ]);
 export const DIFFICULTIES=Object.freeze([
   {id:0,name:'入门',description:'熟悉经典运营与羁绊。',hpMultiplier:1,attackMultiplier:1},
@@ -27,17 +27,36 @@ export function getRunNodes(state){
 }
 export const getCurrentNode=state=>getRunNodes(state)[state.round-1];
 export const getRunLength=state=>getRunNodes(state).length;
-// Longer-run curve: 9→10 is the observed 84 XP. Earlier thresholds remain
-// simulator tuning until a complete historical client table is verified.
+// v6.0/v6.1 saves: level 4 opening and a tuned curve. Kept only so those runs can finish unchanged.
 export const CLASSIC_LEVEL_XP=Object.freeze({4:10,5:20,6:32,7:48,8:64,9:84});
+// Rules revision 2 (v6.2), see docs/classic-opening-research.md. A run opens at level 3 with nothing
+// deployed. Thresholds are the old season's base level table (3.7–4.6 client data, and the 0/72 at
+// level 9 in the in-game tutorial picture). High ranks raise them: two A7 recordings showed
+// x/20, x/40, x/52 and x/72 at levels 5–8, and a player screenshot shows 84 at level 9.
+export const FLOW_RULES=2;
+export const START_LEVEL=3;
+export const ZERO_SUM_LEVEL_XP=Object.freeze({3:4,4:6,5:16,6:36,7:48,8:60,9:72});
+export const BOSS_XP=10;
+export const usesVerifiedRules=state=>(state.flow?.rules||1)>=FLOW_RULES;
+// "Basic Rewards" on the settlement screen: 3 at 1-1, 4 at 1-2, then 5 (seen at 1-4, 1-6 and 1-9).
+export const getNodeBaseIncome=node=>node?.plane===1&&node.index<=2?2+node.index:5;
+// The streak row paid 1 at ×0 and ×1 and 2 at ×2 and ×3 in the recordings; the old client data gives
+// 1 win +1, 2–4 wins +2, 5 or more +3. A defeat pays nothing and there is no losing-streak bonus.
+export const getStreakGold=streak=>streak>=5?3:streak>=2?2:1;
+// Old-season sale values: a one-star sells for its cost; merged units of 2-cost and above lose one coin
+// (2★ 3/5/8/11/14 and 3★ 9/17/26/35/44 for costs 1–5).
+export const getClassicSellPrice=(cost,star)=>cost*3**(star-1)-(cost>1&&star>1?1:0);
+// Experience shown on the settlement screen: +2 per fought node, +10 for a boss, nothing for a supply stop.
+export const getNodeXp=(state,node)=>getRunMode(state).id==='overclock'?getRunMode(state).nodeXp:node?.type==='supply'?0:node?.boss?BOSS_XP:getRunMode(state).nodeXp;
 export function initFlow(mode='standard',difficulty=0){
-  return {mode:modes.has(mode)?mode:'standard',difficulty:DIFFICULTIES.some(d=>d.id===difficulty)?difficulty:0,
+  return {mode:modes.has(mode)?mode:'standard',rules:FLOW_RULES,difficulty:DIFFICULTIES.some(d=>d.id===difficulty)?difficulty:0,
     nodeComplete:false,supplyOffers:[],encounterOffers:[],selectedEncounter:null,supplyRerolls:1,encounterRerolls:1,
     strategyRerolls:[1,1,1],strategySelections:0,extraSupplyDone:[],extraStrategyDone:[],pendingNodeKind:null};
 }
 export function validateFlow(state){
   const f=state.flow;if(f===undefined||f===null)return !['environment','supply','encounter'].includes(state.phase);
   if(!modes.has(f.mode)||!DIFFICULTIES.some(d=>d.id===f.difficulty)||typeof f.nodeComplete!=='boolean')return false;
+  if(f.rules!==undefined&&f.rules!==FLOW_RULES)return false;
   if(!Number.isInteger(f.strategySelections)||f.strategySelections<0||!Array.isArray(f.strategyRerolls)||f.strategyRerolls.length!==3||!f.strategyRerolls.every(n=>Number.isInteger(n)&&n>=0&&n<=10))return false;
   if(![f.supplyRerolls,f.encounterRerolls].every(n=>Number.isInteger(n)&&n>=0&&n<=1))return false;
   if(!Array.isArray(f.supplyOffers)||!Array.isArray(f.encounterOffers)||!Array.isArray(f.extraSupplyDone)||!Array.isArray(f.extraStrategyDone))return false;

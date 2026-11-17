@@ -364,3 +364,15 @@ body.dragging-unit .classic-scene .sell-zone.drop-hover { transform:scale(1.05);
 .modal-footer .help-meta { margin-right:auto; color:#a9a3c4; font-size:12px; } .modal-footer .help-meta a { color:#b5b1ff; }
 .classic-scene .roster-card.is-drag-source .unit-name { opacity:0 !important; }
 .classic-scene .shop-card { touch-action:none; user-select:none; -webkit-user-select:none; }
+
+/* ---- v6.2: behaviour checked against pre-4.7 recordings ---- */
+/* Sell areas exist only while a unit is being carried (both bottom corners), as in the original. */
+.classic-scene .sell-zone { opacity:0; pointer-events:none; transform:translateY(18px); }
+.classic-scene .sell-zone:hover { opacity:0; }
+body.dragging-unit .classic-scene .sell-zone { opacity:1; pointer-events:auto; transform:none; }
+/* The flame counter beside the gold panel is the current winning streak. */
+.classic-scene .streak-badge { color:#8f93b8; }
+.classic-scene .streak-badge.is-hot { color:#ffb347; }
+.classic-scene .streak-badge.is-hot .icon { filter:drop-shadow(0 0 6px #ff8a2b); }
+/* The character card docks at the upper right instead of pointing at the unit. */
+.classic-scene .unit-popover[data-side="dock"]::before { display:none; }

@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.1.0';
-import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice } from './engine.js?v=6.1.0';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.2.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice } from './engine.js?v=6.2.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -95,7 +95,7 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
       </div>`}
     </div>
     <nav class="reference-result-pagination" aria-label="战报视图"><button data-action="result-view" data-view="overview" aria-label="查看战报总览" aria-pressed="${view === 'overview'}" class="${view === 'overview' ? 'active' : ''}"></button><button data-action="result-view" data-view="damage" aria-label="查看伤害统计" aria-pressed="${view === 'damage'}" class="${view === 'damage' ? 'active' : ''}"></button></nav>
-    <div class="reference-result-bottom"><div class="reference-result-secondary">${combat ? '<button data-action="replay"><span>↻</span>回看战斗</button>' : ''}${ended ? '<button data-action="history"><span>▥</span>战斗记录</button>' : ''}</div><button class="reference-confirm-button reference-return-button" data-action="${ended ? 'restart' : 'next'}"><span>${ended ? '开启新的远征' : game.hp <= 0 || game.round === getRunLength(game) ? '查看远征结算' : '返回货币战争'}</span></button><div class="reference-result-income">${ended ? '经典，仍在继续' : `本回合收入 +${number(battle.income)}`}</div></div>
+    <div class="reference-result-bottom"><div class="reference-result-secondary">${combat ? '<button data-action="replay"><span>↻</span>回看战斗</button>' : ''}${ended ? '<button data-action="history"><span>▥</span>战斗记录</button>' : ''}</div><button class="reference-confirm-button reference-return-button" data-action="${ended ? 'restart' : 'next'}"><span>${ended ? '开启新的远征' : game.hp <= 0 || game.round === getRunLength(game) ? '查看远征结算' : '继续挑战'}</span></button><div class="reference-result-income">${ended ? '经典，仍在继续' : `本回合收入 +${number(battle.income)}`}</div></div>
     <p class="reference-reward-breakdown">${!ended && battle.rewards ? battle.rewards.map(escape).join('　·　') : ended ? won ? `你已完成${getRunMode(game).name}全部 ${getRunLength(game)} 个节点。` : '调整阵容与投资路线，再次启程。' : ''}</p>
     <span class="reference-screen-signature">经典回响 · 非官方同人</span>
   </section></div>`;

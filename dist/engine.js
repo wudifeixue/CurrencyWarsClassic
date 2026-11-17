@@ -1,12 +1,12 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.1.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.1.0';
-import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=6.1.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.1.0';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength} from './classic-flow.js?v=6.1.0';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.1.0';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.1.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.1.0';
-export {RUN_MODES,DIFFICULTIES,getRunMode,getRunNodes,getCurrentNode,getRunLength};
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.2.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.2.0';
+import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=6.2.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.2.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,usesVerifiedRules,getNodeBaseIncome,getNodeXp,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength} from './classic-flow.js?v=6.2.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.2.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.2.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.2.0';
+export {RUN_MODES,DIFFICULTIES,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const strategyIds = new Set(STRATEGIES.map(s=>s.id));
@@ -28,8 +28,8 @@ export const getEquipment = resolveEquipment;
 export const getMaxHp = state => 100+(state.bonusMaxHp||0)+sumEffect(state,'maxHp');
 export const getPopulationLimit = state => state.level+(state.consumables||[]).filter(c=>c.id==='wealth-gem').length+(state.inventory||[]).filter(id=>id==='wealth-gem').length+(state.units||[]).reduce((n,u)=>n+u.items.filter(id=>id==='wealth-gem').length,0);
 export {getEffectiveCharacterCost};
-export const getLevelXp=state=>(isClassicRun(state)?CLASSIC_LEVEL_XP:LEVEL_XP)[state.level]||0;
-export const getSellPrice=(state,unit)=>unit?unitCost(state,unit)*3**(unit.star-1):0;
+export const getLevelXp=state=>(isClassicRun(state)?usesVerifiedRules(state)?ZERO_SUM_LEVEL_XP:CLASSIC_LEVEL_XP:LEVEL_XP)[state.level]||0;
+export const getSellPrice=(state,unit)=>!unit?0:usesVerifiedRules(state)?getClassicSellPrice(unitCost(state,unit),unit.star):unitCost(state,unit)*3**(unit.star-1);
 export function getShopOdds(state) {
   const odds=[...SHOP_ODDS[state.level]],bonus=getProgressionShopModifiers(state).fiveCostOddsBonus*100;
   if(bonus){odds[0]-=bonus;odds[4]+=bonus;}
@@ -121,7 +121,10 @@ export function createGame(seed=Date.now(),options={}) {
   addUnit(state,'1013','front');addUnit(state,'1009','front');addUnit(state,'1108','front');addUnit(state,'1001','back');
   state.shop=['1013','1001','1013','1202','1201'];
   if(options.mode){
-    state.flow=initFlow(options.mode,options.difficulty);state.gold=getRunMode(state).startGold;
+    // Verified opening: level 3, nothing deployed, an unrolled shop and no gold until the
+    // Starting Supplies arrive with the chosen investment environment.
+    state.flow=initFlow(options.mode,options.difficulty);
+    state.level=START_LEVEL;state.gold=0;state.units=[];state.loot=[];state.shop=Array(5).fill(null);
     initEnvironment(state,{enabled:true});state.phase='environment';
   }
   return state;
@@ -255,8 +258,8 @@ function finishRun(state){
 }
 function advanceClassicNode(state){
   if(state.hp<=0||state.round>=getRunLength(state))return finishRun(state);
-  state.round++;const flow=state.flow;flow.nodeComplete=false;flow.selectedEncounter=null;flow.supplyOffers=[];flow.encounterOffers=[];flow.supplyRerolls=1;flow.encounterRerolls=1;
-  addXp(state,getRunMode(state).nodeXp);enterNode(state);if(!state.locked)rollShop(state);prepareClassicNode(state);
+  const finished=getCurrentNode(state);state.round++;const flow=state.flow;flow.nodeComplete=false;flow.selectedEncounter=null;flow.supplyOffers=[];flow.encounterOffers=[];flow.supplyRerolls=1;flow.encounterRerolls=1;
+  addXp(state,usesVerifiedRules(state)?getNodeXp(state,finished):getRunMode(state).nodeXp);enterNode(state);if(!state.locked)rollShop(state);prepareClassicNode(state);
   return success(`进入 ${getCurrentNode(state).label} · ${getCurrentNode(state).name}`);
 }
 
@@ -288,6 +291,28 @@ function grantRewards(state,contents) {
     }
   }
   return success(`已获得：${names.join('、')}`);
+}
+// Starting Supplies. The run opens with an empty board and the supplies already delivered: four
+// one-star characters on the bench (two recordings and the old client constant), 3 or 4 gold, one
+// basic equipment in the list and one more inside a crystal on the board. A concept environment
+// turns two of the four into its own characters and supplies the equipment itself; contract
+// environments add their characters on top. Which cost tiers the four can be is not established,
+// so they are drawn from the 1-cost pool that a level 3 shop sells.
+function grantStartingSupplies(state,environmentRewards=[]) {
+  const concept=state.environment?.id?.startsWith('concept-'),fromEnvironment=environmentRewards.filter(r=>r.kind==='character').length;
+  const pool=CLASSIC_ROSTER.filter(c=>c.cost===1&&!environmentRewards.some(r=>r.kind==='character'&&r.id===c.id)).map(c=>c.id),characters=[];
+  const count=Math.max(0,4-(concept?fromEnvironment:0)),basics=EQUIPMENT.filter(e=>e.tier===1);
+  while(characters.length<count&&pool.length)characters.push(pool.splice(Math.floor(random(state)*pool.length),1)[0]);
+  const supplies=[...characters.map(id=>({kind:'character',id})),{kind:'gold',amount:3+Math.floor(random(state)*2)}];
+  if(!environmentRewards.some(r=>r.kind==='item'))supplies.push({kind:'item',id:pick(state,basics).id});
+  const granted=[],queued=[{kind:'item',id:pick(state,basics).id}];
+  for(const reward of [...supplies,...environmentRewards]) {
+    // Chests keep their own opening flow, and anything that does not fit stays on the board as a crystal.
+    if(['character','gold','item'].includes(reward.kind)&&grantRewards(state,[reward]).ok)granted.push(reward);
+    else queued.push(reward);
+  }
+  queueRewards(state,queued,'初始补给');
+  return granted;
 }
 function useConsumable(state,action) {
   const index=state.consumables.findIndex(c=>c.uid===action.uid),tool=state.consumables[index];
@@ -332,6 +357,10 @@ function runAction(state,action) {
   if(action.type==='choose-environment'){
     if(state.phase!=='environment')return fail('当前不在投资环境选择阶段。');
     const response=chooseEnvironment(state,action.id);if(!response.ok)return response;
+    if(usesVerifiedRules(state)){
+      response.supplies=grantStartingSupplies(state,response.rewards);
+      enterNode(state);rollShop(state);prepareClassicNode(state);return response;
+    }
     if(response.replaceStarter){state.units=[];state.loot=state.loot.filter(o=>o.source!=='初始补给');}
     queueRewards(state,response.rewards,'投资环境');enterNode(state);prepareClassicNode(state);return response;
   }
@@ -508,9 +537,13 @@ function runAction(state,action) {
       const progress=won?100:Math.max(0,Math.min(99,Math.floor((1-remainingHp/totalHp)*100)));
       const damage=won?0:classic?Math.max(2,Math.ceil((1-progress/100)*(12+node.plane*6+(enemy.boss?6:0)))):Math.max(3,Math.round(9+state.round*1.4+(enemy.boss?5:0)-(has(state,'fortress')?4:0)));
       const interest=getInterest(state);
-      state.streak=won?Math.max(1,state.streak+1):classic?0:Math.min(-1,state.streak-1);
-      const streakBonus=Math.min(3,Math.floor(Math.abs(state.streak)/2));
-      const baseIncome=classic?5:8,victoryIncome=won?(classic?1:2):0;
+      const verified=usesVerifiedRules(state);
+      // Reward nodes neither extend nor break the streak: 1-1 and 1-2 both settled at ×0, and a
+      // streak survived the 1-8 reward node.
+      if(!(verified&&node.type==='reward'))state.streak=won?Math.max(1,state.streak+1):classic?0:Math.min(-1,state.streak-1);
+      const baseIncome=classic?verified?getNodeBaseIncome(node):5:8,victoryIncome=won?(classic?1:2):0;
+      const streakBonus=verified?(won?getStreakGold(state.streak)-victoryIncome:0):Math.min(3,Math.floor(Math.abs(state.streak)/2));
+      const xpGain=verified?getNodeXp(state,node):0;
       const income=baseIncome+interest+streakBonus+victoryIncome+(has(state,'dividend')?3:0)+(won&&has(state,'momentum')?3:0);
       let healing=(has(state,'recovery')?5:0)+sumEffect(state,'battleHeal');
       // A lethal defeat cannot be undone by post-battle healing.
@@ -523,14 +556,16 @@ function runAction(state,action) {
       if(classic&&won&&node.type==='encounter'&&state.flow.selectedEncounter)queueRewards(state,state.flow.selectedEncounter.rewards,'遭遇奖励');
       const logs=combat.events.map(event=>event.text);
       if(healing&&state.hp>0)logs.push(`战后恢复生效，回复 ${healing} 点小队生命（最高 ${getMaxHp(state)}）。`);
-      const rewards=[`基础收入 +${baseIncome}`,getRunMode(state).interest?`利息 +${interest}`:'超频模式无利息',`连胜奖励 +${streakBonus}`];
+      const rewards=verified?[`基础金币 +${baseIncome}`,`连胜金币 +${streakBonus+victoryIncome}`,getRunMode(state).interest?`利息 +${interest}`:'超频模式无利息']:[`基础收入 +${baseIncome}`,getRunMode(state).interest?`利息 +${interest}`:'超频模式无利息',`连胜奖励 +${streakBonus}`];
+      if(verified&&xpGain)rewards.push(`获得经验 +${xpGain}`);
       if(companyGold)rewards.push(`公司羁绊 +${companyGold}`);
-      if(won)rewards.push(`胜利奖励 +${victoryIncome}`);
+      if(won&&!verified)rewards.push(`胜利奖励 +${victoryIncome}`);
       if(has(state,'dividend'))rewards.push('稳定分红 +3');
       if(won&&has(state,'momentum'))rewards.push('乘胜追投 +3');
       if(growthRewards.length)rewards.push(`羁绊产出 ${growthRewards.length} 枚晶矿，返回备战后领取`);
       if(won&&enemy.boss)rewards.push('首领晶矿已掉落，返回备战后领取');
       state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing,combat,nodeLabel:node.label,nodeType:node.type,progress};
+      if(verified)Object.assign(state.lastBattle,{baseIncome,streakIncome:streakBonus+victoryIncome,interestIncome:interest,streak:state.streak,xpGain});
       state.history.push({round:state.round,nodeLabel:node.label,nodeType:node.type,won,damage,income,playerPower,enemyPower:enemy.power,turns:combat.turns,reason:combat.reason});
       queueRewards(state,onEnvironmentEvent(state,{type:'interest',amount:interest}),'投资环境');
       queueRewards(state,onEnvironmentEvent(state,{type:'battle',key:String(state.round),battle:state.lastBattle}),'投资环境');
@@ -586,7 +621,7 @@ export function validateState(state) {
     }else if(!state.environment.id)return false;
   }
   for(const key of ['round','hp','gold','level','xp','rng','seed','nextUid','streak','wins','losses','freeRefreshes','goldSpentThisNode'])if(!Number.isFinite(state[key])||!Number.isInteger(state[key]))return false;
-  if(state.round<1||state.round>getRunLength(state)||state.hp<0||state.gold<0||state.level<4||state.level>MAX_LEVEL||state.xp<0||state.freeRefreshes<0||state.goldSpentThisNode<0)return false;
+  if(state.round<1||state.round>getRunLength(state)||state.hp<0||state.gold<0||state.level<(usesVerifiedRules(state)?START_LEVEL:4)||state.level>MAX_LEVEL||state.xp<0||state.freeRefreshes<0||state.goldSpentThisNode<0)return false;
   if(state.nextUid<1||state.wins<0||state.losses<0||(state.level<MAX_LEVEL&&state.xp>=getLevelXp(state))||(state.level===MAX_LEVEL&&state.xp!==0))return false;
   if(!Array.isArray(state.units)||state.units.length>getPopulationLimit(state)+BENCH_CAPACITY||!Array.isArray(state.inventory)||!Array.isArray(state.shop)||state.shop.length!==5)return false;
   if(!Array.isArray(state.strategies)||!state.strategies.every(id=>strategyIds.has(id))||new Set(state.strategies).size!==state.strategies.length)return false;

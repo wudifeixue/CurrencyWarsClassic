@@ -1,4 +1,4 @@
-import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=6.1.0';
+import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=6.2.0';
 
 export const LOOT_QUALITIES=['white','blue','gold','prismatic'];
 const consumables={

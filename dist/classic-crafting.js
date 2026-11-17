@@ -1,4 +1,4 @@
-import {EQUIPMENT,TRAITS,RECIPES,resolveEquipment} from './data.js?v=6.1.0';
+import {EQUIPMENT,TRAITS,RECIPES,resolveEquipment} from './data.js?v=6.2.0';
 
 const fail=message=>({ok:false,message});
 const baseId=id=>resolveEquipment(id)?.baseId||id;
