@@ -1,6 +1,6 @@
 // Zero-Sum Game route structure. Sources and explicitly adapted values are in
 // docs/classic-flow-research.md. No weekly/account rewards are simulated here.
-import {CHARACTERS,resolveEquipment} from './data.js?v=6.0.0';
+import {CHARACTERS,resolveEquipment} from './data.js?v=6.1.0';
 export const RUN_MODES=Object.freeze([
   {id:'standard',name:'标准博弈',description:'三个位面，23个节点。奖励、投资、补给、遭遇与首领依次推进；保留利息，经营完整阵容。',nodeCount:23,interest:true,startGold:16,nodeGold:0,nodeXp:2},
   {id:'overclock',name:'超频博弈',description:'更短的三个位面，无利息，每节点自动获得更多金币和经验。网页流程压缩为12节点。',nodeCount:12,interest:false,startGold:36,nodeGold:12,nodeXp:6},
