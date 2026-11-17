@@ -37,26 +37,27 @@ test('duplicate inventory icons preserve the exact first item index and special 
   for(const match of html.matchAll(/src="([^"]+)"/g))assert.ok(existsSync(new URL(`../dist/${match[1]}`,import.meta.url)),match[1]);
 });
 
-test('opening, selecting and cancelling a chest preview retains its options and contents',()=>{
-  const s=createGame(31);queueRewards(s,[{kind:'chest',quality:'basic',options:['knife','star','skates']}]);
+test('a chest waits in a bench slot, opens with four cards, keeps its options on 返回 and is taken by one click',()=>{
+  const s=createGame(31);queueRewards(s,[{kind:'chest',quality:'basic',options:['knife','star','skates','armor']}]);
   run(s,{type:'collect-loot',uid:s.loot.at(-1).uid});
-  const chest=structuredClone(s.chests[0]);run(s,{type:'open-chest',uid:chest.uid});
-  const initial=chestScreen(s),preview=chestScreen(s,0);
-  assert.match(initial,/data-action="choose-chest" disabled/);
-  assert.match(initial,/返回备战界面/);assert.match(initial,/暂不选择/);
-  assert.doesNotMatch(preview,/data-action="choose-chest" disabled/);
+  const chest=structuredClone(s.chests[0]);
+  assert.equal(chest.slot,s.units.filter(u=>u.zone==='bench').length,'the chest takes the first free bench slot');
+  run(s,{type:'open-chest',uid:chest.uid});
+  const screen=chestScreen(s);
+  assert.equal((screen.match(/class="forge-card[ "]/g)||[]).length,4);
+  assert.match(screen,/data-action="cancel-chest"/);assert.match(screen,/返回/);
+  assert.doesNotMatch(screen,/disabled/,'cards are taken by clicking them; there is no separate confirm');
   assert.deepEqual(s.chests[0],chest);assert.deepEqual(s.inventory,[]);
   run(s,{type:'cancel-chest'});assert.equal(chestScreen(s),'');assert.deepEqual(s.chests[0],chest);
-  run(s,{type:'open-chest',uid:chest.uid});assert.equal(chestScreen(s),initial);
-  run(s,{type:'choose-chest',index:0});assert.deepEqual(s.inventory,['knife']);assert.equal(s.chests.length,0);
+  run(s,{type:'open-chest',uid:chest.uid});assert.equal(chestScreen(s),screen);
+  run(s,{type:'choose-chest',index:3});assert.deepEqual(s.inventory,['armor']);assert.equal(s.chests.length,0);
 });
 
-test('privileged chests and consumables remain distinct from equipable inventory',()=>{
-  const chest={uid:'special',quality:'prismatic',kind:'equipment',options:['privileged:boots','privileged:blade','privileged:orbital']};
+test('privileged chests stay off the 物品栏; consumables and equipment remain listed',()=>{
+  const chest={uid:'special',quality:'prismatic',kind:'equipment',slot:0,options:['privileged:boots','privileged:blade','privileged:orbital','privileged:knife']};
   const s={activeChest:chest.uid,chests:[chest],inventory:['knife'],consumables:[{uid:'projector-1',id:'projector'}]};
-  const html=inventoryContents(s),screen=chestScreen(s,0);
-  assert.equal(chestName(chest),'特权武装箱');assert.match(html,/assets\/loot\/chest-privileged.png/);
-  assert.match(html,/data-action="open-chest" data-uid="special"/);
-  assert.match(html,/data-action="consumable" data-uid="projector-1"/);
+  const html=inventoryContents(s),screen=chestScreen(s);
+  assert.equal(chestName(chest),'特权武装箱');assert.doesNotMatch(html,/open-chest/);
+  assert.match(html,/data-action="consumable" data-uid="projector-1"/);assert.match(html,/data-action="item"/);
   assert.match(screen,/is-privileged/);assert.doesNotMatch(screen,/classic-privileged:/);
 });

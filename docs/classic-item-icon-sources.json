@@ -1,0 +1,180 @@
+[
+  {
+    "id": "emblem-luofu",
+    "name": "仙舟星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-luofu.png",
+    "url": "https://patchwiki.biligame.com/images/sr/2/2b/dtb6cawn7laskup2sv7snm7j61d5hf7.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-debuff",
+    "name": "减益星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-debuff.png",
+    "url": "https://patchwiki.biligame.com/images/sr/3/31/oyb57y9ny4vkniy0725jayleew3t3u8.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-break",
+    "name": "击破星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-break.png",
+    "url": "https://patchwiki.biligame.com/images/sr/4/4f/ptsnpbtwlf73l26d4op71l8qtw3ofd2.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-express",
+    "name": "列车同行星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-express.png",
+    "url": "https://patchwiki.biligame.com/images/sr/c/c6/tkj5rv3wtbmt6wa5uplhrxam2j0oyow.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-grail",
+    "name": "命运圣杯星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-grail.png",
+    "url": "https://patchwiki.biligame.com/images/sr/3/32/mt2jp8xagpnmlqvtk4v20pql8zpbdp1.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-night",
+    "name": "夜之半神星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-night.png",
+    "url": "https://patchwiki.biligame.com/images/sr/6/63/lbdmz7g25pygp32wxfvrj3qstk47c39.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-sp",
+    "name": "战技点星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-sp.png",
+    "url": "https://patchwiki.biligame.com/images/sr/6/67/m80i6wskk8pvz90it9ump9xbhdydv8t.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-dot",
+    "name": "持续伤害星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-dot.png",
+    "url": "https://patchwiki.biligame.com/images/sr/a/ad/ivtu3g97uenx0kqgjtc4i10hw31wvv2.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-wanderer",
+    "name": "星间旅人星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-wanderer.png",
+    "url": "https://patchwiki.biligame.com/images/sr/5/55/o1i8w4wb2rvqrhv8f2jjagfvo24v784.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-day",
+    "name": "昼之半神星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-day.png",
+    "url": "https://patchwiki.biligame.com/images/sr/a/a3/9p2645jqpndr6gmn7zybd1h0xo8ym68.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-elation",
+    "name": "欢愉星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-elation.png",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e8/tstujhmze6hmqvrfdkz87iwad9x9ea1.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-blood",
+    "name": "燃血星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-blood.png",
+    "url": "https://patchwiki.biligame.com/images/sr/5/5e/opcd5d3mm9ij4o4mpw9ciyb46c7ny25.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-wolfpack",
+    "name": "狼狩星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-wolfpack.png",
+    "url": "https://patchwiki.biligame.com/images/sr/c/cd/9vasx98ucji1qjf4gl29g6esbxhs5ry.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-festival",
+    "name": "盛会之星星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-festival.png",
+    "url": "https://patchwiki.biligame.com/images/sr/b/b0/t3fdqap7fwrxkd042pgcojbmikgceoc.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-aoe",
+    "name": "群攻星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-aoe.png",
+    "url": "https://patchwiki.biligame.com/images/sr/e/e6/kt8zr4eug1g4fgqke749w70e0ocmwa6.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-energy",
+    "name": "能量星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-energy.png",
+    "url": "https://patchwiki.biligame.com/images/sr/d/da/50uqdwdxpy277ilhqvqyxzcko0nz1gw.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-belobog",
+    "name": "贝洛伯格星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-belobog.png",
+    "url": "https://patchwiki.biligame.com/images/sr/f/fc/r6llwnn97af90pwv0p2yt7s7k58lycy.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-follow",
+    "name": "追击星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-follow.png",
+    "url": "https://patchwiki.biligame.com/images/sr/d/dd/mfq8mgtwupqqbp5v4nbftz4dw581c7y.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-scholar",
+    "name": "银河学者星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-scholar.png",
+    "url": "https://patchwiki.biligame.com/images/sr/b/bb/tb3yzne2ury2gfe2jqy9x9cnnbwat63.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "wrench",
+    "name": "拆装扳手",
+    "localPath": "dist/assets/loot/wrench.png",
+    "url": "https://patchwiki.biligame.com/images/sr/8/8d/byr0dil4xk0vofznnae74s0uixdjray.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "precision-wrench",
+    "name": "精密拆装扳手",
+    "localPath": "dist/assets/loot/precision-wrench.png",
+    "url": "https://patchwiki.biligame.com/images/sr/2/27/1r0qt0a4jyq2ijfzgs5evx66mf6h9rb.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "smelter",
+    "name": "冶金炉",
+    "localPath": "dist/assets/loot/smelter.png",
+    "url": "https://patchwiki.biligame.com/images/sr/e/ee/tm987zq2s9k6gioxrt0xrpon793eq27.png",
+    "source": "https://wiki.biligame.com/sr/装备一览"
+  },
+  {
+    "id": "emblem-heal",
+    "name": "治疗星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-heal.png",
+    "url": "https://static.wikia.nocookie.net/houkai-star-rail/images/f/ff/Equipment_Healing_Emblem.png/revision/latest?cb=20251119124810",
+    "source": "https://honkai-star-rail.fandom.com/wiki/Currency_Wars:_Zero-Sum_Game/Equipment",
+    "uploaded": "2025-11-19T12:48:10Z"
+  },
+  {
+    "id": "emblem-shield",
+    "name": "护盾星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-shield.png",
+    "url": "https://static.wikia.nocookie.net/houkai-star-rail/images/4/4e/Equipment_Shield_Emblem.png/revision/latest?cb=20251119125016",
+    "source": "https://honkai-star-rail.fandom.com/wiki/Currency_Wars:_Zero-Sum_Game/Equipment",
+    "uploaded": "2025-11-19T12:50:16Z"
+  },
+  {
+    "id": "emblem-quantum",
+    "name": "量子同频星徽",
+    "localPath": "dist/assets/equipment/classic-emblem-quantum.png",
+    "url": "https://static.wikia.nocookie.net/houkai-star-rail/images/e/e5/Equipment_Quantum_Resonance_Emblem.png/revision/latest?cb=20251119124957",
+    "source": "https://honkai-star-rail.fandom.com/wiki/Currency_Wars:_Zero-Sum_Game/Equipment",
+    "uploaded": "2025-11-19T12:49:57Z"
+  }
+]

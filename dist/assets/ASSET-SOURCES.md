@@ -59,3 +59,9 @@ BWIKI provides its contributed page content under CC BY-NC-SA 4.0; the game artw
 The 33 `strategies/classic-<id>.png` files are unchanged white transparent glyphs from the [BWIKI investment strategy reference](https://wiki.biligame.com/sr/投资策略一览). Their per-strategy source URLs are recorded in `docs/classic-strategy-art-sources.json`. This provides the original strategy symbols; card frames and color treatment remain implemented by this fan site's CSS.
 
 Twenty-eight original bond glyphs were available from the public BWIKI file index. Five additional bonds (`grail`, `gamer`, `mentor`, `elation`, `navigator`) use the project's semantic SVG fallback because their original small-icon source download was unavailable during retrieval. Do not describe those five SVGs as original game art.
+
+## 星徽, wrench and tool icons (v6.4, 2026-11-17)
+
+The 22 emblem badges in `equipment/classic-emblem-<trait>.png` and the `loot/wrench.png`, `loot/precision-wrench.png`, and `loot/smelter.png` icons are unchanged original game item icons (128 × 128). Nineteen emblems and all three tools come from the [BWIKI equipment reference](https://wiki.biligame.com/sr/装备一览); the 治疗, 护盾 and 量子同频 emblems come from the [Fandom Zero-Sum equipment page](https://honkai-star-rail.fandom.com/wiki/Currency_Wars:_Zero-Sum_Game/Equipment) (uploaded 2025-11-19, during 3.7), because BWIKI refused automated requests for those pages. Every file, its source URL and page are listed in `docs/classic-item-icon-sources.json`. They replace the bond glyphs that were previously shown for 星徽 and the drawn SVG wrench. Fandom content is CC BY-SA; the artwork remains the property of HoYoverse / miHoYo.
+
+No original icon was found for 聘用书; its letter icon is drawn in `loot-ui.js` for this site.

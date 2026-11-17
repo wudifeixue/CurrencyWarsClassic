@@ -1,12 +1,12 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.3.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.3.0';
-import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=6.3.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.3.0';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength} from './classic-flow.js?v=6.3.0';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.3.0';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.3.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.3.0';
-export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeXp};
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.4.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.4.0';
+import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.4.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.4.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss} from './classic-flow.js?v=6.4.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.4.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.4.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.4.0';
+export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const strategyIds = new Set(STRATEGIES.map(s=>s.id));
@@ -33,8 +33,14 @@ export {getEffectiveCharacterCost};
 const ZONES=['front','back','bench'];
 export const getBackCapacity=state=>Math.min(9,Math.max(6,getPopulationLimit(state)-FRONT_CAPACITY));
 export const getZoneCapacity=(state,zone)=>zone==='front'?FRONT_CAPACITY:zone==='back'?getBackCapacity(state):BENCH_CAPACITY;
+// 武装箱 and 聘用书 are grid items: each one stands in a bench slot until it is opened, so it counts
+// against the 9 bench places just like a character.
+const benchChests=state=>(state.chests||[]).filter(c=>Number.isInteger(c.slot));
+export const getBenchCount=state=>state.units.filter(u=>u.zone==='bench').length+benchChests(state).length;
+const chestAt=(state,slot)=>benchChests(state).find(c=>c.slot===slot);
 function freeSlot(state,zone,except) {
   const taken=new Set(state.units.filter(u=>u!==except&&u.zone===zone&&Number.isInteger(u.slot)).map(u=>u.slot));
+  if(zone==='bench')for(const c of benchChests(state))if(c!==except)taken.add(c.slot);
   let slot=0;while(taken.has(slot))slot++;return slot;
 }
 // Every unit stands in a numbered slot of its row. Units that arrive without a valid one take the
@@ -42,10 +48,20 @@ function freeSlot(state,zone,except) {
 // for the board, the battle line-up and "leftmost" effects.
 function settleSlots(state) {
   if(!Array.isArray(state.units))return;
+  const chests=Array.isArray(state.chests)?state.chests:[],chestSlots=new Set(),loose=[];
+  for(const chest of chests){if(Number.isInteger(chest.slot)&&chest.slot>=0&&chest.slot<BENCH_CAPACITY&&!chestSlots.has(chest.slot))chestSlots.add(chest.slot);else loose.push(chest);}
   for(const zone of ZONES) {
-    const capacity=getZoneCapacity(state,zone),row=state.units.filter(u=>u?.zone===zone),taken=new Set(),pending=[];
+    const capacity=getZoneCapacity(state,zone),row=state.units.filter(u=>u?.zone===zone),taken=new Set(zone==='bench'?chestSlots:[]),pending=[];
     for(const unit of row){if(Number.isInteger(unit.slot)&&unit.slot>=0&&unit.slot<capacity&&!taken.has(unit.slot))taken.add(unit.slot);else pending.push(unit);}
     for(const unit of pending){let slot=0;while(taken.has(slot))slot++;unit.slot=slot;taken.add(slot);}
+    // Chests from saves made before they lived on the bench take the free slots that remain; with a
+    // full bench they go back onto the board as a crystal, so nothing is lost.
+    if(zone==='bench')for(const chest of loose) {
+      let slot=0;while(taken.has(slot))slot++;
+      if(slot<BENCH_CAPACITY){chest.slot=slot;taken.add(slot);continue;}
+      delete chest.slot;state.chests.splice(state.chests.indexOf(chest),1);if(state.activeChest===chest.uid)state.activeChest=null;
+      state.loot.push({uid:`loot-${state.nextLootUid++}`,quality:chest.kind==='role'?'blue':['advanced','gold'].includes(chest.quality)?'gold':['prismatic','privileged'].includes(chest.quality)?'prismatic':'blue',source:'武装箱',contents:[{kind:'chest',chest}]});
+    }
     const places=state.units.map((u,i)=>u?.zone===zone?i:-1).filter(i=>i>=0),ordered=[...row].sort((a,b)=>a.slot-b.slot);
     places.forEach((index,n)=>{state.units[index]=ordered[n];});
   }
@@ -56,7 +72,7 @@ function swapUnits(state,a,b) {
   const ca=getCharacter(a.characterId),cb=getCharacter(b.characterId);
   return success(a.zone===b.zone?'已调整站位':`已交换${ca.name}与${cb.name}的位置`);
 }
-export const getLevelXp=state=>(isClassicRun(state)?usesVerifiedRules(state)?ZERO_SUM_LEVEL_XP:CLASSIC_LEVEL_XP:LEVEL_XP)[state.level]||0;
+export const getLevelXp=state=>(isClassicRun(state)?usesVerifiedRules(state)?getRank(state)>=5?HIGH_RANK_LEVEL_XP:ZERO_SUM_LEVEL_XP:CLASSIC_LEVEL_XP:LEVEL_XP)[state.level]||0;
 export const getSellPrice=(state,unit)=>!unit?0:usesVerifiedRules(state)?getClassicSellPrice(unitCost(state,unit),unit.star):unitCost(state,unit)*3**(unit.star-1);
 export function getShopOdds(state) {
   const odds=[...SHOP_ODDS[state.level]],bonus=getProgressionShopModifiers(state).fiveCostOddsBonus*100;
@@ -151,7 +167,8 @@ export function createGame(seed=Date.now(),options={}) {
   if(options.mode){
     // Verified opening: level 3, nothing deployed, an unrolled shop and no gold until the
     // Starting Supplies arrive with the chosen investment environment.
-    state.flow=initFlow(options.mode,options.difficulty);
+    state.flow=initFlow(options.mode,options.difficulty,options.rank);
+    state.hp=getStartingHp(state);
     state.level=START_LEVEL;state.gold=0;state.units=[];state.loot=[];state.shop=Array(5).fill(null);
     initEnvironment(state,{enabled:true});state.phase='environment';
   }
@@ -294,8 +311,13 @@ function advanceClassicNode(state){
 function grantCharacter(state,id,star=1,cost=getEffectiveCharacterCost(state,id)) {
   if(!getCharacter(id))return fail('奖励角色不存在。');
   const copies=state.units.filter(u=>u.characterId===id&&u.star===star&&unitCost(state,u)===cost).length;
-  if(state.units.filter(u=>u.zone==='bench').length>=BENCH_CAPACITY&&(star>=3||copies<2))return fail('备战席已满，请先腾出位置；奖励会保留。');
+  if(getBenchCount(state)>=BENCH_CAPACITY&&(star>=3||copies<2))return fail('备战席已满，需要售卖备战区角色才可开启晶矿。');
   addUnit(state,id,'bench',star,cost);mergeUnits(state);return success('角色已加入备战席');
+}
+function placeChest(state,chest) {
+  const slot=freeSlot(state,'bench',chest);
+  if(slot>=BENCH_CAPACITY)return fail('备战席已满，需要售卖备战区角色才可开启晶矿。');
+  chest.slot=slot;state.chests.push(chest);return success('武装箱已放入备战席');
 }
 function grantRewards(state,contents) {
   const names=[];
@@ -305,13 +327,15 @@ function grantRewards(state,contents) {
     else if(r.kind==='xp'){addXp(state,n);names.push(`${n}经验`);}
     else if(r.kind==='refresh'){state.freeRefreshes+=n;names.push(`${n}次免费刷新`);}
     else if(r.kind==='hp'){state.bonusMaxHp+=r.maxHp||0;state.hp=Math.min(getMaxHp(state),state.hp+n);names.push(`${n}小队生命`);}
-    else if(r.kind==='chest'){state.chests.push(r.chest||makeChest(state,r.quality,r.options));names.push('武装箱');}
+    else if(r.kind==='chest'){const result=placeChest(state,r.chest||makeChest(state,r.quality,r.options));if(!result.ok)return result;names.push('武装箱');}
     else if(r.kind==='character') {
       for(let i=0;i<n;i++){const result=grantCharacter(state,String(r.id),r.star||1,r.cost);if(!result.ok)return result;}
       names.push(getCharacter(r.id).name);
     } else if(r.kind==='item') {
       for(let i=0;i<n;i++) {
         if(getEquipment(r.id))state.inventory.push(r.id);
+        // 聘用书 are forge items: they wait on the bench and offer four characters of that cost.
+        else if(/^hire-[1-5]$/.test(r.id)){const result=placeChest(state,makeRoleChest(state,Number(r.id.slice(5))));if(!result.ok)return result;}
         // Holding the reusable Precision Disassembly Wrench turns any further wrench into 1 gold.
         else if(['wrench','precision-wrench'].includes(r.id)&&state.consumables.some(c=>c.id==='precision-wrench'))state.gold+=1;
         else if(getConsumable(r.id))state.consumables.push({uid:`tool-${state.nextLootUid++}`,id:r.id,nodes:0});
@@ -326,13 +350,23 @@ function grantRewards(state,contents) {
 // one-star characters on the bench (two recordings and the old client constant), 3 or 4 gold, one
 // basic equipment in the list and one more inside a crystal on the board. A concept environment
 // turns two of the four into its own characters and supplies the equipment itself; contract
-// environments add their characters on top. Which cost tiers the four can be is not established,
-// so they are drawn from the 1-cost pool that a level 3 shop sells.
+// environments add their characters on top.
+// Cost spread (revision 4): the two full recordings that show all four, REC2 (1/2/1/2) and V1
+// (1/1/1/3), both total 6, and REC1 kept two 1-costs beside its two environment characters. So the
+// four are 1/1/2/2 or 1/1/1/3, and a concept environment replaces the two dearest. Earlier runs drew
+// all four from the 1-cost pool.
+export function getStarterCosts(state){
+  if(!usesRevision4(state))return [1,1,1,1];
+  return random(state)<.5?[1,1,2,2]:[1,1,1,3];
+}
 function grantStartingSupplies(state,environmentRewards=[]) {
   const concept=state.environment?.id?.startsWith('concept-'),fromEnvironment=environmentRewards.filter(r=>r.kind==='character').length;
-  const pool=CLASSIC_ROSTER.filter(c=>c.cost===1&&!environmentRewards.some(r=>r.kind==='character'&&r.id===c.id)).map(c=>c.id),characters=[];
-  const count=Math.max(0,4-(concept?fromEnvironment:0)),basics=EQUIPMENT.filter(e=>e.tier===1);
-  while(characters.length<count&&pool.length)characters.push(pool.splice(Math.floor(random(state)*pool.length),1)[0]);
+  const taken=new Set(environmentRewards.filter(r=>r.kind==='character').map(r=>r.id)),characters=[];
+  const costs=getStarterCosts(state).slice(0,Math.max(0,4-(concept?fromEnvironment:0))),basics=EQUIPMENT.filter(e=>e.tier===1);
+  for(const cost of costs) {
+    const pool=CLASSIC_ROSTER.filter(c=>c.cost===cost&&!taken.has(c.id)&&!characters.includes(c.id)).map(c=>c.id);
+    if(pool.length)characters.push(pool[Math.floor(random(state)*pool.length)]);
+  }
   const supplies=[...characters.map(id=>({kind:'character',id})),{kind:'gold',amount:3+Math.floor(random(state)*2)}];
   if(!environmentRewards.some(r=>r.kind==='item'))supplies.push({kind:'item',id:pick(state,basics).id});
   const granted=[],queued=[{kind:'item',id:pick(state,basics).id}];
@@ -342,8 +376,8 @@ function grantStartingSupplies(state,environmentRewards=[]) {
     else queued.push(reward);
   }
   queueRewards(state,queued,'开局补给');
-  // Base ranks start with the reusable Precision Disassembly Wrench (old client rank rule text).
-  if(usesRevision3(state))state.consumables.push({uid:`tool-${state.nextLootUid++}`,id:'precision-wrench',nodes:0});
+  // A0–A5 start with the reusable Precision Disassembly Wrench; from A6 the single-use one (old client rank notes).
+  if(usesRevision3(state))state.consumables.push({uid:`tool-${state.nextLootUid++}`,id:getRank(state)>=6?'wrench':'precision-wrench',nodes:0});
   return granted;
 }
 function useConsumable(state,action) {
@@ -458,7 +492,11 @@ function runAction(state,action) {
     if(state.flow?.pendingNodeKind){const pending=state.flow.pendingNodeKind;state.flow.extraStrategyDone.push(state.round);state.flow.pendingNodeKind=null;if(pending==='supply')makeSupplyOffers(state);if(pending==='encounter')makeEncounterOffers(state);}
     return success(`已获得「${name}」`);
   }
-  if(state.phase!=='prep')return fail('请先完成当前结算或奖励选择。');
+  // 返回备战 (revision 4): while an investment strategy is still to be picked, the player may go back to
+  // the preparation screen and keep managing the team (REC1 2:20); only the battle waits for the pick.
+  const strategyPending=state.phase==='choice'&&state.choiceKind==='strategy'&&isClassicRun(state)&&usesRevision4(state);
+  if(strategyPending&&action.type==='battle')return fail('请先选择投资策略。');
+  if(state.phase!=='prep'&&!strategyPending)return fail('请先完成当前结算或奖励选择。');
   if(state.activeChest&&!['cancel-chest','choose-chest','open-chest'].includes(action.type))return fail('请先选择装备或取消打开武装箱。');
   switch(action.type) {
     case 'collect-loot': {
@@ -471,10 +509,22 @@ function runAction(state,action) {
       state.activeChest=action.uid;return success('请选择武装；也可以取消并保留箱子。');
     }
     case 'cancel-chest':state.activeChest=null;return success('武装箱已保留，可稍后继续选择。');
+    case 'move-chest': {
+      // Chests can be rearranged along the bench; dropping one on a benched character swaps them.
+      const chest=state.chests.find(c=>c.uid===action.uid);
+      if(!chest||!Number.isInteger(action.position)||action.position<0||action.position>=BENCH_CAPACITY)return fail('请选择有效的位置。');
+      if(action.position===chest.slot)return success('武装箱已在该位置。');
+      const other=chestAt(state,action.position),unit=state.units.find(u=>u.zone==='bench'&&u.slot===action.position);
+      if(other)other.slot=chest.slot;else if(unit)unit.slot=chest.slot;
+      chest.slot=action.position;return success('已调整武装箱位置');
+    }
     case 'choose-chest': {
       const index=state.chests.findIndex(c=>c.uid===state.activeChest),chest=state.chests[index];
       if(!chest||!chest.options[action.index])return fail('请选择有效武装。');
-      const id=chest.options[action.index];state.inventory.push(id);state.chests.splice(index,1);state.activeChest=null;
+      const id=chest.options[action.index];state.chests.splice(index,1);state.activeChest=null;
+      // A 聘用书 frees its own bench slot first, so the recruit always has room.
+      if(chest.kind==='role'){const result=grantCharacter(state,id,1);if(!result.ok)return result;return success(`已招募${getCharacter(id).name}`);}
+      state.inventory.push(id);
       return success(`已获得${getEquipment(id).name}`);
     }
     case 'use-consumable':return useConsumable(state,action);
@@ -487,7 +537,7 @@ function runAction(state,action) {
       const cost=getEffectiveCharacterCost(state,character.id);
       if(state.gold<cost)return fail('金币不足。');
       const copies=state.units.filter(u=>u.characterId===character.id&&u.star===1&&unitCost(state,u)===cost).length;
-      if(state.units.filter(u=>u.zone==='bench').length>=BENCH_CAPACITY&&copies<2)return fail('备战席已满，请先部署或出售角色。');
+      if(getBenchCount(state)>=BENCH_CAPACITY&&copies<2)return fail('备战席已满，无法购买。');
       spend(state,cost);state.shop[action.index]=null;addUnit(state,character.id);
       for(const e of effects(state))if(e.purchaseXp&&!meta(state,e.id).purchasedCosts.includes(cost)) {
         addXp(state,e.purchaseXp[cost]);meta(state,e.id).purchasedCosts.push(cost);
@@ -519,11 +569,13 @@ function runAction(state,action) {
       const capacity=getZoneCapacity(state,action.zone),c=getCharacter(unit.characterId);
       if(action.position!==undefined&&(!Number.isInteger(action.position)||action.position<0||action.position>=capacity))return fail('请选择有效的位置。');
       // A named slot that is taken means "trade places"; without a slot the unit takes the first free one.
+      // A bench slot holding a chest is not free: the unit takes the first free slot instead.
+      if(action.zone==='bench'&&action.position!==undefined&&chestAt(state,action.position))action={...action,position:undefined};
       const occupant=action.position===undefined?null:state.units.find(u=>u!==unit&&u.zone===action.zone&&u.slot===action.position);
       if(occupant)return swapUnits(state,unit,occupant);
       if(unit.zone===action.zone&&(action.position===undefined||action.position===unit.slot))return success('角色已在该位置。');
       if(unit.zone!==action.zone) {
-        const count=state.units.filter(u=>u.zone===action.zone).length;
+        const count=action.zone==='bench'?getBenchCount(state):state.units.filter(u=>u.zone===action.zone).length;
         if(action.zone==='front'&&count>=capacity)return fail('前台最多部署 4 人，请先调整阵容。');
         if(unit.zone==='bench'&&deployed(state).length>=getPopulationLimit(state))return fail('部署人数已达上限，购买经验可提升人口。');
         if(action.zone==='back'&&count>=capacity)return fail('后台格子已满，请先调整阵容。');
@@ -556,7 +608,7 @@ function runAction(state,action) {
       if(!unit||!getEquipment(unit.items[action.itemIndex]))return fail('请选择有效装备。');
       // Worn equipment only comes off with a Disassembly Wrench (in-game tutorial, consumable text).
       if(usesRevision3(state))return fail('穿戴后的装备不能直接取下，请把拆装扳手拖到角色身上。');
-      state.inventory.push(unit.items.splice(action.itemIndex,1)[0]);return success('装备已放回仓库');
+      state.inventory.push(unit.items.splice(action.itemIndex,1)[0]);return success('装备已放回物品栏');
     }
     case 'combine': {
       const response=combineInventoryItems(state,action.indexA,action.indexB);
@@ -570,11 +622,15 @@ function runAction(state,action) {
       const companyGold=!enemy.boss&&company?.active?(company.count>=3?3:1):0;
       state.gold+=companyGold;
       const node=getCurrentNode(state),classic=isClassicRun(state),lootBefore=state.loot.length,hpBefore=state.hp;
-      const combat=simulateCombat(state,{enemyLineup:enemy.units,maxActions:node.type==='reward'?180:100});
+      // Revision 4: the old countdown rule — nobody is knocked down; a fatal blow restores the character
+      // and shortens what is left of the countdown instead.
+      const countdown=classic&&usesRevision4(state)?{turns:getNodeCountdown(node),reviveLoss:getReviveCountdownLoss(getRank(state))}:null;
+      const combat=simulateCombat(state,{enemyLineup:enemy.units,maxActions:node.type==='reward'?180:100,countdown});
       const won=combat.winner==='ally';
       const remainingHp=combat.final.filter(u=>u.side==='enemy').reduce((sum,u)=>sum+Math.max(0,u.hp),0),totalHp=enemy.units.reduce((sum,u)=>sum+u.maxHp,0);
       const progress=won?100:Math.max(0,Math.min(99,Math.floor((1-remainingHp/totalHp)*100)));
-      const penalty=usesRevision3(state)?getDefeatPenaltyParts(node,progress):null;
+      const revision4=usesRevision4(state),minProgress=revision4?getMinProgress(node):node.boss?BOSS_MIN_PROGRESS:null;
+      const penalty=usesRevision3(state)?getDefeatPenaltyParts(node,progress,{rank:getRank(state),revision4}):null;
       const damage=won?0:penalty?penalty.total:classic?Math.max(2,Math.ceil((1-progress/100)*(12+node.plane*6+(enemy.boss?6:0)))):Math.max(3,Math.round(9+state.round*1.4+(enemy.boss?5:0)-(has(state,'fortress')?4:0)));
       const interest=getInterest(state);
       const verified=usesVerifiedRules(state);
@@ -593,7 +649,10 @@ function runAction(state,action) {
       queueRewards(state,growthRewards,'战后羁绊奖励');
       if(won&&enemy.boss)queueRewards(state,[{kind:'chest',quality:node.plane>=2?'privileged':'advanced'},{kind:'gold',amount:5}],'首领晶矿');
       if(classic&&won&&node.type==='reward')queueRewards(state,[{kind:'gold',amount:4+node.plane*2},{kind:'chest',quality:'basic'},{kind:'item',id:pick(state,EQUIPMENT.filter(e=>e.tier===1)).id}],'奖励节点晶矿');
-      if(classic&&won&&node.type==='encounter'&&state.flow.selectedEncounter)queueRewards(state,state.flow.selectedEncounter.rewards,'遭遇奖励');
+      // Encounter rewards: a win before revision 4. Since then the reward follows the rank notes — below
+      // A4 it is always paid, from A4 only when the 25% minimum progress was reached.
+      const encounterPaid=revision4?(getRank(state)<4||progress>=minProgress):won;
+      if(classic&&encounterPaid&&node.type==='encounter'&&state.flow.selectedEncounter)queueRewards(state,state.flow.selectedEncounter.rewards,'遭遇奖励');
       const logs=combat.events.map(event=>event.text);
       if(healing&&state.hp>0)logs.push(`战后恢复生效，回复 ${healing} 点小队生命（最高 ${getMaxHp(state)}）。`);
       const rewards=verified?[`基础金币 +${baseIncome}`,`连胜金币 +${streakBonus+victoryIncome}`,getRunMode(state).interest?`利息 +${interest}`:'超频模式无利息']:[`基础收入 +${baseIncome}`,getRunMode(state).interest?`利息 +${interest}`:'超频模式无利息',`连胜奖励 +${streakBonus}`];
@@ -606,7 +665,8 @@ function runAction(state,action) {
       if(won&&enemy.boss)rewards.push('首领晶矿已掉落，返回备战后领取');
       state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing,combat,nodeLabel:node.label,nodeType:node.type,progress};
       if(verified)Object.assign(state.lastBattle,{baseIncome,streakIncome:streakBonus+victoryIncome,interestIncome:interest,streak:state.streak,xpGain});
-      if(penalty)Object.assign(state.lastBattle,{hpBefore,penalty:won?null:penalty,minProgress:node.boss?BOSS_MIN_PROGRESS:null});
+      if(penalty)Object.assign(state.lastBattle,{hpBefore,penalty:won?null:penalty,minProgress});
+      if(countdown)Object.assign(state.lastBattle,{countdown:countdown.turns,revives:combat.revives||0,countdownLeft:combat.countdownLeft});
       state.history.push({round:state.round,nodeLabel:node.label,nodeType:node.type,won,damage,income,playerPower,enemyPower:enemy.power,turns:combat.turns,reason:combat.reason});
       queueRewards(state,onEnvironmentEvent(state,{type:'interest',amount:interest}),'投资环境');
       queueRewards(state,onEnvironmentEvent(state,{type:'battle',key:String(state.round),battle:state.lastBattle}),'投资环境');
@@ -687,7 +747,8 @@ export function validateState(state) {
     if(unit.items.some(id=>getEquipment(id).unique&&unit.items.filter(key=>baseItemId(key)===baseItemId(id)).length>1))return false;
     ids.add(unit.uid);
   }
-  if(state.units.filter(u=>u.zone==='front').length>FRONT_CAPACITY||state.units.filter(u=>u.zone==='bench').length>BENCH_CAPACITY||deployed(state).length>getPopulationLimit(state))return false;
+  for(const chest of state.chests||[])if(Number.isInteger(chest.slot)){if(slots.has('bench'+chest.slot))return false;slots.add('bench'+chest.slot);}
+  if(state.units.filter(u=>u.zone==='front').length>FRONT_CAPACITY||getBenchCount(state)>BENCH_CAPACITY||deployed(state).length>getPopulationLimit(state))return false;
   if(Object.values(state.progression.day.assignments).some(uid=>!ids.has(uid)))return false;
   if(state.units.some(u=>u.items.length+daySlots(state,u.uid)>3||daySlots(state,u.uid)>0&&u.items.some(id=>getEquipment(id).exclusiveSlots)))return false;
   if(!state.inventory.every(id=>getEquipment(id))||!state.shop.every(id=>id===null||getCharacter(id)))return false;

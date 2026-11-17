@@ -6,8 +6,8 @@ import {CLASSIC_ENVIRONMENTS} from '../dist/classic-environments.js';
 import {CLASSIC_ROSTER} from '../dist/data.js';
 
 const run=(s,a)=>{const r=act(s,a);assert.equal(r.ok,true,r.message);assert.equal(validateState(s),true,`${a.type} @ ${s.round}`);return r;};
-function fresh(mode='standard',environment='secondhand'){
- const s=createGame(123,{mode});s.environment.choices=[environment,...CLASSIC_ENVIRONMENTS.filter(e=>e.id!==environment).slice(0,2).map(e=>e.id)];
+function fresh(mode='standard',environment='secondhand',rank=0){
+ const s=createGame(123,{mode,rank});s.environment.choices=[environment,...CLASSIC_ENVIRONMENTS.filter(e=>e.id!==environment).slice(0,2).map(e=>e.id)];
  run(s,{type:'choose-environment',id:environment});return deploy(s);
 }
 // Keeps a long scripted run alive the way a player would: open crystals, spend spare gold on experience, field everyone.
@@ -31,7 +31,7 @@ function advance(s){if(s.phase==='choice')run(s,{type:'choose',index:0});else if
 function reach(s,label){for(let i=0;getCurrentNode(s).label!==label&&i<100;i++)advance(s);assert.equal(getCurrentNode(s).label,label);}
 
 test('mode routes keep distinct original node roles and stage labels',()=>{
- const standard=createGame(7,{mode:'standard'}),fast=createGame(7,{mode:'overclock'});
+ const standard=createGame(7,{mode:'standard',rank:2}),fast=createGame(7,{mode:'overclock',rank:2});
  assert.equal(validateState(standard),true);assert.equal(standard.phase,'environment');
  assert.equal(getRunLength(standard),23);assert.equal(getRunLength(fast),16);
  assert.deepEqual(getRunNodes(fast).map(n=>`${n.label}:${n.type}`),['1-1:reward','1-2:strategy','1-3:supply','1-4:encounter','1-5:reward','1-6:boss','2-1:strategy','2-2:supply','2-3:encounter','2-4:reward','2-5:boss','3-1:strategy','3-2:supply','3-3:encounter','3-4:reward','3-5:boss']);
@@ -85,7 +85,7 @@ test('supply is a real noncombat node, rewards persist as crystals and cannot re
 });
 
 test('encounter branches change enemies and grant selected reward only after victory',()=>{
- const a=strong(fresh());reach(a,'1-7');const b=structuredClone(a);
+ const a=strong(fresh('standard','secondhand',2));reach(a,'1-7');const b=structuredClone(a);
  assert.equal(a.phase,'encounter');const low=a.flow.encounterOffers[0],high=a.flow.encounterOffers[2];
  run(a,{type:'choose-encounter',index:0});run(b,{type:'choose-encounter',index:2});
  assert.ok(getEnemy(b).units[0].maxHp>getEnemy(a).units[0].maxHp);
@@ -248,7 +248,7 @@ test('a concept environment adds its characters to the bench and they can actual
 });
 
 test('encounter refresh does not consume a charge without changing fixed offers, and corrupted offers are rejected',()=>{
- const s=strong(fresh());reach(s,'1-7');const before=JSON.stringify(s);assert.equal(act(s,{type:'reroll-encounter'}).ok,false);assert.equal(JSON.stringify(s),before);
+ const s=strong(fresh('standard','secondhand',2));reach(s,'1-7');const before=JSON.stringify(s);assert.equal(act(s,{type:'reroll-encounter'}).ok,false);assert.equal(JSON.stringify(s),before);
  const bad=structuredClone(s);bad.flow.encounterOffers[0].hpMultiplier=1e99;assert.equal(validateState(bad),false);
  const badReward=structuredClone(s);badReward.flow.encounterOffers[0].rewards=[{kind:'item',id:'not-real'}];assert.equal(validateState(badReward),false);
  const wrongPhase=structuredClone(s);wrongPhase.phase='environment';assert.equal(validateState(wrongPhase),false);
