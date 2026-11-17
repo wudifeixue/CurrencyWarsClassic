@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
-import {createGame,act,validateState,migrateState,getCurrentNode,getRunNodes,getLevelXp,getBenchCount,getEquipment} from '../dist/engine.js';
+import {createGame,act,validateState,migrateState,getCurrentNode,getRunNodes,getLevelXp,getBenchCount,getEquipment,getRewardNodeLayout} from '../dist/engine.js';
 import {getDefeatPenaltyParts,getNodeCountdown,getMinProgress,RANKS,validateFlow} from '../dist/classic-flow.js';
 import {simulateCombat} from '../dist/combat.js';
 import {queueRewards,FORGE_CHOICES} from '../dist/loot.js';
@@ -142,4 +142,21 @@ test('星徽 and wrenches use the original item icons',()=>{
   const emblems=['luofu','debuff','break','express','grail','night','sp','shield','dot','wanderer','day','elation','heal','blood','wolfpack','festival','aoe','energy','belobog','follow','quantum','scholar'];
   for(const id of emblems){const path=getEquipmentArtPath(`trait-${id}`);assert.equal(path,`assets/equipment/classic-emblem-${id}.png`);assert.ok(existsSync(new URL('../dist/'+path,import.meta.url)),path);}
   for(const id of ['wrench','precision-wrench','smelter']){assert.match(consumableArt(id),new RegExp(`assets/loot/${id}.png`));assert.ok(existsSync(new URL(`../dist/assets/loot/${id}.png`,import.meta.url)));}
+});
+
+test('reward nodes drop small crystals as in REC1: 2 white + 2 blue at 1-1, 3 white + 2 blue at 1-2',()=>{
+  const nodes=s=>getRunNodes(s).filter(n=>n.type==='reward');
+  const std=createGame(1,{mode:'standard',rank:0}),oc=createGame(1,{mode:'overclock',rank:0});
+  assert.deepEqual(nodes(std).map(n=>[n.label,getRewardNodeLayout(std,n)]),[['1-1',{white:2,blue:2,gold:0}],['1-2',{white:3,blue:2,gold:0}],['1-8',{white:3,blue:2,gold:1}],['2-6',{white:2,blue:3,gold:1}],['3-6',{white:2,blue:2,gold:2}]]);
+  assert.deepEqual(getRewardNodeLayout(oc,nodes(oc)[0]),{white:2,blue:2,gold:0});
+  for(let seed=1;seed<=12;seed++){
+    const s=fresh(0,'secondhand','standard',seed);s.loot=[];
+    for(const u of s.units.slice(0,3))run(s,{type:'move',uid:u.uid,zone:'front'});
+    for(const label of ['1-1','1-2']){
+      const before=s.loot.length;run(s,{type:'battle'});const orbs=s.loot.slice(before).filter(o=>o.source==='奖励节点晶矿');
+      assert.equal(orbs.length,label==='1-1'?4:5);assert.ok(orbs.every(o=>['white','blue'].includes(o.quality)));
+      for(const o of orbs)for(const c of o.contents){assert.notEqual(c.kind,'chest');if(c.kind==='gold')assert.ok(c.amount<=2);}
+      run(s,{type:'next'});
+    }
+  }
 });

@@ -1,8 +1,8 @@
-import {getRunLength} from './classic-flow.js?v=6.4.0';
+import {getRunLength} from './classic-flow.js?v=6.4.1';
 // Old Zero-Sum Game persistent bonds. References and simulator boundaries:
 // docs/classic-progression-research.md. No dependency on engine or combat.
-import {CLASSIC_CHARACTERS,CLASSIC_TRAITS} from './classic-roster.js?v=6.4.0';
-import {CLASSIC_EQUIPMENT} from './classic-items.js?v=6.4.0';
+import {CLASSIC_CHARACTERS,CLASSIC_TRAITS} from './classic-roster.js?v=6.4.1';
+import {CLASSIC_EQUIPMENT} from './classic-items.js?v=6.4.1';
 const chars=new Map(CLASSIC_CHARACTERS.map(c=>[c.id,c]));
 const traits=new Map(CLASSIC_TRAITS.map(t=>[t.id,t]));
 const gear=new Map(CLASSIC_EQUIPMENT.map(e=>[e.id,e]));
