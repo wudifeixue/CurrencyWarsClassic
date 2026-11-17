@@ -1,11 +1,11 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.0.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.0.0';
-import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=6.0.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.0.0';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength} from './classic-flow.js?v=6.0.0';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.0.0';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.0.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.0.0';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.1.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.1.0';
+import {initializeLoot,queueRewards,makeChest,getConsumable,validateLoot} from './loot.js?v=6.1.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.1.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength} from './classic-flow.js?v=6.1.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.1.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.1.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.1.0';
 export {RUN_MODES,DIFFICULTIES,getRunMode,getRunNodes,getCurrentNode,getRunLength};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
@@ -462,6 +462,16 @@ function runAction(state,action) {
       const index=before?state.units.indexOf(before):row.length?state.units.indexOf(row.at(-1))+1:state.units.length;
       state.units.splice(index,0,unit);
       return success(`已将${c.name}移至${{front:'前台',back:'后台',bench:'备战席'}[action.zone]}${action.zone!=='bench'&&!c.allowedZones.includes(action.zone)?'；此位置无法激活角色赋能':''}`);
+    }
+    case 'swap': {
+      // Dropping one unit onto another exchanges their zones and positions; counts per zone never change.
+      const a=state.units.find(u=>u.uid===action.uid),b=state.units.find(u=>u.uid===action.targetUid);
+      if(!a||!b)return fail('请选择有效角色和位置。');
+      if(a===b)return success('角色已在该位置。');
+      const ia=state.units.indexOf(a),ib=state.units.indexOf(b),zoneA=a.zone;
+      state.units[ia]=b;state.units[ib]=a;a.zone=b.zone;b.zone=zoneA;
+      const ca=getCharacter(a.characterId),cb=getCharacter(b.characterId);
+      return success(a.zone===b.zone?'已调整站位':`已交换${ca.name}与${cb.name}的位置`);
     }
     case 'sell': {
       const index=state.units.findIndex(u=>u.uid===action.uid);if(index<0)return fail('角色不存在。');

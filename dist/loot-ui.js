@@ -1,5 +1,5 @@
-import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.0.0';
-import {getConsumable} from './loot.js?v=6.0.0';
+import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.1.0';
+import {getConsumable} from './loot.js?v=6.1.0';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);
@@ -34,15 +34,15 @@ export function lootField(game){
   const orbs=game.loot||[];if(!orbs.length)return '';
   return `<section class="loot-field" aria-label="待领取战利品"><div class="loot-field-heading"><span>战利品</span><b>${orbs.length}</b></div><div class="loot-orbs">${orbs.map((orb,i)=>{
     const q=quality(orb.quality);
-    return `<button class="loot-orb quality-${q}" data-action="collect-loot" data-uid="${esc(orb.uid)}" style="--orb-delay:${-(i%5)*.53}s" title="开启${qualityNames[q]}" aria-label="开启${qualityNames[q]}"><span class="orb-halo"></span><span class="orb-sphere"><span class="orb-cloud"></span><span class="orb-shine"></span><span class="orb-particles"></span></span><span class="orb-floor"></span><span class="orb-label">${qualityNames[q]}</span></button>`;
+    return `<button class="loot-orb quality-${q}" data-key="orb-${esc(orb.uid)}" data-action="collect-loot" data-uid="${esc(orb.uid)}" style="--orb-delay:${-(i%5)*.53}s" data-tip-title="${qualityNames[q]}" data-tip="点击开启${orb.source?` · 来源：${esc(orb.source)}`:''}" aria-label="开启${qualityNames[q]}"><span class="orb-halo"></span><span class="orb-sphere"><span class="orb-cloud"></span><span class="orb-shine"></span><span class="orb-particles"></span></span><span class="orb-floor"></span><span class="orb-label">${qualityNames[q]}</span></button>`;
   }).join('')}</div><p class="loot-field-hint">点击晶矿，领取战利品</p></section>`;
 }
 
 export function inventoryContents(game){
-  const chests=(game.chests||[]).map(chest=>`<button class="inventory-item loot-chest chest-${chestType(chest)}" data-action="open-chest" data-uid="${esc(chest.uid)}" title="${chestName(chest)} · 点击选择装备，可返回备战" aria-label="打开${chestName(chest)}">${chestArt(chest)}<span class="inventory-kind">自选</span></button>`);
-  const consumables=(game.consumables||[]).map(c=>{const info=getConsumable(c.id);return `<button class="inventory-item loot-consumable" data-action="consumable" data-uid="${esc(c.uid)}" title="${esc(info?.name||c.id)}：${esc(info?.description||'')}" aria-label="${info?.passive?'查看':'使用'}${esc(info?.name||c.id)}">${consumableArt(c.id)}<span class="inventory-kind">道具</span></button>`;});
-  const items=groupedInventory(game.inventory).map(({id,index,amount})=>{const e=item(id);return `<button class="inventory-item tier-${e.tier}" data-action="item" data-index="${index}" title="${esc(e.name)}${amount>1?` ×${amount}`:''}：${esc(e.description)}" aria-label="装备${esc(e.name)}${amount>1?`，共${amount}件`:''}">${itemImage(id)}${amount>1?`<span class="inventory-count">${amount}</span>`:''}</button>`;});
-  return [...chests,...consumables,...items].join('')||'<p class="inventory-empty">暂无装备</p>';
+  const chests=(game.chests||[]).map(chest=>`<button class="inventory-item loot-chest chest-${chestType(chest)}" data-key="chest-${esc(chest.uid)}" data-action="open-chest" data-uid="${esc(chest.uid)}" data-tip-title="${chestName(chest)}" data-tip="点击打开并三选一；返回不会消耗箱子。" aria-label="打开${chestName(chest)}">${chestArt(chest)}<span class="inventory-kind">自选</span></button>`);
+  const consumables=(game.consumables||[]).map(c=>{const info=getConsumable(c.id);return `<button class="inventory-item loot-consumable" data-key="consumable-${esc(c.uid)}" data-action="consumable" data-uid="${esc(c.uid)}" data-tip-title="${esc(info?.name||c.id)}" data-tip="${esc(info?.description||'')}" aria-label="${info?.passive?'查看':'使用'}${esc(info?.name||c.id)}">${consumableArt(c.id)}<span class="inventory-kind">道具</span></button>`;});
+  const items=groupedInventory(game.inventory).map(({id,index,amount})=>{const e=item(id);return `<button class="inventory-item tier-${e.tier} ${e.privileged?'is-privileged':''}" data-key="item-${esc(id)}" data-action="item" data-index="${index}" data-tip-kind="item" data-tip-id="${esc(id)}" data-tip-extra="${amount>1?`共 ${amount} 件 · `:''}拖到角色身上穿戴，或点击选择角色" aria-label="装备${esc(e.name)}${amount>1?`，共${amount}件`:''}">${itemImage(id)}${amount>1?`<span class="inventory-count">${amount}</span>`:''}</button>`;});
+  return [...chests,...consumables,...items].join('')||'<p class="inventory-empty">仓库<br>暂无装备</p>';
 }
 
 export function chestScreen(game,selected=null){

@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.0.0';
-import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice } from './engine.js?v=6.0.0';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.1.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice } from './engine.js?v=6.1.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');

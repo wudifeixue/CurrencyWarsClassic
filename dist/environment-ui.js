@@ -1,5 +1,5 @@
-import {CLASSIC_ROSTER,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.0.0';
-import {getEnvironment,getActiveEnvironment,getEnvironmentProgress} from './classic-environments.js?v=6.0.0';
+import {CLASSIC_ROSTER,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.1.0';
+import {getEnvironment,getActiveEnvironment,getEnvironmentProgress} from './classic-environments.js?v=6.1.0';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const check='<svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="13" fill="#25211b" stroke="#bdaa7c" stroke-width="2"/><path d="m8 15 5 5 9-10" fill="none" stroke="#f4eee0" stroke-width="2"/></svg>';
 const kits={
