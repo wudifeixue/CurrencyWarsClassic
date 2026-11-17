@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
-import {createGame,act,validateState,migrateState,getCurrentNode,getRunNodes,getLevelXp,getBenchCount,getEquipment,getRewardNodeLayout} from '../dist/engine.js';
+import {createGame,act,validateState,migrateState,getCurrentNode,getRunNodes,getLevelXp,getBenchCount,getEquipment,getRewardNodeLayout,getShopOdds} from '../dist/engine.js';
 import {getDefeatPenaltyParts,getNodeCountdown,getMinProgress,RANKS,validateFlow} from '../dist/classic-flow.js';
 import {simulateCombat} from '../dist/combat.js';
 import {queueRewards,FORGE_CHOICES} from '../dist/loot.js';
@@ -76,7 +76,7 @@ test('encounter rewards: paid at A2–A3 whatever the result, from A4 only past 
     else if(s.phase==='result')run(s,{type:'next'});
     else if(s.phase==='prep'){if(!s.units.some(u=>u.zone==='front'))run(s,{type:'move',uid:s.units[0].uid,zone:'front'});if(getCurrentNode(s).combat)run(s,{type:'battle'});else run(s,{type:'next-node'});}
   }
-  assert.equal(s.phase,'encounter');run(s,{type:'choose-encounter',index:2});
+  assert.equal(s.phase,'encounter');run(s,{type:'choose-encounter',index:1});
   // A lone 1★ unit cannot reach a quarter of the elite's health.
   const keep=s.units.find(u=>u.zone==='front');s.units=[{...keep,star:1,items:[],zone:'front',slot:0}];
   const low=structuredClone(s);low.flow.rank=2;
@@ -125,8 +125,12 @@ test('the item card lists what an item combines into, and owned partners combine
   const html=itemDetailCard(s,0);
   assert.match(html,/可合成列表/);assert.match(html,/data-action="combine-with" data-index="0" data-partner="1"/);
   assert.equal((html.match(/class="craft-row is-owned"/g)||[]).length,3,'star, the second knife and the red gem');
-  run(s,{type:'combine',indexA:0,indexB:1});const crafted=s.inventory.at(-1);assert.equal(getEquipment(crafted).tier,2);
-  assert.match(itemDetailCard(s,s.inventory.length-1),/合成路线/);
+  const r=run(s,{type:'combine',indexA:0,indexB:1});assert.equal(r.index,0);
+  assert.equal(getEquipment(s.inventory[0]).tier,2,'the result sits where the target was');assert.deepEqual(s.inventory.slice(1),['knife','red-gem']);
+  assert.match(itemDetailCard(s,0),/合成路线/);
+  // Repeated combines never leave the consumed pair behind.
+  s.inventory=['knife','star','knife','star'];run(s,{type:'combine',indexA:0,indexB:1});run(s,{type:'combine',indexA:1,indexB:2});
+  assert.equal(s.inventory.length,2);assert.ok(s.inventory.every(id=>getEquipment(id).tier===2));
 });
 
 test('返回备战: the team can be managed while a strategy pick waits; only the battle needs the pick',()=>{
@@ -159,4 +163,27 @@ test('reward nodes drop small crystals as in REC1: 2 white + 2 blue at 1-1, 3 wh
       run(s,{type:'next'});
     }
   }
+});
+
+test('supply offers five packs drawn with the shop odds; encounters offer an easy and a hard tier of four',()=>{
+  const s=fresh(2);for(const u of s.units.slice(0,3))run(s,{type:'move',uid:u.uid,zone:'front'});
+  for(let i=0;i<40&&s.phase!=='supply';i++){if(s.phase==='choice')run(s,{type:'choose',index:0});else if(s.phase==='result')run(s,{type:'next'});else run(s,{type:'battle'});}
+  assert.equal(s.phase,'supply');assert.equal(s.flow.supplyOffers.length,5);
+  for(const o of s.flow.supplyOffers){const [c,i]=o.rewards;assert.equal(c.kind,'character');assert.ok(getEquipment(i.id).tier===1||['red-gem','blue-gem'].includes(i.id));}
+  const odds=getShopOdds(s);for(const o of s.flow.supplyOffers)assert.ok(odds[cost(o.rewards[0].id)-1]>0,'only costs the shop can roll at this level');
+  for(let k=0;k<30;k++){const t=fresh(2,'secondhand','standard',k+1);for(const u of t.units.slice(0,3))run(t,{type:'move',uid:u.uid,zone:'front'});
+    for(let i=0;i<60&&getCurrentNode(t).label!=='1-7';i++){if(t.phase==='choice')run(t,{type:'choose',index:0});else if(t.phase==='supply')run(t,{type:'choose-supply',index:0});else if(t.phase==='result')run(t,{type:'next'});else if(getCurrentNode(t).combat)run(t,{type:'battle'});else run(t,{type:'next-node'});}
+    if(t.phase!=='encounter')continue;
+    const [a,b]=t.flow.encounterOffers;assert.equal(t.flow.encounterOffers.length,2);assert.equal(b.level,a.level+1);assert.ok(a.level>=1&&b.level<=4);
+    for(const o of [a,b]){if(o.level===4)assert.ok(o.rewards.some(r=>r.id==='wealth-gem'||r.kind==='chest'));if(o.level===1)assert.equal(o.rewards.length,1);}
+  }
+});
+
+test('a fatal blow brings the character back at full HP and costs 1.5 countdown points (3.5 from A3)',()=>{
+  const state={units:[{uid:'a',characterId:'1001',zone:'front',items:[],star:1}],strategies:[],round:4,seed:3,strategyState:{}};
+  const brute={id:'brute',name:'重装',hp:5e6,maxHp:5e6,attack:4000,speed:140,weaknesses:[],toughness:0,maxToughness:0};
+  const c=simulateCombat(state,{enemyLineup:[brute],countdown:{turns:12,reviveLoss:1.5}});
+  const revive=c.events.find(e=>/战斗倒计时减少/.test(e.text)),unit=revive.snapshot.find(u=>u.id==='a');
+  assert.equal(unit.hp,c.units.find(u=>u.id==='a').maxHp,'restored to full');
+  const before=c.events[c.events.indexOf(revive)-1]?.countdown,after=revive.countdown;assert.ok(before-after>=1.4,`${before} → ${after}`);
 });

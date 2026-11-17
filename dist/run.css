@@ -13,3 +13,10 @@
 .strategy-reroll-button{display:block;text-align:center;width:100%;margin-top:15px;color:#ede5f6;font-size:24px}.strategy-reroll-button:disabled{opacity:.4}
 
 .classic-scene .profile-badge{text-align:left}.classic-scene .navigation button{width:66px}.classic-scene .profile-badge:hover{border-color:#ead494;background:#302846}.classic-scene .profile-badge:after{content:'⌄';font-size:16px;color:#d1ba81;position:absolute;right:4px;bottom:2px}
+
+/* v6.4.2 — five supply packs (old-season layout) and two encounter fights. */
+.run-node-screen.is-supply .run-node-offers{left:80px;right:80px;gap:22px}
+.run-node-screen.is-supply .run-node-offer{max-width:none;padding:24px 18px}
+.run-node-screen.is-supply .run-node-offer h2{font-size:24px}
+.run-node-screen.is-supply .run-node-offer p{font-size:17px}
+.run-node-screen.is-encounter .run-node-offers{left:380px;right:380px}

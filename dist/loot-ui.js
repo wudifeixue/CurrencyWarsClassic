@@ -1,6 +1,6 @@
-import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.4.1';
-import {getConsumable} from './loot.js?v=6.4.1';
-import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.4.1';
+import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.4.2';
+import {getConsumable} from './loot.js?v=6.4.2';
+import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.4.2';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);
@@ -49,7 +49,9 @@ export function lootField(game){
 export function inventoryContents(game){
   // Chests are not inventory items: they wait on the bench (see app.js benchChest).
   const consumables=(game.consumables||[]).map(c=>{const info=getConsumable(c.id);return `<button class="inventory-item loot-consumable" data-key="consumable-${esc(c.uid)}" data-action="consumable" data-uid="${esc(c.uid)}" data-tip-title="${esc(info?.name||c.id)}" data-tip="${esc(info?.description||'')}" ${info?.requiresTarget?'data-tip-extra="拖到角色身上使用，或点击选择角色"':''} aria-label="${info?.passive?'查看':'使用'}${esc(info?.name||c.id)}">${consumableArt(c.id)}<span class="inventory-kind">道具</span></button>`;});
-  const items=groupedInventory(game.inventory).map(({id,index,amount})=>{const e=item(id);return `<button class="inventory-item tier-${e.tier} ${e.privileged?'is-privileged':''}" data-key="item-${esc(id)}" data-action="item" data-index="${index}" data-tip-kind="item" data-tip-id="${esc(id)}" data-tip-extra="${amount>1?`共 ${amount} 件 · `:''}拖到角色身上穿戴，或点击选择角色" aria-label="装备${esc(e.name)}${amount>1?`，共${amount}件`:''}">${itemImage(id)}${amount>1?`<span class="inventory-count">${amount}</span>`:''}</button>`;});
+  // One tile per item in the order obtained, as in the old client's 物品栏 (no grouping, no re-sorting),
+  // so nothing jumps around after a combine.
+  const items=(game.inventory||[]).map((id,index)=>{const e=item(id);if(!e)return '';return `<button class="inventory-item tier-${e.tier} ${e.privileged?'is-privileged':''}" data-key="item-${index}-${esc(id)}" data-action="item" data-index="${index}" data-tip-kind="item" data-tip-id="${esc(id)}" data-tip-extra="拖到角色身上穿戴，拖到另一件装备上合成；点击查看可合成列表" aria-label="装备${esc(e.name)}">${itemImage(id)}</button>`;});
   return [...consumables,...items].join('')||'<p class="inventory-empty">物品栏<br>暂无装备</p>';
 }
 
@@ -67,10 +69,10 @@ export function craftOptions(inventory,index){
 // 可合成列表 (owned partners outlined and clickable) or, for crafted items, the 合成路线.
 export function itemDetailCard(game,index){
   const id=game.inventory[index],e=item(id);if(!e)return '';
-  const amount=game.inventory.filter(x=>x===id).length,options=craftOptions(game.inventory,index),recipe=recipeOf(id);
+  const options=craftOptions(game.inventory,index),recipe=recipeOf(id);
   const rows=options.map(o=>{const r=item(o.result),owned=o.partnerIndex>=0,inner=`<span class="craft-plus">＋</span><span class="craft-icon">${itemImage(o.partner)}</span><span class="craft-plus">＝</span><span class="craft-icon is-result">${itemImage(o.result)}</span><span class="craft-name">${esc(r?.name||o.result)}</span>`;
     return owned?`<button class="craft-row is-owned" data-action="combine-with" data-index="${index}" data-partner="${o.partnerIndex}" aria-label="与${esc(item(o.partner)?.name)}合成${esc(r?.name)}">${inner}</button>`:`<div class="craft-row" title="还没有${esc(item(o.partner)?.name)}">${inner}</div>`;}).join('');
-  return `<aside class="item-card" data-key="item-card" role="dialog" aria-label="${esc(e.name)}"><button class="popover-close item-card-close" data-action="item-close" aria-label="关闭">×</button><header class="item-card-head"><span class="item-card-art tier-${e.tier}">${itemImage(id)}</span><div><h2>${esc(e.name)}</h2><small>${itemKind(e)}${amount>1?` · 共 ${amount} 件`:''}</small></div></header><p class="item-card-desc">${esc(e.description)}</p>${rows?`<div class="item-card-section"><h3>可合成列表</h3>${rows}</div>`:''}${recipe?`<div class="item-card-section"><h3>合成路线</h3><div class="craft-route">${recipe.map(x=>`<span class="craft-icon">${itemImage(x)}</span>`).join('<span class="craft-plus">＋</span>')}</div></div>`:''}<p class="item-card-hint">拖到角色身上穿戴${rows?'；拖到另一件装备上合成':''}</p></aside>`;
+  return `<aside class="item-card" data-key="item-card" role="dialog" aria-label="${esc(e.name)}"><button class="popover-close item-card-close" data-action="item-close" aria-label="关闭">×</button><header class="item-card-head"><span class="item-card-art tier-${e.tier}">${itemImage(id)}</span><div><h2>${esc(e.name)}</h2><small>${itemKind(e)}</small></div></header><p class="item-card-desc">${esc(e.description)}</p>${rows?`<div class="item-card-section"><h3>可合成列表</h3>${rows}</div>`:''}${recipe?`<div class="item-card-section"><h3>合成路线</h3><div class="craft-route">${recipe.map(x=>`<span class="craft-icon">${itemImage(x)}</span>`).join('<span class="craft-plus">＋</span>')}</div></div>`:''}<p class="item-card-hint">拖到角色身上穿戴${rows?'；拖到另一件装备上合成':''}</p></aside>`;
 }
 const traitNames=ids=>ids.map(id=>TRAITS.find(t=>t.id===id)?.name).filter(Boolean).join(' · ');
 // The forge choice as in the old client: a panel over the board with four cards; clicking a card

@@ -1,4 +1,4 @@
-import {EQUIPMENT,TRAITS,RECIPES,resolveEquipment} from './data.js?v=6.4.1';
+import {EQUIPMENT,TRAITS,RECIPES,resolveEquipment} from './data.js?v=6.4.2';
 
 const fail=message=>({ok:false,message});
 const baseId=id=>resolveEquipment(id)?.baseId||id;
@@ -11,9 +11,9 @@ export function combineInventoryItems(state,indexA,indexB) {
   const a=state.inventory[indexA],b=state.inventory[indexB],result=getCraftResult(a,b);
   if(!resolveEquipment(a)||!resolveEquipment(b))return fail('请选择两件有效的合成材料。');
   if(!result)return fail('这两件装备没有合成配方。');
-  for(const i of [indexA,indexB].sort((x,y)=>y-x))state.inventory.splice(i,1);
-  state.inventory.push(result);
-  return {ok:true,crafted:true,result,message:`合成成功：${resolveEquipment(result).name}`};
+  // The result takes the target's place (the item dropped onto), so the rest of the 物品栏 keeps its order.
+  state.inventory[indexB]=result;state.inventory.splice(indexA,1);
+  return {ok:true,crafted:true,result,index:indexA<indexB?indexB-1:indexB,message:`合成成功：${resolveEquipment(result).name}`};
 }
 
 // Read-only preview shared with the UI. A second component combines on the

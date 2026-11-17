@@ -1,5 +1,5 @@
-import {getProgressionPanels} from './classic-progression.js?v=6.4.1';
-import {getTraitArtPath} from './data.js?v=6.4.1';
+import {getProgressionPanels} from './classic-progression.js?v=6.4.2';
+import {getTraitArtPath} from './data.js?v=6.4.2';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function progressionSummary(state) {
  const panels=getProgressionPanels(state),growth=panels.filter(p=>p.progress);

@@ -33,10 +33,10 @@ test('classic recipes cover all 36 old-season pairs with the correct named produ
   for(const [a,b,name] of expected)for(const [first,second] of [[a,b],[b,a]]){
     const s=createGame(3);s.inventory=['star',first,'knife',second,'armor'];
     run(s,{type:'combine',indexA:3,indexB:1});
-    assert.deepEqual(s.inventory.slice(0,3),['star','knife','armor']);
+    assert.deepEqual([s.inventory[0],s.inventory[2],s.inventory[3]],['star','knife','armor'],'the result takes the target slot; nothing else moves');
     assert.equal(s.inventory.length,4);
-    assert.equal(getEquipment(s.inventory[3]).name,name,`${first}+${second}`);
-    assert.equal(getEquipment(s.inventory[3]).tier,2);produced.add(s.inventory[3]);
+    assert.equal(getEquipment(s.inventory[1]).name,name,`${first}+${second}`);
+    assert.equal(getEquipment(s.inventory[1]).tier,2);produced.add(s.inventory[1]);
   }
   assert.equal(produced.size,36);
 });
@@ -174,7 +174,7 @@ test('armed-refresh rewards only successful item synthesis',()=>{
   const s=choose(createGame(1),'armed-refresh');s.inventory=['knife','knife','battery','battery'];
   run(s,{type:'combine',indexA:0,indexB:1});assert.equal(s.freeRefreshes,2);
   reject(s,{type:'combine',indexA:0,indexB:2});assert.equal(s.freeRefreshes,2);
-  run(s,{type:'combine',indexA:0,indexB:1});assert.equal(s.freeRefreshes,4);
+  run(s,{type:'combine',indexA:1,indexB:2});assert.equal(s.freeRefreshes,4);
 });
 
 test('fixed-finance pays at acquisition and later plane boundaries only',()=>{

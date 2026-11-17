@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {createGame,act} from '../dist/engine.js';
 import {queueRewards} from '../dist/loot.js';
-import {groupedInventory,inventoryContents,lootField,chestScreen,chestName} from '../dist/loot-ui.js';
+import {inventoryContents,lootField,chestScreen,chestName} from '../dist/loot-ui.js';
 
 const run=(state,action)=>{const result=act(state,action);assert.equal(result.ok,true,result.message);};
 
@@ -25,13 +25,11 @@ test('all four ore qualities have separate visual classes and accessible collect
   assert.equal(lootField({loot:[]}), '');
 });
 
-test('duplicate inventory icons preserve the exact first item index and special equipment art',()=>{
+test('the 物品栏 lists every item in its own tile, in the order obtained, with the right art',()=>{
   const inventory=['knife','armor','knife','privileged:boots','trait-day','wealth-gem'];
-  const grouped=groupedInventory(inventory),knife=grouped.find(x=>x.id==='knife');
-  assert.deepEqual(knife,{id:'knife',index:0,amount:2});assert.equal(grouped.length,5);
   const html=inventoryContents({inventory,chests:[],consumables:[]});
-  assert.equal((html.match(/data-action="item"/g)||[]).length,5);
-  assert.match(html,/is-privileged/);assert.match(html,/inventory-count">2/);
+  assert.deepEqual([...html.matchAll(/data-action="item" data-index="(\d+)"/g)].map(m=>Number(m[1])),[0,1,2,3,4,5]);
+  assert.match(html,/is-privileged/);assert.doesNotMatch(html,/inventory-count/);
   assert.doesNotMatch(html,/classic-privileged:|classic-trait-day/);
   assert.match(html,/assets\/equipment\/classic-wealth-gem\.png/);
   for(const match of html.matchAll(/src="([^"]+)"/g))assert.ok(existsSync(new URL(`../dist/${match[1]}`,import.meta.url)),match[1]);
