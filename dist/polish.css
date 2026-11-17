@@ -376,3 +376,15 @@ body.dragging-unit .classic-scene .sell-zone { opacity:1; pointer-events:auto; t
 .classic-scene .streak-badge.is-hot .icon { filter:drop-shadow(0 0 6px #ff8a2b); }
 /* The character card docks at the upper right instead of pointing at the unit. */
 .classic-scene .unit-popover[data-side="dock"]::before { display:none; }
+
+/* ---------- v6.3: wrench, worn equipment and tool dragging ---------- */
+.classic-scene .popover-items .item-slot.is-worn { cursor:help; }
+.classic-scene .popover-items .item-slot.is-worn:hover { border-color:#e7dc9e; transform:none; }
+.classic-scene .popover-wrench { display:flex; align-items:center; gap:10px; width:calc(100% - 32px); margin:10px 16px 0; padding:8px 12px; font-size:15px; color:#e8f3ff; background:linear-gradient(100deg,#2d4a7a,#252748); border:1px solid #9ab8df88; }
+.classic-scene .popover-wrench:hover { filter:brightness(1.2); border-color:#cfe3ff; }
+.classic-scene .popover-wrench svg { flex:none; width:24px; height:24px; }
+.classic-scene .popover-wrench .consumable-cost { display:none; }
+.classic-scene .popover-wrench-note { margin:10px 16px 0; font-size:14px; color:#a59fbb; }
+.consumable-glyph.is-precision { color:#ffe8a3; }
+.drag-ghost.drag-tool { color:#eaf3ff; display:grid; place-items:center; }
+.drag-ghost.drag-tool svg { width:70%; height:70%; }

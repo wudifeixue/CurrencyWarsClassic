@@ -109,3 +109,47 @@
 .reference-overview-strategies>div{display:flex;gap:16px;align-items:center;padding:2px 8px}.reference-overview-strategies>div>span{position:relative;display:flex;align-items:center;flex-direction:column;width:95px;color:#f3c4ff}.reference-overview-strategies svg,.reference-overview-strategies img{width:67px;height:77px;padding:10px;filter:drop-shadow(0 0 6px #c897f2);background:radial-gradient(#603a7b,#211c32);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
 .reference-overview-strategies small{font-size:15px;margin-top:6px;color:#bbb8c9;white-space:nowrap}.reference-empty-overview{font-size:20px;color:#77727e;margin:15px 0}
 @media(prefers-reduced-motion:reduce){.reference-choice-card{transition:none}}
+
+/* ---------- Node settlement ("挑战完成"): progress, squad HP, experience, gold overview, ore, statistics ---------- */
+.settle{position:absolute;inset:0;padding:26px 60px 0;color:#f3efe2}
+.settle-progress{display:flex;align-items:center;gap:22px;height:44px;font-size:22px;color:#d9d2bd}
+.settle-progress>span{flex:none;letter-spacing:2px}.settle-progress strong{flex:none;width:76px;text-align:right;font:500 26px var(--number,Arial);color:#fff3c9}
+.settle-progress-bar{position:relative;flex:1;height:14px;background:#111114;border:2px solid #6f6850;box-shadow:inset 0 0 0 1px #000}
+.settle-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,#c79b3c,#ffe9a0);box-shadow:0 0 12px #ffdf8a88;transform-origin:left;animation:settle-fill .9s cubic-bezier(.2,.7,.3,1) both}
+.settle-progress-bar b{position:absolute;top:-9px;bottom:-9px;width:3px;margin-left:-1px;background:#ff8f7d;box-shadow:0 0 6px #ff8f7d}
+.settle-progress-bar b:after{content:"最低进度";position:absolute;top:-24px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:400;color:#ffb3a5}
+.reference-result-screen.is-defeat .settle-progress-bar i{background:linear-gradient(90deg,#7c7667,#cfc7b2);box-shadow:none}
+.settle-emblems{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px;height:190px}
+.settle-emblem{display:flex;align-items:center;gap:30px;padding:0 44px;background:#121214a6;border:2px solid #37363a;animation:settle-rise .45s .25s cubic-bezier(.2,.7,.3,1) both}
+.settle-emblem small{display:block;font-size:21px;letter-spacing:2px;color:#bdb7a6}
+.settle-emblem strong{display:block;font:500 62px/1.1 var(--number,Arial);color:#fff6d6;letter-spacing:1px}
+.settle-emblem p{margin:4px 0 0;font-size:17px;color:#a7a294}
+.settle-emblem em{display:block;font-style:normal;font-size:21px;color:#ff9f8f}.settle-emblem em.is-gain{color:#9ff0c5}
+.settle-heart{flex:none;width:124px;height:114px;color:#f2c45a;filter:drop-shadow(0 0 14px #ffd76d88)}.settle-heart svg{width:100%;height:100%}
+.settle-hp.is-loss .settle-heart{color:#c96a58;filter:drop-shadow(0 0 12px #ff8f7d66);animation:settle-shake .5s .5s both}
+.settle-level-badge{flex:none;width:118px;height:132px;display:flex;align-items:center;justify-content:center;gap:3px;font:600 62px var(--number,Arial);color:#fff;background:linear-gradient(150deg,#7c8dff,#3a3fb4);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);text-shadow:0 2px 6px #171a55}
+.settle-level-badge small{display:inline;font-size:22px;letter-spacing:0;color:#dfe3ff;margin-top:22px}
+.settle-columns{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px;height:322px}
+.settle-columns section{position:relative;padding:14px 26px;background:#111113a6;border:2px solid #333334;overflow:hidden;animation:settle-rise .45s .4s cubic-bezier(.2,.7,.3,1) both}
+.settle-columns h3{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px;padding-bottom:9px;border-bottom:2px solid #3a3939;font-size:24px;font-weight:500;color:#e9e3d0}
+.settle-columns h3 b{display:flex;align-items:center;gap:10px;font:500 32px var(--number,Arial);color:#ffe9a8}.settle-columns h3 svg{width:34px;height:34px}
+.settle-columns h3 button{width:38px;height:38px;border:1px solid #6d6a62;border-radius:50%;background:#1d1d21;color:#e9e3d0;font-size:22px;line-height:1}.settle-columns h3 button:hover{border-color:#fff;color:#fff}
+.settle-gold p{display:flex;align-items:center;justify-content:space-between;margin:0;height:46px;font-size:22px;color:#cfc9b8;border-bottom:1px solid #2c2b2d}
+.settle-gold p b{font:500 26px var(--number,Arial);color:#f6efd9;display:flex;align-items:center;gap:8px}
+.settle-gold p span i{font-style:normal;margin-left:12px;font-size:18px;color:#ffb866}.settle-gold p.is-muted{color:#8f8a7d}.settle-gold p.is-muted b{color:#8f8a7d}.settle-gold p.is-muted span i{color:#8f8a7d}
+.settle-gold .settle-ores{border-bottom:0}.settle-gold .settle-ores small{font-size:20px;color:#8f8a7d;font-weight:400}
+.settle-ore{display:inline-block;width:26px;height:26px;margin-left:10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#effaff 30%,#9fb6c6);box-shadow:0 0 8px #effaff88}
+.settle-ore.quality-blue{background:radial-gradient(circle at 35% 30%,#fff,#7ee1ff 35%,#2c7fb8);box-shadow:0 0 8px #7ee1ff99}
+.settle-ore.quality-gold{background:radial-gradient(circle at 35% 30%,#fff,#ffdb67 35%,#b9862a);box-shadow:0 0 8px #ffdb6799}
+.settle-ore.quality-prismatic{background:conic-gradient(from 40deg,#d0a8ff,#9ff0ff,#ffd9f3,#d0a8ff);box-shadow:0 0 8px #d0a8ffaa}
+.settle-notes{display:block;margin-top:2px;font-size:16px;line-height:1.35;color:#a39d8d}
+.settle-stat{display:grid;grid-template-columns:40px 1fr 96px;align-items:center;gap:16px;height:41px}
+.settle-stat img{width:40px;height:40px;object-fit:cover;object-position:center top;border-radius:50%;border:2px solid #8f8a7d;background:#26262c}
+.settle-stat>span{font-size:13px;color:#bbb;overflow:hidden;white-space:nowrap}
+.settle-stat div{height:10px;background:#1b1b1f;border:1px solid #3b3a3c}.settle-stat div i{display:block;height:100%;background:linear-gradient(90deg,#dc90b7,#bdcceb)}
+.settle-stat b{text-align:right;font:500 22px var(--number,Arial);color:#f3e5c6;font-variant-numeric:tabular-nums}
+.settle-empty{margin:60px 0 0;text-align:center;font-size:22px;color:#8f8a7d}
+@keyframes settle-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes settle-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes settle-shake{0%,100%{transform:none}25%{transform:translateX(-7px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+@media(prefers-reduced-motion:reduce){.settle-progress-bar i,.settle-emblem,.settle-columns section,.settle-hp.is-loss .settle-heart{animation:none}}

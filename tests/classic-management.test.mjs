@@ -85,8 +85,10 @@ test('level ten and nine reserve slots are playable and enforce their boundaries
   run(s,{type:'buy',index:1});assert.equal(s.units.filter(u=>u.zone==='bench').length,9);
   reject(s,{type:'buy',index:3});
   reject(s,{type:'move',uid:s.units[0].uid,zone:'bench'});
-  for(let i=0;i<6;i++)run(s,{type:'move',uid:`reserve-${i}`,zone:'back'});
+  run(s,{type:'move',uid:'reserve-0',zone:'front'});
+  for(let i=1;i<6;i++)run(s,{type:'move',uid:`reserve-${i}`,zone:'back'});
   assert.equal(s.units.filter(u=>u.zone!=='bench').length,10);
+  assert.equal(s.units.filter(u=>u.zone==='back').length,6);
   reject(s,{type:'move',uid:'reserve-6',zone:'back'});
 });
 

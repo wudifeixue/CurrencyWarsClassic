@@ -1,7 +1,11 @@
-import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=6.2.0';
+import {EQUIPMENT,TRAITS,CHARACTERS,resolveEquipment} from './data.js?v=6.3.0';
 
 export const LOOT_QUALITIES=['white','blue','gold','prismatic'];
 const consumables={
+  // Old client text: the Precision wrench can be used any number of times and is what base ranks
+  // start with; the plain one disappears after a single use.
+  'precision-wrench':{name:'精密拆装扳手',description:'拖到一名角色身上使用，取下该角色穿戴的所有装备，可无限次使用。持有时再获得拆装扳手，改为获得1金币。',requiresTarget:true,reusable:true,icon:'✚'},
+  wrench:{name:'拆装扳手',description:'拖到一名角色身上使用，取下该角色穿戴的所有装备。使用后消失。',requiresTarget:true,icon:'✚'},
   projector:{name:'员工投影仪',description:'选择一名1～3费角色，获得其1星复制体。装备和星级不会复制。',requiresTarget:true,icon:'◇'},
   'perfect-projector':{name:'完美员工投影仪',description:'选择任意费用角色，获得其1星复制体。',requiresTarget:true,icon:'◈'},
   'privilege-card':{name:'特权赋予卡',description:'将所选角色第一件普通进阶装备升级为同名特权装备。',requiresTarget:true,icon:'✦'},

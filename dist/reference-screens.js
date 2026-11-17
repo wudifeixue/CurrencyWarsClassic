@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.2.0';
-import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice } from './engine.js?v=6.2.0';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.3.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.3.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -64,6 +64,46 @@ function overviewPanel(game, battle, won, ended) {
   <div class="reference-overview-lower"><section class="reference-overview-record"><h3>本局记录</h3><p><span>累计收入</span><strong>${gem}${number(cumulativeIncome)}</strong></p><p><span>胜 / 负</span><strong>${game.wins} / ${game.losses}</strong></p></section><section class="reference-overview-strategies"><h3>投资策略</h3><div>${game.strategies.map(id => {const s = STRATEGIES.find(item => item.id === id);return s ? `<span title="${escape(s.name)}：${escape(s.description)}">${strategySymbol(id)}<small>${escape(s.name)}</small></span>` : '';}).join('') || '<p class="reference-empty-overview">尚未获得投资策略</p>'}</div></section></div></div>`;
 }
 
+// Per-node settlement, laid out like the old season's "挑战完成" page: challenge progress, squad HP,
+// experience gained, the gold overview with its three sources, crystal ore dropped and battle statistics.
+const compact = value => { const n = Math.round(Number(value) || 0); return n >= 10000 ? `${(n / 1000).toFixed(1)}K` : number(n); };
+const heart = '<svg viewBox="0 0 100 92" aria-hidden="true"><path d="M50 90 6 46V22L24 4h14l12 12L62 4h14l18 18v24Z" fill="currentColor"/><path d="M50 74 20 44V28l8-8h6l16 16 16-16h6l8 8v16Z" fill="none" stroke="#fff8d8" stroke-width="3" opacity=".65"/></svg>';
+const oreNames = { white: '白色晶矿', blue: '蓝色晶矿', gold: '金色晶矿', prismatic: '棱彩晶矿' };
+function settlementPanel(game, battle, won) {
+  const combat = battle.combat, overclock = !getRunMode(game).interest;
+  const progress = Math.max(0, Math.min(100, Number.isFinite(battle.progress) ? battle.progress : won ? 100 : 0));
+  const penalty = battle.penalty, parts = penalty ? [`固定 ${penalty.base}`, `未完成进度 ${penalty.progress}`, penalty.threshold ? `未达最低进度要求 ${penalty.threshold}` : ''].filter(Boolean).join(' · ') : '';
+  const other = Math.max(0, (battle.income || 0) - (battle.baseIncome || 0) - (battle.streakIncome || 0) - (battle.interestIncome || 0));
+  const ores = Object.entries((battle.drops || []).reduce((count, quality) => ({ ...count, [quality]: (count[quality] || 0) + 1 }), {}));
+  const notes = (battle.rewards || []).filter(line => !/^(基础金币|连胜金币|利息|获得经验|超频模式无利息)/.test(line));
+  const rows = (combat?.stats || []).filter(s => s.side === 'ally').sort((a, b) => b.damage - a.damage).slice(0, 6);
+  const max = Math.max(1, ...rows.map(s => s.damage || 0));
+  const maxLevel = !getLevelXp(game);
+  return `<div class="settle">
+    <div class="settle-progress" role="img" aria-label="挑战进度 ${progress}%"><span>挑战进度</span><div class="settle-progress-bar"><i style="width:${progress}%"></i>${battle.minProgress ? `<b style="left:${battle.minProgress}%" title="最低进度要求 ${battle.minProgress}%"></b>` : ''}</div><strong>${progress}%</strong></div>
+    <div class="settle-emblems">
+      <div class="settle-emblem settle-hp ${battle.damage ? 'is-loss' : ''}"><span class="settle-heart">${heart}</span><div><small>小队生命值</small><strong>${number(game.hp)}</strong>${battle.damage ? `<em>失去小队生命值 −${number(battle.damage)}</em>${parts ? `<p>${parts}</p>` : ''}` : battle.healing ? `<em class="is-gain">回复 +${number(battle.healing)}</em>` : '<p>未损失小队生命值</p>'}</div></div>
+      <div class="settle-emblem settle-level"><span class="settle-level-badge"><small>Lv.</small>${game.level}</span><div><small>获取经验</small><strong>+${number(battle.xpGain)}</strong><p>${maxLevel ? '已达到最高等级' : `当前 ${game.xp} / ${getLevelXp(game)} · 进入下个节点时计入`}</p></div></div>
+    </div>
+    <div class="settle-columns">
+      <section class="settle-gold"><h3>获得金币总览<b>${gem}${number(battle.income)}</b></h3>
+        <p><span>基础奖励</span><b>${number(battle.baseIncome)}</b></p>
+        <p><span>连胜<i>×${Math.max(0, battle.streak || 0)}</i></span><b>${number(battle.streakIncome)}</b></p>
+        <p class="${overclock ? 'is-muted' : ''}"><span>利息${overclock ? '<i>超频博弈不计利息</i>' : ''}</span><b>${number(battle.interestIncome)}</b></p>
+        ${other ? `<p><span>策略与其他收益</span><b>${number(other)}</b></p>` : ''}
+        <p class="settle-ores"><span>掉落晶矿</span><b>${ores.length ? ores.map(([quality, count]) => `<i class="settle-ore quality-${escape(quality)}" title="${oreNames[quality] || '晶矿'}"></i>${count}`).join('') : '<small>无</small>'}</b></p>
+        ${notes.length ? `<small class="settle-notes">${notes.map(escape).join(' · ')}</small>` : ''}
+      </section>
+      <section class="settle-stats"><h3>数据统计<button data-action="result-view" data-view="damage" aria-label="查看完整伤害统计">⌕</button></h3>
+        ${rows.length ? rows.map(s => {
+          const c = character(combat.units?.find(u => u.id === s.id)?.characterId || game.units.find(u => u.uid === s.id)?.characterId);
+          return `<div class="settle-stat" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}">${c ? `<img src="assets/portraits/${c.id}.png" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<div><i style="width:${Math.max(0, Math.min(100, (s.damage || 0) / max * 100))}%"></i></div><b>${compact(s.damage)}</b></div>`;
+        }).join('') : '<p class="settle-empty">本节点没有战斗数据</p>'}
+      </section>
+    </div>
+  </div>`;
+}
+
 export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
   const battle = game.lastBattle || {};
   const combat = battle.combat;
@@ -73,13 +113,15 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
   const deployed = game.units.filter(u => u.zone !== 'bench');
   const teamValue = deployed.reduce((sum, u) => sum + getSellPrice(game,u), 0);
   const roundLabel = ended ? `抵达 ${getCurrentNode(game).label} · ${game.wins} 胜 / ${game.losses} 负` : `${getCurrentNode(game).label} · ${escape(battle.enemy)}${combat ? ` · ${combat.turns} 次行动` : ''}`;
-  const title = ended ? won ? '远征完成' : '远征结束' : won ? '作战胜利' : '作战失利';
+  // Runs on the verified rules settle each node on the "挑战完成" page; older saves keep the previous report.
+  const settle = !ended && Number.isFinite(battle.baseIncome);
+  const title = ended ? won ? '远征完成' : '远征结束' : settle ? won ? '挑战完成' : '挑战失败' : won ? '作战胜利' : '作战失利';
   const reason = combat?.reason === 'timeout' ? '达到行动上限' : battle.won ? '敌方全部退场' : '前台全部退场';
   return `<div class="reference-overlay"><section class="reference-fullscreen reference-result-screen ${won ? 'is-victory' : 'is-defeat'}" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
     <div class="reference-victory-prism" aria-hidden="true"><span></span></div>
     <header class="reference-result-heading"><h1 id="modal-heading">${title}</h1><p>${roundLabel}</p></header>
-    <div class="reference-result-panel ${view === 'overview' ? 'reference-overview-panel' : ''}">
-      ${view === 'overview' ? overviewPanel(game, battle, won, ended) : `
+    <div class="reference-result-panel ${view === 'overview' ? settle ? 'settle-panel' : 'reference-overview-panel' : ''}">
+      ${view === 'overview' ? settle ? settlementPanel(game, battle, won) : overviewPanel(game, battle, won, ended) : `
       <div class="reference-result-metrics"><div><span>小队生命值</span><strong><span class="reference-heart">♥</span>${number(game.hp)}</strong></div><div><span>持有金币</span><strong>${gem}${number(game.gold)}</strong></div><div><span>阵容价值</span><strong>${gem}${number(teamValue)}</strong></div></div>
       <div class="reference-damage-heading"><span>${ended ? `远征战绩 ${game.wins} 胜 / ${game.losses} 负` : `${reason}　·　收入 +${number(battle.income)}${battle.damage ? `　·　生命 −${number(battle.damage)}` : ''}`}</span><strong>伤害统计</strong></div>
       <div class="reference-damage-chart" role="img" aria-label="本场角色伤害统计：${escape(rows.map(s => `${s.name} ${number(s.damage)}，治疗 ${number(s.healing)}，护盾 ${number(s.shielding)}`).join('；'))}">
@@ -94,9 +136,9 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
         }).join('')}</div>` : '<div class="reference-no-statistics">这份旧版战报未保存逐角色伤害统计<br><small>下一场战斗将记录完整数据</small></div>'}
       </div>`}
     </div>
-    <nav class="reference-result-pagination" aria-label="战报视图"><button data-action="result-view" data-view="overview" aria-label="查看战报总览" aria-pressed="${view === 'overview'}" class="${view === 'overview' ? 'active' : ''}"></button><button data-action="result-view" data-view="damage" aria-label="查看伤害统计" aria-pressed="${view === 'damage'}" class="${view === 'damage' ? 'active' : ''}"></button></nav>
-    <div class="reference-result-bottom"><div class="reference-result-secondary">${combat ? '<button data-action="replay"><span>↻</span>回看战斗</button>' : ''}${ended ? '<button data-action="history"><span>▥</span>战斗记录</button>' : ''}</div><button class="reference-confirm-button reference-return-button" data-action="${ended ? 'restart' : 'next'}"><span>${ended ? '开启新的远征' : game.hp <= 0 || game.round === getRunLength(game) ? '查看远征结算' : '继续挑战'}</span></button><div class="reference-result-income">${ended ? '经典，仍在继续' : `本回合收入 +${number(battle.income)}`}</div></div>
-    <p class="reference-reward-breakdown">${!ended && battle.rewards ? battle.rewards.map(escape).join('　·　') : ended ? won ? `你已完成${getRunMode(game).name}全部 ${getRunLength(game)} 个节点。` : '调整阵容与投资路线，再次启程。' : ''}</p>
+    <nav class="reference-result-pagination" aria-label="战报视图"><button data-action="result-view" data-view="overview" aria-label="${settle ? '查看节点结算' : '查看战报总览'}" aria-pressed="${view === 'overview'}" class="${view === 'overview' ? 'active' : ''}"></button><button data-action="result-view" data-view="damage" aria-label="查看伤害统计" aria-pressed="${view === 'damage'}" class="${view === 'damage' ? 'active' : ''}"></button></nav>
+    <div class="reference-result-bottom"><div class="reference-result-secondary">${combat ? '<button data-action="replay"><span>↻</span>回看战斗</button>' : ''}${ended ? '<button data-action="history"><span>▥</span>战斗记录</button>' : ''}</div><button class="reference-confirm-button reference-return-button" data-action="${ended ? 'restart' : 'next'}"><span>${ended ? '开启新的远征' : game.hp <= 0 || game.round === getRunLength(game) ? '查看远征结算' : '继续挑战'}</span></button><div class="reference-result-income">${ended ? '经典，仍在继续' : settle ? `持有金币 ${number(game.gold)}` : `本回合收入 +${number(battle.income)}`}</div></div>
+    <p class="reference-reward-breakdown">${settle && view === 'overview' ? '' : !ended && battle.rewards ? battle.rewards.map(escape).join('　·　') : ended ? won ? `你已完成${getRunMode(game).name}全部 ${getRunLength(game)} 个节点。` : '调整阵容与投资路线，再次启程。' : ''}</p>
     <span class="reference-screen-signature">经典回响 · 非官方同人</span>
   </section></div>`;
 }
