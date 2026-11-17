@@ -11,8 +11,9 @@ const fresh=id=>{const s=createGame(73,{mode:'standard'});s.environment.choices=
 const nextNode=s=>{s.phase='prep';s.choices=[];s.choiceKind=null;s.flow.pendingNodeKind=null;s.flow.nodeComplete=true;run(s,{type:'next-node'});};
 const chooseStrategy=(s,id)=>{s.phase='choice';s.choiceKind='strategy';s.choices=[{kind:'strategy',id},...STRATEGIES.filter(x=>x.id!==id&&!x.legacy&&!s.strategies.includes(x.id)).slice(0,2).map(x=>({kind:'strategy',id:x.id}))];run(s,{type:'choose',index:0});};
 test('engine environment confirmation keeps real reward orbs, cancel-free reroll and compatible saves',()=>{
- const s=fresh('concept-energy');assert.equal(s.units.length,0);assert.equal(s.inventory.length,0);assert.equal(s.loot.filter(o=>o.source==='投资环境').length,3);assert.ok(s.environment.seenNodes.includes('1'));
- const h=s.loot.find(o=>o.contents.some(r=>r.kind==='character'));run(s,{type:'collect-loot',uid:h.uid});assert.equal(s.units.length,1);assert.equal(s.units[0].zone,'bench');assert.equal(validateState(s),true);assert.deepEqual(migrateState(s),s);
+ const s=fresh('concept-energy');assert.equal(s.units.length,4);assert.ok(s.units.every(u=>u.zone==='bench'));assert.ok(['1402','1217'].every(id=>s.units.some(u=>u.characterId===id)));
+ assert.deepEqual(s.inventory,['battery'],'the concept environment supplies the opening equipment');assert.equal(s.loot.length,1,'one more basic piece waits in a crystal');assert.ok(s.environment.seenNodes.includes('1'));
+ assert.equal(validateState(s),true);assert.deepEqual(migrateState(s),s);
  const r=act(s,{type:'choose-environment',id:'concept-energy'});assert.equal(r.ok,false);
 });
 test('node event cannot be shadowed by node.type; plane2 currency and privilege rewards actually enqueue',()=>{

@@ -1,5 +1,5 @@
-import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.1.0';
-import {getConsumable} from './loot.js?v=6.1.0';
+import {EQUIPMENT,CHARACTERS,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.3.0';
+import {getConsumable} from './loot.js?v=6.3.0';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);
@@ -19,6 +19,7 @@ export const chestArt=chest=>`<img src="assets/loot/chest-${chestType(chest)}.pn
 
 export function consumableArt(id){
   if(['projector','perfect-projector','privilege-card'].includes(id))return `<img src="assets/loot/${id}.png" alt="" draggable="false">`;
+  if(['wrench','precision-wrench'].includes(id))return `<svg class="consumable-glyph ${id==='precision-wrench'?'is-precision':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 3.5a5 5 0 0 0-4.300 7.200L3.500 17.400a2.200 2.200 0 0 0 3.100 3.100l6.700-6.700a5 5 0 0 0 6.900-5.800l-3 3-2.800-.700-.700-2.800 3-3a5 5 0 0 0-2.200-1Z"/>${id==='precision-wrench'?'<path d="M5.200 18.800h.01"/>':''}</svg>${id==='precision-wrench'?'<b class="consumable-cost">∞</b>':''}`;
   const glyph=id==='wealth-gem'?'<path d="m12 2 9 6-9 14L3 8Zm-9 6h18M7 3l5 19 5-19"/>':id.startsWith('hire-')?'<path d="M5 2h12l3 3v17H5ZM8 8h9M8 12h9M8 16h5"/><circle cx="16" cy="18" r="3"/>':id.startsWith('trait-')?'<path d="m12 2 10 10-10 10L2 12Z"/><path d="m12 7 5 5-5 5-5-5Z"/>':'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1"/><circle cx="16" cy="8" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/>';
   return `<svg class="consumable-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">${glyph}</svg>${id.startsWith('hire-')?`<b class="consumable-cost">${esc(id.slice(5))}</b>`:''}`;
 }
@@ -40,7 +41,7 @@ export function lootField(game){
 
 export function inventoryContents(game){
   const chests=(game.chests||[]).map(chest=>`<button class="inventory-item loot-chest chest-${chestType(chest)}" data-key="chest-${esc(chest.uid)}" data-action="open-chest" data-uid="${esc(chest.uid)}" data-tip-title="${chestName(chest)}" data-tip="点击打开并三选一；返回不会消耗箱子。" aria-label="打开${chestName(chest)}">${chestArt(chest)}<span class="inventory-kind">自选</span></button>`);
-  const consumables=(game.consumables||[]).map(c=>{const info=getConsumable(c.id);return `<button class="inventory-item loot-consumable" data-key="consumable-${esc(c.uid)}" data-action="consumable" data-uid="${esc(c.uid)}" data-tip-title="${esc(info?.name||c.id)}" data-tip="${esc(info?.description||'')}" aria-label="${info?.passive?'查看':'使用'}${esc(info?.name||c.id)}">${consumableArt(c.id)}<span class="inventory-kind">道具</span></button>`;});
+  const consumables=(game.consumables||[]).map(c=>{const info=getConsumable(c.id);return `<button class="inventory-item loot-consumable" data-key="consumable-${esc(c.uid)}" data-action="consumable" data-uid="${esc(c.uid)}" data-tip-title="${esc(info?.name||c.id)}" data-tip="${esc(info?.description||'')}" ${info?.requiresTarget?'data-tip-extra="拖到角色身上使用，或点击选择角色"':''} aria-label="${info?.passive?'查看':'使用'}${esc(info?.name||c.id)}">${consumableArt(c.id)}<span class="inventory-kind">道具</span></button>`;});
   const items=groupedInventory(game.inventory).map(({id,index,amount})=>{const e=item(id);return `<button class="inventory-item tier-${e.tier} ${e.privileged?'is-privileged':''}" data-key="item-${esc(id)}" data-action="item" data-index="${index}" data-tip-kind="item" data-tip-id="${esc(id)}" data-tip-extra="${amount>1?`共 ${amount} 件 · `:''}拖到角色身上穿戴，或点击选择角色" aria-label="装备${esc(e.name)}${amount>1?`，共${amount}件`:''}">${itemImage(id)}${amount>1?`<span class="inventory-count">${amount}</span>`:''}</button>`;});
   return [...chests,...consumables,...items].join('')||'<p class="inventory-empty">仓库<br>暂无装备</p>';
 }
