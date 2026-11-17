@@ -1,16 +1,16 @@
-import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.4.0';
-import { modeScreen, nodeScreen } from './run-ui.js?v=6.4.0';
-import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.4.0';
-import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.4.0';
-import { getProgressionPanels } from './classic-progression.js?v=6.4.0';
-import { choiceScreen, resultScreen } from './reference-screens.js?v=6.4.0';
-import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.4.0';
-import { getConsumable } from './loot.js?v=6.4.0';
-import { combatMarkup } from './battle-ui.js?v=6.4.0';
-import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.4.0';
-import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.4.0';
-import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3 } from './engine.js?v=6.4.0';
-import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.4.0';
+import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.4.1';
+import { modeScreen, nodeScreen } from './run-ui.js?v=6.4.1';
+import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.4.1';
+import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.4.1';
+import { getProgressionPanels } from './classic-progression.js?v=6.4.1';
+import { choiceScreen, resultScreen } from './reference-screens.js?v=6.4.1';
+import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.4.1';
+import { getConsumable } from './loot.js?v=6.4.1';
+import { combatMarkup } from './battle-ui.js?v=6.4.1';
+import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.4.1';
+import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.4.1';
+import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3 } from './engine.js?v=6.4.1';
+import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.4.1';
 
 const paths = {flame:'M12 2.5c.6 3.2 4.6 5 4.6 10.2A4.6 4.6 0 0 1 12 17.5a4.6 4.6 0 0 1-4.6-4.8c0-2.1 1-3.6 2.2-4.8.1 2 .9 3.1 2 3.4C11.4 8.300 10.900 5.400 12 2.500zM9.500 21.500h5',
  star:'M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z',
@@ -123,7 +123,7 @@ function sellZones(){return ['left','right'].map(side=>`<div class="sell-zone se
 function battlePage(){return `${sellZones()}${synergies()}${strategies()}${board()}${benchDock()}${inventory()}${environmentSummary(game)}${progressionSummary(game)}${lootField(game)}${battlePanel()}${shop()}${unitPanel()}${itemCard()}`;}
 
 function codex(){const list=CLASSIC_ROSTER.filter(c=>(!codexCost||c.cost===codexCost)&&(!codexQuery||`${c.name}${c.element}${c.traits.map(traitName).join('')}`.includes(codexQuery)));return `<section class="panel page-panel"><div class="tab-page-head"><div><h2>角色图鉴 <span class="tiny-label">CHARACTER ARCHIVE</span></h2><p>${CLASSIC_ROSTER.length} 位同行者 · 零和博弈经典卡池</p></div><span class="number muted">${list.length} / ${CLASSIC_ROSTER.length}</span></div><div class="codex-controls">${[0,1,2,3,4,5].map(n=>`<button class="filter-button ${codexCost===n?'active':''}" data-action="filter" data-cost="${n}">${n?`${n} 费角色`:'全部角色'}</button>`).join('')}<input id="codex-search" class="search-input" placeholder="搜索角色、属性、羁绊" aria-label="搜索角色" value="${esc(codexQuery)}"></div><div class="codex-grid">${list.map(c=>`<button class="unit-card" style="--char:${c.color};--rarity:${rarity[c.cost]}" data-action="character" data-id="${c.id}" aria-label="查看${c.name}"><img src="${c.image}" alt="" loading="lazy"><span class="cost-badge">${icon('coin')}${c.cost}</span><div class="unit-info"><h3>${c.name}</h3><div class="unit-tags">${c.traits.map(t=>`<span>${traitName(t)}</span>`).join('')}</div><small>${c.element} · ${c.role}</small></div></button>`).join('')||'<p class="no-items">没有匹配的角色。</p>'}</div></section>`;}
-function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.4</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
+function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.4.1</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
 
 function render(){morph(app,`<main class="classic-scene ${shopOpen&&tab==='battle'?'shop-is-open':''} ${tab!=='battle'?'is-secondary':''}"><div class="scene-rails" aria-hidden="true"><div class="rail-left"></div><div class="rail-right"></div></div>${header()}${overview()}${tab==='battle'?battlePage():`<div class="secondary-screen">${codex()}</div>${footer()}`}</main>`);fitGame();renderModal();positionPanel();positionItemCard();if(pendingFx){const job=pendingFx;pendingFx=null;try{runFx(job);}catch(error){console.error(error);}}}
 

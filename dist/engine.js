@@ -1,11 +1,11 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.4.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.4.0';
-import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.4.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.4.0';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss} from './classic-flow.js?v=6.4.0';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.4.0';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.4.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.4.0';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.4.1';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.4.1';
+import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.4.1';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.4.1';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss} from './classic-flow.js?v=6.4.1';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.4.1';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.4.1';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.4.1';
 export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
@@ -308,6 +308,31 @@ function advanceClassicNode(state){
   return success(`进入 ${getCurrentNode(state).label} · ${getCurrentNode(state).name}`);
 }
 
+// Reward-node crystals (revision 4). REC1's settlement pages show 2 white + 2 blue crystals at 1-1
+// and 3 white + 2 blue at 1-2, and what came out was small: free refreshes, a 1-cost character and a
+// couple of basic items; no 武装箱 and no large gold. The client prices rewards in one unit (1 gold
+// = 1, a free refresh = 2, an N-cost character = N, a basic item = 6, a basic 武装箱 = 4, an advanced
+// one = 14) and the crystal colour follows that value, but the crystal pools themselves are kept on
+// the server. So: white ≈ 2–4, blue ≈ 6, gold ≈ 14, with the weights below as estimates. The later
+// reward nodes (1-8, 2-6, 3-6 and Overclock's) were not read from footage and are scaled up by plane.
+const weighted=(state,list)=>{let roll=random(state)*list.reduce((n,[w])=>n+w,0);for(const [w,value] of list){roll-=w;if(roll<0)return value;}return list.at(-1)[1];};
+const rosterOf=(state,cost)=>pick(state,CLASSIC_ROSTER.filter(c=>c.cost===cost)).id;
+const basicItem=state=>pick(state,EQUIPMENT.filter(e=>e.tier===1)).id;
+const ORB_CONTENTS={
+  white:state=>weighted(state,[[40,()=>[{kind:'refresh',amount:2}]],[30,()=>[{kind:'gold',amount:2}]],[30,()=>[{kind:'character',id:rosterOf(state,1)}]]])(),
+  blue:state=>weighted(state,[[60,()=>[{kind:'item',id:basicItem(state)}]],[20,()=>[{kind:'character',id:rosterOf(state,2)}]],[20,()=>[{kind:'refresh',amount:3}]]])(),
+  gold:state=>weighted(state,[[50,()=>[{kind:'chest',quality:'advanced'}]],[25,()=>[{kind:'item',id:basicItem(state)},{kind:'item',id:basicItem(state)}]],[25,()=>[{kind:'character',id:rosterOf(state,3)},{kind:'gold',amount:4}]]])(),
+};
+export function getRewardNodeLayout(state,node){
+  const rewards=getRunNodes(state).filter(n=>n.type==='reward'),order=rewards.indexOf(rewards.find(n=>n.round===node.round));
+  if(order===0)return {white:2,blue:2,gold:0};
+  if(order===1&&node.plane===1)return {white:3,blue:2,gold:0};
+  return [{white:3,blue:2,gold:1},{white:2,blue:3,gold:1},{white:2,blue:2,gold:2}][Math.max(0,Math.min(2,node.plane-1))];
+}
+function rewardNodeOrbs(state,node){
+  const layout=getRewardNodeLayout(state,node);
+  return Object.entries(layout).flatMap(([quality,count])=>Array.from({length:count},()=>({orbQuality:quality,contents:ORB_CONTENTS[quality](state)})));
+}
 function grantCharacter(state,id,star=1,cost=getEffectiveCharacterCost(state,id)) {
   if(!getCharacter(id))return fail('奖励角色不存在。');
   const copies=state.units.filter(u=>u.characterId===id&&u.star===star&&unitCost(state,u)===cost).length;
@@ -648,7 +673,7 @@ function runAction(state,action) {
       const growthRewards=onBattleResolved(state,combat);
       queueRewards(state,growthRewards,'战后羁绊奖励');
       if(won&&enemy.boss)queueRewards(state,[{kind:'chest',quality:node.plane>=2?'privileged':'advanced'},{kind:'gold',amount:5}],'首领晶矿');
-      if(classic&&won&&node.type==='reward')queueRewards(state,[{kind:'gold',amount:4+node.plane*2},{kind:'chest',quality:'basic'},{kind:'item',id:pick(state,EQUIPMENT.filter(e=>e.tier===1)).id}],'奖励节点晶矿');
+      if(classic&&won&&node.type==='reward')queueRewards(state,usesRevision4(state)?rewardNodeOrbs(state,node):[{kind:'gold',amount:4+node.plane*2},{kind:'chest',quality:'basic'},{kind:'item',id:pick(state,EQUIPMENT.filter(e=>e.tier===1)).id}],'奖励节点晶矿');
       // Encounter rewards: a win before revision 4. Since then the reward follows the rank notes — below
       // A4 it is always paid, from A4 only when the 25% minimum progress was reached.
       const encounterPaid=revision4?(getRank(state)<4||progress>=minProgress):won;
