@@ -1,19 +1,19 @@
-import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.7.0';
-import { modeScreen, nodeScreen } from './run-ui.js?v=6.7.0';
-import { supplyScreen } from './supply-ui.js?v=6.7.0';
-import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.7.0';
-import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.7.0';
-import { getProgressionPanels } from './classic-progression.js?v=6.7.0';
-import { choiceScreen, resultScreen } from './reference-screens.js?v=6.7.0';
-import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.7.0';
-import { getConsumable } from './loot.js?v=6.7.0';
-import { recommendedEquipment } from './classic-recommend.js?v=6.7.0';
-import { CLASSIC_RECIPE_PARTS } from './classic-items.js?v=6.7.0';
-import { combatMarkup } from './battle-ui.js?v=6.7.0';
-import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.7.0';
-import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.7.0';
-import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3, usesRevision5, fieldHasCopy } from './engine.js?v=6.7.0';
-import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.7.0';
+import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.8.0';
+import { modeScreen, nodeScreen } from './run-ui.js?v=6.8.0';
+import { supplyScreen } from './supply-ui.js?v=6.8.0';
+import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.8.0';
+import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.8.0';
+import { getProgressionPanels, getDayEquipment } from './classic-progression.js?v=6.8.0';
+import { choiceScreen, resultScreen } from './reference-screens.js?v=6.8.0';
+import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.8.0';
+import { getConsumable } from './loot.js?v=6.8.0';
+import { recommendedEquipment } from './classic-recommend.js?v=6.8.0';
+import { CLASSIC_RECIPE_PARTS } from './classic-items.js?v=6.8.0';
+import { combatMarkup } from './battle-ui.js?v=6.8.0';
+import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.8.0';
+import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.8.0';
+import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3, usesRevision5, fieldHasCopy } from './engine.js?v=6.8.0';
+import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.8.0';
 
 const paths = {flame:'M12 2.5c.6 3.2 4.6 5 4.6 10.2A4.6 4.6 0 0 1 12 17.5a4.6 4.6 0 0 1-4.6-4.8c0-2.1 1-3.6 2.2-4.8.1 2 .9 3.1 2 3.4C11.4 8.300 10.900 5.400 12 2.500zM9.500 21.500h5',
  star:'M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z',
@@ -51,7 +51,8 @@ const traitName = id => TRAITS.find(t=>t.id===id)?.name||LEGACY_TRAITS.find(t=>t
 const rarity = ['','#b8bec8','#6cc2ad','#758afa','#ae84ed','#e4c871'];
 const portrait = c => `assets/portraits/${c.id}.webp`;
 const itemArt = (id,cls='') => {const e=getEquipment(id);return `<img class="equipment-art ${e?.privileged?'is-privileged':''} ${cls}" src="${getEquipmentArtPath(id)}" alt="" draggable="false">`;};
-const dayItems = unit => Object.entries(game.progression?.day?.assignments||{}).filter(([,uid])=>uid===unit.uid).map(([id])=>id);
+// 白昼 equipment on this character that is currently out (see getDayEquipment).
+const dayItems = unit => getDayEquipment(game).filter(e=>e.available&&e.owner===unit.uid).map(e=>e.id);
 const occupiedSlots=unit=>unit.items.some(id=>getEquipment(id)?.exclusiveSlots)?3:unit.items.length+dayItems(unit).length;
 const traitArt = id => `<img src="${getTraitArtPath(id)}" alt="" draggable="false">`;
 const saveKey = 'currency-wars-classic-v1';
@@ -70,7 +71,10 @@ function save(){if(newRunRequired)return;try{localStorage.setItem(saveKey,JSON.s
 function toast(message,{error=false}={}){if(!message)return;const el=document.getElementById('toast'),vp=document.getElementById('game-viewport').getBoundingClientRect(),overlay=!!modalRoot.firstChild;el.textContent=message;el.classList.toggle('is-error',error);el.style.left=`${vp.left+vp.width/2}px`;el.style.top=`${overlay?vp.top+vp.height*.045:vp.top+vp.height*.515}px`;el.style.setProperty('--toast-scale',Math.max(.6,vp.width/1920));el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),error?2100:2500);}
 // Snapshot of what the player can see, so a render can animate from it.
 function captureState(){return {round:game.round,phase:game.phase,gold:game.gold,level:game.level,xp:game.xp,hp:game.hp,units:new Map(game.units.map(u=>[u.uid,{uid:u.uid,star:u.star,characterId:u.characterId,zone:u.zone,items:[...u.items]}])),traits:new Map(getSynergies(game).map(s=>[s.id,s.level])),rects:rectMap(app,'.roster-card[data-uid]','data-uid')};}
-function settle(before,action,fx={}){if(game.phase==='supply'&&before.phase!=='supply'){supplyDealAt=Date.now();choiceHidden=false;nodeSelected=null;}if(before.round!==game.round||!atPrep())shopOpen=false;if(game.phase==='prep'&&game.round>1&&!game.flow?.nodeComplete&&(before.round!==game.round||before.phase!=='prep'))queueShopOpen();if(!game.units.some(u=>u.uid===selected))selected=game.units.find(u=>u.zone==='front')?.uid;if(panelUid&&!game.units.some(u=>u.uid===panelUid))panelUid=null;pendingFx={before,action,fx};render();}
+let dayShown=null;
+// 白昼 equipment appears and disappears with the bond; say so when it changes.
+function dayNotice(){const now=getDayEquipment(game).filter(e=>e.available);if(dayShown){const gained=now.filter(e=>!dayShown.includes(e.id)),lost=getDayEquipment(game).filter(e=>!e.available&&dayShown.includes(e.id));if(gained.length)setTimeout(()=>toast(`获得${gained.map(e=>`【${e.name}】`).join('')}`),40);else if(lost.length)setTimeout(()=>toast(`昼之半神人数不足，${lost.map(e=>`【${e.name}】`).join('')}已消失`),40);}dayShown=now.map(e=>e.id);}
+function settle(before,action,fx={}){dayNotice();if(game.phase==='supply'&&before.phase!=='supply'){supplyDealAt=Date.now();choiceHidden=false;nodeSelected=null;}if(before.round!==game.round||!atPrep())shopOpen=false;if(game.phase==='prep'&&game.round>1&&!game.flow?.nodeComplete&&(before.round!==game.round||before.phase!=='prep'))queueShopOpen();if(!game.units.some(u=>u.uid===selected))selected=game.units.find(u=>u.zone==='front')?.uid;if(panelUid&&!game.units.some(u=>u.uid===panelUid))panelUid=null;pendingFx={before,action,fx};render();}
 let shopOpenTimer=0;
 function queueShopOpen(){clearTimeout(shopOpenTimer);const round=game.round;shopOpenTimer=setTimeout(()=>{if(game.round!==round||game.phase!=='prep'||tab!=='battle'||modal||modalRoot.firstChild||drag||panelUid||battleAnimating||shopOpen)return;shopOpen=true;render();},reducedMotion()?0:900);}
 function perform(action,{quiet=false,fx={}}={}){const before=captureState();const result=act(game,action);if(result.ok){save();settle(before,action,fx);}if(!quiet||!result.ok)toast(result.message,{error:!result.ok});return result;}
@@ -79,7 +83,7 @@ function unitCard(unit,kind='front') {
  const c=getCharacter(unit.characterId),traits=[...c.traits,...(unit.extraTraits||[])];
  return `<button class="unit-card roster-card star-${unit.star} ${panelUid===unit.uid?'selected':''}" data-key="unit-${unit.uid}" style="--char:${c.color};--rarity:${rarity[c.cost]}" data-action="select" data-uid="${unit.uid}" data-char="${c.id}" data-traits="${traits.join(' ')}" draggable="false" aria-label="${esc(c.name)}，${unit.star}星，${zoneName(unit.zone)}" aria-pressed="${panelUid===unit.uid}">
  <img class="face" src="${portrait(c)}" alt="" draggable="false">${positionBadge(c,kind)}<span class="unit-stars">${'★'.repeat(unit.star)}</span><span class="unit-name">${esc(c.name)}</span>
- <span class="equipped-icons">${unit.items.map(id=>`<span class="equipped-icon tier-${getEquipment(id).tier}" data-tip-kind="item" data-tip-id="${esc(id)}">${itemArt(id)}</span>`).join('')}</span></button>`;
+ <span class="equipped-icons">${unit.items.map(id=>`<span class="equipped-icon tier-${getEquipment(id).tier}" data-tip-kind="item" data-tip-id="${esc(id)}">${itemArt(id)}</span>`).join('')}${getDayEquipment(game).filter(e=>e.available&&e.owner===unit.uid).map(e=>`<span class="equipped-icon tier-2 is-day" data-tip-title="${esc(e.name)}" data-tip="白昼装备">${itemArt(e.art)}</span>`).join('')}</span></button>`;
 }
 
 function emptySlot(zone,index){return `<div class="empty-slot" data-key="slot-${zone}-${index}" data-zone="${zone}" data-slot="${index}" aria-label="${zoneName(zone)}空位 ${index+1}"><span class="slot-ornament"></span></div>`;}
@@ -107,7 +111,7 @@ function benchDock(){const interest=getInterest(game),maxLevel=game.level===MAX_
 
 function shop(){const probabilities=getShopOdds(game),price=getRefreshCost(game),node=getCurrentNode(game);return `<section class="shop ${shopOpen?'':'is-collapsed'}" aria-label="角色商店" ${shopOpen?'':'inert aria-hidden="true"'}><div class="shop-cards">${game.shop.map((id,i)=>{if(!id)return `<div class="shop-sold" data-key="sold-${i}" aria-label="该位置角色已招募"><span class="slot-ornament"></span></div>`;const c=getCharacter(id),cost=getEffectiveCharacterCost(game,id),copies=game.units.filter(u=>u.characterId===id&&u.star===1).length,merge=copies>=2;return `<button class="shop-card ${copies?'is-owned':''} ${merge?'will-merge':''}" data-key="shop-${i}-${id}" data-char="${id}" style="--char:${c.color};--rarity:${rarity[cost]}" data-action="buy" data-index="${i}" ${game.gold<cost?'disabled':''} aria-label="招募${esc(c.name)}，${cost}金币"><img class="face" src="${portrait(c)}" alt="" draggable="false">${positionBadge(c)}${copies?`<span class="owned-badge" aria-label="已拥有${copies}张一星">${[0,1,2].map(n=>`<i class="${n<copies?'on':n===copies?'next':''}"></i>`).join('')}</span>`:''}${merge?'<span class="merge-ribbon">★ 可升星</span>':''}<div class="shop-traits">${c.traits.map(t=>`<span>${traitArt(t)}${traitName(t)}</span>`).join('')}</div><div class="shop-info"><h3>${esc(c.name)}</h3><span class="shop-price">${icon('coin')}${cost}</span></div></button>`;}).join('')}</div><div class="shop-footer"><div class="shop-stage" data-tip-title="${esc(node.label)} · ${esc(node.name)}" data-tip="小队生命 ${game.hp}"><span>${node.label}</span><b>${icon('heart')}${game.hp}</b></div><div class="shop-probs" aria-label="商店费用概率" data-tip-title="Lv.${game.level} 商店概率" data-tip="依次为 1～5 费角色出现的概率；等级越高，高费角色越多。">${probabilities.map((p,i)=>`<span style="color:${rarity[i+1]}"><i></i>${Number(p.toFixed(1))}%</span>`).join('')}</div><button class="shop-search" data-action="tab" data-tab="codex" data-tip="查看角色图鉴" aria-label="查看角色图鉴">${icon('book')}</button><button class="shop-lock ${game.locked?'active':''}" data-action="lock" data-tip-title="${game.locked?'已锁定':'锁定商店'}" data-tip="${game.locked?'下个节点保留当前卡牌，点击解除。':'下个节点保留当前卡牌，不自动刷新。'}" aria-label="${game.locked?'解除商店锁定':'锁定商店'}" aria-pressed="${game.locked}">${icon(game.locked?'lock':'unlock')}</button></div></section><button class="refresh-button ${shopOpen?'':'is-hidden'}" data-action="refresh" ${game.gold<price||!shopOpen?'disabled':''} data-tip-title="刷新商店 · D / R" data-tip="${price===0?`免费刷新，剩余 ${game.freeRefreshes} 次。`:`花费 ${price} 金币重新抽取 5 张卡牌。`}"><kbd>D</kbd><span>${price===0?'免费刷新':'刷新'}</span><strong>${price===0?`剩余 ${game.freeRefreshes}`:`${icon('coin')}${price}`}</strong></button>`;}
 
-function itemSlots(unit){const wrench=usesRevision3(game);return Array.from({length:3},(_,i)=>unit.items[i]?wrench?`<span class="item-slot filled is-worn" data-tip-kind="item" data-tip-id="${esc(unit.items[i])}" data-tip-extra="穿戴后需用拆装扳手取下">${itemArt(unit.items[i])}</span>`:`<button class="item-slot filled" data-action="unequip" data-uid="${unit.uid}" data-index="${i}" data-tip-kind="item" data-tip-id="${esc(unit.items[i])}" data-tip-extra="点击卸下，放回物品栏" aria-label="卸下${getEquipment(unit.items[i]).name}">${itemArt(unit.items[i])}</button>`:dayItems(unit)[i-unit.items.length]?`<button class="item-slot day-slot" data-action="progression-open" data-tip="白昼装备占用此栏，可在羁绊成长中调整">${traitArt('day')}<small>白昼</small></button>`:unit.items.some(id=>getEquipment(id)?.exclusiveSlots)?'<span class="item-slot reserved-slot" data-tip="随便骰子占用此栏">锁定</span>':'<span class="item-slot" data-tip="把右侧物品栏的装备拖到角色身上即可穿戴">＋</span>').join('');}
+function itemSlots(unit){const wrench=usesRevision3(game);return Array.from({length:3},(_,i)=>unit.items[i]?wrench?`<span class="item-slot filled is-worn" data-tip-kind="item" data-tip-id="${esc(unit.items[i])}" data-tip-extra="穿戴后需用拆装扳手取下">${itemArt(unit.items[i])}</span>`:`<button class="item-slot filled" data-action="unequip" data-uid="${unit.uid}" data-index="${i}" data-tip-kind="item" data-tip-id="${esc(unit.items[i])}" data-tip-extra="点击卸下，放回物品栏" aria-label="卸下${getEquipment(unit.items[i]).name}">${itemArt(unit.items[i])}</button>`:dayItems(unit)[i-unit.items.length]?(e=>`<button class="item-slot day-slot" data-action="progression-open" data-tip-title="${esc(e.name)}" data-tip="白昼装备；可在羁绊成长中改派或卸下"><img src="${getEquipmentArtPath(e.art)}" alt=""><small>白昼</small></button>`)(getDayEquipment(game).find(x=>x.id===dayItems(unit)[i-unit.items.length])):unit.items.some(id=>getEquipment(id)?.exclusiveSlots)?'<span class="item-slot reserved-slot" data-tip="随便骰子占用此栏">锁定</span>':'<span class="item-slot" data-tip="把右侧物品栏的装备拖到角色身上即可穿戴">＋</span>').join('');}
 
 // Worn equipment only comes off with a Disassembly Wrench; the card offers the one in the inventory.
 
@@ -140,7 +144,7 @@ function sellZones(){return ['left','right'].map(side=>`<div class="sell-zone se
 function battlePage(){return `${sellZones()}${synergies()}${strategies()}${board()}${benchDock()}${inventory()}${lootField(game)}${battlePanel()}${shop()}${unitPanel()}${itemCard()}`;}
 
 function codex(){const list=CLASSIC_ROSTER.filter(c=>(!codexCost||c.cost===codexCost)&&(!codexQuery||`${c.name}${c.element}${c.traits.map(traitName).join('')}`.includes(codexQuery)));return `<section class="panel page-panel"><div class="tab-page-head"><div><h2>角色图鉴 <span class="tiny-label">CHARACTER ARCHIVE</span></h2><p>${CLASSIC_ROSTER.length} 位同行者 · 零和博弈经典卡池</p></div><span class="number muted">${list.length} / ${CLASSIC_ROSTER.length}</span></div><div class="codex-controls">${[0,1,2,3,4,5].map(n=>`<button class="filter-button ${codexCost===n?'active':''}" data-action="filter" data-cost="${n}">${n?`${n} 费角色`:'全部角色'}</button>`).join('')}<input id="codex-search" class="search-input" placeholder="搜索角色、属性、羁绊" aria-label="搜索角色" value="${esc(codexQuery)}"></div><div class="codex-grid">${list.map(c=>`<button class="unit-card" style="--char:${c.color};--rarity:${rarity[c.cost]}" data-action="character" data-id="${c.id}" aria-label="查看${c.name}"><img src="${c.image}" alt="" loading="lazy"><span class="cost-badge">${icon('coin')}${c.cost}</span><div class="unit-info"><h3>${c.name}</h3><div class="unit-tags">${c.traits.map(t=>`<span>${traitName(t)}</span>`).join('')}</div><small>${c.element} · ${c.role}</small></div></button>`).join('')||'<p class="no-items">没有匹配的角色。</p>'}</div></section>`;}
-function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.7.0</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
+function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.8.0</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
 
 function render(){morph(app,`<main class="classic-scene ${shopOpen&&tab==='battle'?'shop-is-open':''} ${tab!=='battle'?'is-secondary':''}"><div class="scene-rails" aria-hidden="true"><div class="rail-left"></div><div class="rail-right"></div></div>${ARENA_LAYER}${header()}${overview()}${tab==='battle'?battlePage():`<div class="secondary-screen">${codex()}</div>${footer()}`}</main>`);fitGame();renderModal();positionPanel();positionItemCard();if(pendingFx){const job=pendingFx;pendingFx=null;try{runFx(job);}catch(error){console.error(error);}}}
 
@@ -275,7 +279,7 @@ function handleAction(button){const a=button.dataset.action,i=Number(button.data
  case 'reroll-strategy':choiceSelected=null;perform({type:'refresh-strategy',index:i});break;
  case 'close':if(!newRunRequired)closeModal();break;
  case 'backdrop':if(!['choice','result'].includes(game.phase)&&!battleAnimating)closeModal();break;
- case 'progression-open':openModal({type:'progression'});break;
+ case 'progression-open':case 'day-item':openModal({type:'progression'});break;
  case 'progression-select':{const choice=getProgressionPanels(game)[Number(button.dataset.panel)]?.choices?.[Number(button.dataset.choice)];if(choice?.action){perform({type:'progression',...choice.action});}break;}
  case 'trait':openModal({type:'trait',id:button.dataset.id});break;
  case 'item':itemCardIndex=itemCardIndex===i?null:i;panelUid=null;hideTip();render();break;
@@ -305,6 +309,7 @@ function dropTarget(x,y){
  const el=document.elementFromPoint(x,y);if(!el||!app.contains(el))return null;
  if(drag.kind==='tool'){const card=el.closest('.roster-card');if(!card)return null;const tool=(game.consumables||[]).find(c=>c.uid===drag.uid),info=tool&&getConsumable(tool.id),unit=game.units.find(u=>u.uid===card.dataset.uid),name=getCharacter(unit.characterId).name,wrench=['wrench','precision-wrench'].includes(tool?.id),ok=!!info&&(!wrench||unit.items.length>0);return {el:card,type:'tool',uid:card.dataset.uid,ok,label:!info?'道具已不存在':wrench?(ok?`取下${name}的 ${unit.items.length} 件装备`:`${name}没有穿戴装备`):`对${name}使用${info.name}`};}
  if(drag.kind==='chest'){const bench=el.closest('.bench');if(!bench)return null;const spot=el.closest('.bench .roster-card,.bench .empty-slot,.bench .bench-chest');if(!spot)return null;if(spot.dataset.chestUid===drag.uid)return {el:spot,type:'none',ok:true,label:''};return {el:spot,type:'chest-move',position:slotOf(spot),ok:true,label:spot.classList.contains('empty-slot')?'移到这个格子':'交换位置'};}
+ if(drag.kind==='day'){const card=el.closest('.roster-card');if(!card)return null;const u=game.units.find(x=>x.uid===card.dataset.uid),c=u&&getCharacter(u.characterId),entry=getDayEquipment(game).find(e=>e.id===drag.dayId),isDay=!!u&&u.zone!=='bench'&&[...c.traits,...(u.extraTraits||[])].includes('day'),full=!!u&&occupiedSlots(u)>=3;return {el:card,type:'day',uid:card.dataset.uid,ok:!!entry?.available&&isDay&&!full,label:!isDay?'仅能交给上场的昼之半神角色':full?'装备栏已满':`把${entry?.name||'白昼装备'}交给${c.name}`};}
  if(drag.kind==='item'){const other=el.closest('.equipment-rail [data-action="item"]');if(other){const partnerIndex=Number(other.dataset.index),a=game.inventory[drag.index];if(partnerIndex===drag.index)return {el:other,type:'none',ok:true,label:''};const result=getCraftResult(a,game.inventory[partnerIndex]);return {el:other,type:'combine',partnerIndex,ok:!!result,label:result?`合成：${getEquipment(result).name}`:'这两件装备没有合成配方'};}const card=el.closest('.roster-card');if(!card)return null;const preview=getEquipCraftPreview(game,card.dataset.uid,drag.index);return {el:card,type:'equip',uid:card.dataset.uid,ok:preview.ok,label:preview.message,crafted:preview.crafted};}
  if(drag.kind==='unit'){const sell=el.closest('[data-sell-zone]');if(sell){const unit=game.units.find(u=>u.uid===drag.uid);return {el:sell,type:'sell',ok:true,label:`出售 +${getSellPrice(game,unit)} 金币`};}}
  const card=el.closest('.roster-card'),slot=el.closest('.empty-slot'),zoneEl=el.closest('.front-row,.back-row,.bench');
@@ -321,13 +326,13 @@ function startDrag(event){
  const d=drag,r=d.source.getBoundingClientRect(),s=sceneScale();
  // Picking a unit up closes the detail card and, as in the original, hides the shop so the whole board and both sell areas are free.
  if(panelUid||itemCardIndex!==null||d.kind==='unit'&&shopOpen){panelUid=null;itemCardIndex=null;if(d.kind==='unit')shopOpen=false;render();d.source=d.kind==='unit'?app.querySelector(`.roster-card[data-uid="${d.uid}"]`):(d.source.dataset.key&&app.querySelector(`[data-key="${d.source.dataset.key}"]`))||d.source;}
- hideTip();const ghost=document.createElement('div');ghost.className=`drag-ghost drag-${d.kind==='tool'?'item drag-tool':d.kind}`;
+ hideTip();const ghost=document.createElement('div');ghost.className=`drag-ghost drag-${d.kind==='tool'?'item drag-tool':d.kind==='day'?'item':d.kind}`;
  if(d.kind==='chest'){ghost.innerHTML=d.source.querySelector('.bench-chest-art')?.innerHTML||'';d.w=d.h=Math.max(r.width,r.height);}
- else if(d.kind==='item'||d.kind==='tool'){const img=d.source.querySelector('img');ghost.innerHTML=img?`<img src="${img.src}" alt="">`:d.source.querySelector('svg')?.outerHTML||d.source.innerHTML;d.w=d.h=Math.max(46,82*s);}
+ else if(d.kind==='item'||d.kind==='tool'||d.kind==='day'){const img=d.source.querySelector('img');ghost.innerHTML=img?`<img src="${img.src}" alt="">`:d.source.querySelector('svg')?.outerHTML||d.source.innerHTML;d.w=d.h=Math.max(46,82*s);}
  else{const id=d.kind==='unit'?game.units.find(u=>u.uid===d.uid)?.characterId:game.shop[d.index],c=getCharacter(id),unit=d.kind==='unit'?game.units.find(u=>u.uid===d.uid):null;ghost.style.setProperty('--rarity',rarity[d.kind==='shop'?getEffectiveCharacterCost(game,id):c.cost]);ghost.innerHTML=`<img src="${portrait(c)}" alt=""><span class="drag-stars">${'★'.repeat(unit?.star||1)}</span>`;d.w=d.h=d.kind==='shop'?Math.max(70,128*s):Math.max(r.width,r.height);}
  ghost.style.width=`${d.w}px`;ghost.style.height=`${d.h}px`;document.body.append(ghost);d.ghost=ghost;
  const label=document.createElement('div');label.className='drag-label';document.body.append(label);d.label=label;
- d.source.classList.add('is-drag-source');document.body.classList.add(`dragging-${d.kind==='tool'?'item':d.kind}`);
+ d.source.classList.add('is-drag-source');document.body.classList.add(`dragging-${['tool','day'].includes(d.kind)?'item':d.kind}`);
  if(d.kind==='unit'){const u=game.units.find(u=>u.uid===d.uid);document.querySelectorAll('.sell-zone-value').forEach(el=>el.textContent=`+ ${getSellPrice(game,u)} 金币`);}
  d.lastX=event.clientX;d.tilt=0;
 }
@@ -337,9 +342,9 @@ document.addEventListener('pointerdown',event=>{
  const card=event.target.closest('.roster-card'),item=event.target.closest('.equipment-rail [data-action="item"]'),shopCard=event.target.closest('.shop:not(.is-collapsed) .shop-card:not(:disabled)');
  // Consumables that act on a character (wrench, projector, furnace…) are dragged onto it, as in the original.
  const toolEl=event.target.closest('.equipment-rail [data-action="consumable"]'),tool=toolEl&&getConsumable((game.consumables||[]).find(c=>c.uid===toolEl.dataset.uid)?.id)?.requiresTarget?toolEl:null;
- const chestEl=event.target.closest('.bench .bench-chest');
- const source=card||item||tool||chestEl||shopCard;if(!source)return;
- drag={kind:card?'unit':item?'item':tool?'tool':chestEl?'chest':'shop',uid:(card||tool)?.dataset.uid||chestEl?.dataset.chestUid,index:Number((item||shopCard)?.dataset.index),source,x:event.clientX,y:event.clientY,pointerId:event.pointerId,ghost:null,target:null};
+ const chestEl=event.target.closest('.bench .bench-chest'),dayEl=event.target.closest('.equipment-rail [data-action="day-item"]');
+ const source=card||item||tool||dayEl||chestEl||shopCard;if(!source)return;
+ drag={kind:card?'unit':item?'item':tool?'tool':dayEl?'day':chestEl?'chest':'shop',dayId:dayEl?.dataset.dayId,uid:(card||tool)?.dataset.uid||chestEl?.dataset.chestUid,index:Number((item||shopCard)?.dataset.index),source,x:event.clientX,y:event.clientY,pointerId:event.pointerId,ghost:null,target:null};
  try{source.setPointerCapture(event.pointerId);}catch{}
 });
 document.addEventListener('pointermove',event=>{
@@ -366,8 +371,9 @@ document.addEventListener('pointerup',event=>{
  suppressClickUntil=Date.now()+350;
  const target=d.target,ghostRect=d.ghost.getBoundingClientRect(),center={left:ghostRect.left+ghostRect.width/2-d.w/2/1.08,top:ghostRect.top+ghostRect.height/2-d.h/2/1.08,width:d.w/1.08,height:d.h/1.08};
  if(!target||!target.ok||target.type==='none'){if(target&&!target.ok)toast(target.label,{error:true});cancelDrag();return;}
- const kind=d.kind,uid=d.uid,index=d.index,html=d.ghost.innerHTML;endDrag();
+ const kind=d.kind,uid=d.uid,index=d.index,dayId=d.dayId,html=d.ghost.innerHTML;endDrag();
  if(target.type==='sell')perform({type:'sell',uid});
+ else if(target.type==='day')perform({type:'progression',kind:'day-equip',id:dayId,uid:target.uid});
  else if(target.type==='swap')perform({type:'swap',uid,targetUid:target.uid},{quiet:true,fx:{dragUid:uid,dragRect:center}});
  else if(target.type==='move')perform({type:'move',uid,zone:target.zone,position:target.position},{quiet:true,fx:{dragUid:uid,dragRect:center}});
  else if(target.type==='equip'){const result=perform({type:'equip',uid:target.uid,itemIndex:index},{quiet:true,fx:{itemRect:center,itemHtml:html,crafted:target.crafted,componentIndex:getEquipCraftPreview(game,target.uid,index).componentIndex}});if(result.ok)toast(result.message);}
@@ -401,4 +407,4 @@ window.addEventListener('pagehide',save);
 (globalThis.requestIdleCallback||setTimeout)(()=>{for(const e of EQUIPMENT){const img=new Image();img.decoding='async';img.src=getEquipmentArtPath(e.id);}for(const t of TRAITS){const img=new Image();img.src=getEquipmentArtPath(`trait-${t.id}`);}});
 window.addEventListener('resize',fitGame);
 document.addEventListener('fullscreenchange',fitGame);
-save();render();if(recovered)toast('旧存档无法读取，已为你开始新的远征。');
+save();try{dayNotice();}catch{}render();if(recovered)toast('旧存档无法读取，已为你开始新的远征。');

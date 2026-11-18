@@ -1,11 +1,11 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.7.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.7.0';
-import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.7.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.7.0';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss,usesRevision5,usesRevision6,RANK_ENEMY_SCALE} from './classic-flow.js?v=6.7.0';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.7.0';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.7.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.7.0';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.8.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.8.0';
+import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.8.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.8.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss,usesRevision5,usesRevision6,usesRevision7,RANK_ENEMY_SCALE} from './classic-flow.js?v=6.8.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.8.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.8.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.8.0';
 export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,usesRevision5,usesRevision6,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
@@ -448,8 +448,10 @@ function grantRewards(state,contents) {
   return success(`已获得：${names.join('、')}`);
 }
 // Starting Supplies. The run opens with an empty board and the supplies already delivered: four
-// one-star characters on the bench (two recordings and the old client constant), 3 or 4 gold, one
-// basic equipment in the list and one more inside a crystal on the board. A concept environment
+// one-star characters on the bench (two recordings and the old client constant), 3 or 4 gold and one
+// basic equipment inside a crystal on the board. Before revision 7 a second basic item also went
+// straight into the list; REC2 (a contract environment) shows only the wrench there until the crystal
+// is opened, and REC1's list item came from its concept environment. A concept environment
 // turns two of the four into its own characters and supplies the equipment itself; contract
 // environments add their characters on top.
 // Cost spread (revision 4): the two full recordings that show all four, REC2 (1/2/1/2) and V1
@@ -469,7 +471,7 @@ function grantStartingSupplies(state,environmentRewards=[]) {
     if(pool.length)characters.push(pool[Math.floor(random(state)*pool.length)]);
   }
   const supplies=[...characters.map(id=>({kind:'character',id})),{kind:'gold',amount:3+Math.floor(random(state)*2)}];
-  if(!environmentRewards.some(r=>r.kind==='item'))supplies.push({kind:'item',id:pick(state,basics).id});
+  if(!usesRevision7(state)&&!environmentRewards.some(r=>r.kind==='item'))supplies.push({kind:'item',id:pick(state,basics).id});
   const granted=[],queued=[{kind:'item',id:pick(state,basics).id}];
   for(const reward of [...supplies,...environmentRewards]) {
     // Chests keep their own opening flow, and anything that does not fit stays on the board as a crystal.

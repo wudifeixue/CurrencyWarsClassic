@@ -1,6 +1,6 @@
 // Zero-Sum Game route structure. Sources and explicitly adapted values are in
 // docs/classic-flow-research.md and docs/classic-opening-research.md. No weekly/account rewards are simulated here.
-import {CHARACTERS,resolveEquipment} from './data.js?v=6.7.0';
+import {CHARACTERS,resolveEquipment} from './data.js?v=6.8.0';
 export const RUN_MODES=Object.freeze([
   {id:'standard',name:'标准博弈',description:'三个位面，23个节点。奖励、投资、补给、遭遇与首领依次推进；保留利息，经营完整阵容。',nodeCount:23,interest:true,nodeGold:0,nodeXp:2},
   {id:'overclock',name:'超频博弈',description:'更短的三个位面，共16个节点。无利息，每个节点的基础金币和经验更多。',nodeCount:16,interest:false,nodeGold:12,nodeXp:6},
@@ -49,7 +49,9 @@ export const CLASSIC_LEVEL_XP=Object.freeze({4:10,5:20,6:32,7:48,8:64,9:84});
 // equipment, the pick handed over at once and the run moving straight on).
 // Rules revision 6 (v6.7): enemy strength follows each rank (A0–A8) instead of three bands, and a
 // character the player already has at 3 stars stops appearing in the shop and supply.
-export const FLOW_RULES=6;
+// Rules revision 7 (v6.8): the opening puts no basic item in the list; the opening crystal holds the
+// one basic item (REC2 0:56–1:02: only the wrench in the list until the crystal is opened).
+export const FLOW_RULES=7;
 export const START_LEVEL=3;
 export const ZERO_SUM_LEVEL_XP=Object.freeze({3:4,4:6,5:16,6:36,7:48,8:60,9:72});
 export const BOSS_XP=10;
@@ -58,6 +60,7 @@ export const usesRevision3=state=>(state.flow?.rules||1)>=3;
 export const usesRevision4=state=>(state.flow?.rules||1)>=4;
 export const usesRevision5=state=>(state.flow?.rules||1)>=5;
 export const usesRevision6=state=>(state.flow?.rules||1)>=6;
+export const usesRevision7=state=>(state.flow?.rules||1)>=7;
 // Old client ranks (GridFightDivisionLevelShow) and the rules each one adds, decoded from the
 // GridFightDivisionStage environment notes. Effects are cumulative.
 export const RANKS=Object.freeze([
@@ -148,7 +151,7 @@ export function initFlow(mode='standard',difficulty=0,rank=0){
 export function validateFlow(state){
   const f=state.flow;if(f===undefined||f===null)return !['environment','supply','encounter'].includes(state.phase);
   if(!modes.has(f.mode)||!DIFFICULTIES.some(d=>d.id===f.difficulty)||typeof f.nodeComplete!=='boolean')return false;
-  if(f.rules!==undefined&&![2,3,4,5,6].includes(f.rules))return false;
+  if(f.rules!==undefined&&![2,3,4,5,6,7].includes(f.rules))return false;
   if(f.rules>=4&&!RANKS.some(r=>r.id===f.rank))return false;
   if(!Number.isInteger(f.strategySelections)||f.strategySelections<0||!Array.isArray(f.strategyRerolls)||f.strategyRerolls.length!==3||!f.strategyRerolls.every(n=>Number.isInteger(n)&&n>=0&&n<=10))return false;
   if(![f.supplyRerolls,f.encounterRerolls].every(n=>Number.isInteger(n)&&n>=0&&n<=1))return false;

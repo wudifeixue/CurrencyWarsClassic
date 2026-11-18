@@ -1,7 +1,8 @@
-import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.7.0';
-import {getConsumable} from './loot.js?v=6.7.0';
-import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.7.0';
-import {recommendedRoles} from './classic-recommend.js?v=6.7.0';
+import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.8.0';
+import {getConsumable} from './loot.js?v=6.8.0';
+import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.8.0';
+import {recommendedRoles} from './classic-recommend.js?v=6.8.0';
+import {getDayEquipment} from './classic-progression.js?v=6.8.0';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);
@@ -53,7 +54,10 @@ export function inventoryContents(game){
   // One tile per item in the order obtained, as in the old client's 物品栏 (no grouping, no re-sorting),
   // so nothing jumps around after a combine.
   const items=(game.inventory||[]).map((id,index)=>{const e=item(id);if(!e)return '';return `<button class="inventory-item tier-${e.tier} ${e.privileged?'is-privileged':''}" data-key="item-${index}-${esc(id)}" data-action="item" data-index="${index}" data-tip-kind="item" data-tip-id="${esc(id)}" data-tip-extra="拖到角色身上穿戴，拖到另一件装备上合成；点击查看可合成列表" aria-label="装备${esc(e.name)}">${itemImage(id)}</button>`;});
-  return [...consumables,...items].join('')||'<p class="inventory-empty">物品栏<br>暂无装备</p>';
+  // 白昼 equipment that is out (the bond has enough characters) and not yet on anyone: drag it onto a
+  // 昼之半神 character on the field.
+  const day=getDayEquipment(game).filter(e=>e.available&&!e.owner).map(e=>`<button class="inventory-item day-item tier-2" data-key="day-${e.id}" data-action="day-item" data-day-id="${e.id}" data-tip-title="${esc(e.name)}" data-tip="仅【昼之半神】角色可穿戴；场上昼之半神不足 ${e.count} 名时消失。" data-tip-extra="拖到场上的昼之半神角色身上穿戴" aria-label="${esc(e.name)}"><img src="${esc(getEquipmentArtPath(e.art))}" alt="" draggable="false"><span class="inventory-kind">白昼</span></button>`);
+  return [...consumables,...day,...items].join('')||'<p class="inventory-empty">物品栏<br>暂无装备</p>';
 }
 
 const recipeOf=id=>{const base=item(id)?.baseId||id;const entry=Object.entries(RECIPES).find(([,result])=>result===base);return entry?entry[0].split('+'):null;};
