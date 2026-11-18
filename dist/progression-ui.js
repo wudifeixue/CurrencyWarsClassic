@@ -1,9 +1,10 @@
-import {getProgressionPanels} from './classic-progression.js?v=6.5.0';
-import {getTraitArtPath} from './data.js?v=6.5.0';
+import {getProgressionPanels} from './classic-progression.js?v=6.6.0';
+import {getTraitArtPath} from './data.js?v=6.6.0';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function progressionSummary(state) {
  const panels=getProgressionPanels(state),growth=panels.filter(p=>p.progress);
- return `<button class="growth-open" data-action="progression-open" title="查看羁绊成长与独立选择"><span>◇ 羁绊成长</span><small>${growth.length?growth.map(p=>`${p.title.split(' · ')[0]} ${p.progress.value}/${p.progress.max}`).join(' · '):'独立羁绊 · 节点成长'}</small></button>`;
+ // A small icon beside the environment; the progress shows on hover and the details on click.
+ return `<button class="growth-open" data-action="progression-open" data-tip-title="羁绊成长" data-tip="${growth.length?growth.map(p=>`${p.title.split(' · ')[0]} ${p.progress.value}/${p.progress.max}`).join(' · '):'独立羁绊 · 节点成长'}" data-tip-extra="点击查看详情" aria-label="羁绊成长">◇</button>`;
 }
 export function progressionScreen(state) {
  const panels=getProgressionPanels(state),disabled=state.phase!=='prep';

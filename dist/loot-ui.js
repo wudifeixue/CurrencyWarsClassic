@@ -1,6 +1,7 @@
-import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.5.0';
-import {getConsumable} from './loot.js?v=6.5.0';
-import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.5.0';
+import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.6.0';
+import {getConsumable} from './loot.js?v=6.6.0';
+import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.6.0';
+import {recommendedRoles} from './classic-recommend.js?v=6.6.0';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);
@@ -70,9 +71,12 @@ export function craftOptions(inventory,index){
 export function itemDetailCard(game,index){
   const id=game.inventory[index],e=item(id);if(!e)return '';
   const options=craftOptions(game.inventory,index),recipe=recipeOf(id);
+  // 适配角色 (GridFightEquipRecommendRole), as on the original card; characters the player has are lit.
+  const fits=recommendedRoles(id).map(person).filter(Boolean),mine=new Set((game.units||[]).map(u=>u.characterId));
+  const roles=fits.length?`<div class="item-card-section"><h3>适配角色</h3><div class="item-card-roles">${fits.map(c=>`<span class="item-card-role ${mine.has(c.id)?'is-owned':''}" title="${esc(c.name)}${mine.has(c.id)?' · 已拥有':''}"><img src="assets/portraits/${esc(c.id)}.webp" alt="${esc(c.name)}"></span>`).join('')}</div></div>`:'';
   const rows=options.map(o=>{const r=item(o.result),owned=o.partnerIndex>=0,inner=`<span class="craft-plus">＋</span><span class="craft-icon">${itemImage(o.partner)}</span><span class="craft-plus">＝</span><span class="craft-icon is-result">${itemImage(o.result)}</span><span class="craft-name">${esc(r?.name||o.result)}</span>`;
     return owned?`<button class="craft-row is-owned" data-action="combine-with" data-index="${index}" data-partner="${o.partnerIndex}" aria-label="与${esc(item(o.partner)?.name)}合成${esc(r?.name)}">${inner}</button>`:`<div class="craft-row" title="还没有${esc(item(o.partner)?.name)}">${inner}</div>`;}).join('');
-  return `<aside class="item-card" data-key="item-card" role="dialog" aria-label="${esc(e.name)}"><button class="popover-close item-card-close" data-action="item-close" aria-label="关闭">×</button><header class="item-card-head"><span class="item-card-art tier-${e.tier}">${itemImage(id)}</span><div><h2>${esc(e.name)}</h2><small>${itemKind(e)}</small></div></header><p class="item-card-desc">${esc(e.description)}</p>${rows?`<div class="item-card-section"><h3>可合成列表</h3>${rows}</div>`:''}${recipe?`<div class="item-card-section"><h3>合成路线</h3><div class="craft-route">${recipe.map(x=>`<span class="craft-icon">${itemImage(x)}</span>`).join('<span class="craft-plus">＋</span>')}</div></div>`:''}<p class="item-card-hint">拖到角色身上穿戴${rows?'；拖到另一件装备上合成':''}</p></aside>`;
+  return `<aside class="item-card" data-key="item-card" role="dialog" aria-label="${esc(e.name)}"><button class="popover-close item-card-close" data-action="item-close" aria-label="关闭">×</button><header class="item-card-head"><span class="item-card-art tier-${e.tier}">${itemImage(id)}</span><div><h2>${esc(e.name)}</h2><small>${itemKind(e)}</small></div></header><p class="item-card-desc">${esc(e.description)}</p>${roles}${recipe?`<div class="item-card-section"><h3>合成公式</h3><div class="craft-route">${recipe.map(x=>`<span class="craft-icon">${itemImage(x)}</span>`).join('<span class="craft-plus">＋</span>')}</div></div>`:''}${rows?`<div class="item-card-section"><h3>可合成列表</h3>${rows}</div>`:''}<p class="item-card-hint">拖到角色身上穿戴${rows?'；拖到另一件装备上合成':''}</p></aside>`;
 }
 const traitNames=ids=>ids.map(id=>TRAITS.find(t=>t.id===id)?.name).filter(Boolean).join(' · ');
 // The forge choice as in the old client: a panel over the board with four cards; clicking a card
@@ -81,7 +85,7 @@ export function chestScreen(game){
   const chest=(game.chests||[]).find(c=>c.uid===game.activeChest);if(!chest)return '';
   const role=chest.kind==='role',costColor=['','#b8bec8','#6cc2ad','#758afa','#ae84ed','#e4c871'];
   const cards=chest.options.map((id,index)=>{
-    if(role){const c=person(id);if(!c)return '';return `<button class="forge-card is-role" data-action="choose-chest" data-index="${index}" style="--rarity:${costColor[c.cost]}" aria-label="招募${esc(c.name)}"><span class="forge-card-art"><img src="assets/portraits/${esc(c.id)}.png" alt="" draggable="false"></span><span class="forge-card-name">${esc(c.name)}</span><span class="forge-card-meta">${c.cost}费 · ${esc(traitNames(c.traits||[]))}</span></button>`;}
+    if(role){const c=person(id);if(!c)return '';return `<button class="forge-card is-role" data-action="choose-chest" data-index="${index}" style="--rarity:${costColor[c.cost]}" aria-label="招募${esc(c.name)}"><span class="forge-card-art"><img src="assets/portraits/${esc(c.id)}.webp" alt="" draggable="false"></span><span class="forge-card-name">${esc(c.name)}</span><span class="forge-card-meta">${c.cost}费 · ${esc(traitNames(c.traits||[]))}</span></button>`;}
     const e=item(id);if(!e)return '';const recipe=recipeOf(id);
     return `<button class="forge-card tier-${e.tier} ${e.privileged?'is-privileged':''}" data-action="choose-chest" data-index="${index}" aria-label="选择${esc(e.name)}"><span class="forge-card-art">${itemImage(id)}</span><span class="forge-card-name">${esc(e.name)}</span><span class="forge-card-meta">${esc(e.description)}</span>${recipe?`<span class="forge-card-recipe" aria-label="合成路线">${recipe.map(itemImage).join('<b>＋</b>')}</span>`:''}</button>`;
   }).join('');
@@ -91,7 +95,7 @@ export function chestScreen(game){
 function rewardVisual(content){
   if(content.kind==='gold')return {image:'assets/ui/coin.svg',label:`金币 +${content.amount||0}`,target:'.shop-toggle'};
   if(content.kind==='item'){const e=item(content.id);return e?{image:getEquipmentArtPath(e.id),label:e.name,target:'.equipment-heading'}:{markup:consumableArt(content.id),label:getConsumable(content.id)?.name||'道具',target:'.equipment-heading'};}
-  if(content.kind==='character')return {image:`assets/portraits/${content.id}.png`,label:person(content.id)?.name||'角色',target:'.bench'};
+  if(content.kind==='character')return {image:`assets/portraits/${content.id}.webp`,label:person(content.id)?.name||'角色',target:'.bench'};
   if(content.kind==='consumable')return {markup:consumableArt(content.id),label:getConsumable(content.id)?.name||'道具',target:'.equipment-heading'};
   if(content.kind==='chest'){const chest=content.chest||content;return {image:`assets/loot/chest-${chestType(chest)}.png`,label:chestName(chest),target:'.equipment-heading'};}
   if(['xp','hp','refresh'].includes(content.kind))return {markup:`<b class="loot-resource-symbol">${{xp:'EXP',hp:'♥',refresh:'↻'}[content.kind]}</b>`,label:`${{xp:'经验',hp:'小队生命',refresh:'免费刷新'}[content.kind]} +${content.amount||0}`,target:content.kind==='hp'?'.resource.life':content.kind==='xp'?'.experience-button':'.refresh-button'};

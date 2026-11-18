@@ -1,5 +1,5 @@
 // Original Zero-Sum investment environments. Source and known numerical adaptations: docs/classic-environments-research.md.
-import {CLASSIC_ROSTER,TRAITS} from "./data.js?v=6.5.0";
+import {CLASSIC_ROSTER,TRAITS} from "./data.js?v=6.6.0";
 export const CLASSIC_ENVIRONMENTS = [
   {
     "id": "secondhand",

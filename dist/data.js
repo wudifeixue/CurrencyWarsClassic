@@ -1,12 +1,12 @@
-import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.5.0';
+import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.6.0';
 export { LEGACY_TRAITS };
-import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.5.0';
-import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.5.0';
-import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.5.0';
-import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.5.0';
-import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.5.0';
+import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.6.0';
+import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.6.0';
+import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.6.0';
+import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.6.0';
+import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.6.0';
 export { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES };
-export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.5.0';
+export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.6.0';
 export { CLASSIC_SOURCE_SEASON };
 
 const oldCharacters = new Map(OLD_CHARACTERS.map(c => [c.id,c]));
@@ -28,7 +28,7 @@ export const CLASSIC_ROSTER = CLASSIC_CHARACTERS.map(c => {
 });
 const classicIds=new Set(CLASSIC_ROSTER.map(c=>c.id));
 // Existing runs retain their old, now out-of-pool units instead of losing saved progress.
-export const CHARACTERS = [...CLASSIC_ROSTER, ...OLD_CHARACTERS.filter(c=>!classicIds.has(c.id)).map(c=>({...c,legacy:true,allowedZones:['front','back'],empowerments:[],portrait:`assets/portraits/${c.id}.png`,simulationDescription:'旧存档保留角色；不再出现在经典商店中。'}))];
+export const CHARACTERS = [...CLASSIC_ROSTER, ...OLD_CHARACTERS.filter(c=>!classicIds.has(c.id)).map(c=>({...c,legacy:true,allowedZones:['front','back'],empowerments:[],portrait:`assets/portraits/${c.id}.webp`,simulationDescription:'旧存档保留角色；不再出现在经典商店中。'}))];
 export const TRAITS = CLASSIC_TRAITS;
 export const getTraitArtPath = id => ['grail','gamer','mentor','elation','navigator'].includes(id)||!TRAITS.some(t=>t.id===id)?`assets/traits/${id}.svg`:`assets/traits/classic-${id}.png`;
 export const EQUIPMENT = CLASSIC_EQUIPMENT;

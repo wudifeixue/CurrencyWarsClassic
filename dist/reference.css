@@ -2,8 +2,19 @@
 :root { --reference-white:#f6f3ff; --reference-cyan:#79fff4; --reference-gold:#ffda78; }
 #app { width:1920px; height:1080px; display:block; background:#30288a; color:var(--reference-white); }
 #app::before,#app::after { display:none; }
-.classic-scene { position:absolute; inset:0; overflow:hidden; isolation:isolate; font-size:20px; background:#3832ab url('./assets/ui/classic-arena.svg') center/100% 100% no-repeat; }
-.classic-scene:not(.shop-is-open) { background-image:url('./assets/ui/classic-arena-closed.svg'); }
+.classic-scene { position:absolute; inset:0; overflow:hidden; isolation:isolate; font-size:20px; background:#3832ab url('./assets/ui/classic-arena-base.svg') center/100% 100% no-repeat; }
+/* Clamps, divider and back floor slide with the rows when the shop opens or closes (open = shop open). */
+.classic-scene .arena-moving { position:absolute; left:0; top:0; z-index:0; width:1920px; height:1080px; pointer-events:none; overflow:visible; }
+.classic-scene .arena-divider, .classic-scene .arena-clamp { transform-box:view-box; transform-origin:960px 600px; transition:transform .32s cubic-bezier(.2,.8,.25,1); }
+.classic-scene:not(.shop-is-open) .arena-divider { transform:translateY(-70px) scaleX(.98012); }
+.classic-scene:not(.shop-is-open) .arena-clamp-left { transform:translate(14px,-70px); }
+.classic-scene:not(.shop-is-open) .arena-clamp-right { transform:translate(-14px,-70px); }
+.classic-scene .arena-back { transform-box:view-box; transform-origin:960px 1034px; transition:transform .32s cubic-bezier(.2,.8,.25,1), d .32s cubic-bezier(.2,.8,.25,1); }
+.classic-scene:not(.shop-is-open) .arena-back { transform:scaleY(1.16908); }
+@supports (d:path("M0 0")) {
+  .classic-scene.shop-is-open .arena-back { d:path("M300 620H1620L1709 1034H211Z"); }
+  .classic-scene:not(.shop-is-open) .arena-back { transform:none; d:path("M314 550H1606L1709 1034H211Z"); }
+}
 .classic-scene .scene-rails { display:none; }
 .classic-scene .shell { display:contents; }
 .classic-scene button:focus-visible { outline:3px solid #fff5c9; outline-offset:5px; }

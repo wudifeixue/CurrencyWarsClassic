@@ -40,7 +40,7 @@ const roster = [
   ['1203','罗刹',4,'虚数','治疗',['luofu','heal'],120,1350,'生息回轮','持续治愈，帮助阵容稳稳穿过终局。','#c2d5aa'],
   ['1208','符玄',5,'量子','守护',['luofu','shield'],160,1750,'穷观阵','以穷观之阵承接伤害，构筑最终防线。','#d7a8d1'],
 ];
-export const CHARACTERS = roster.map(([id,name,cost,element,role,traits,attack,hp,skill,description,color])=>({id,name,cost,element,role,traits,attack,hp,skill,description,color,image:`assets/characters/${id}.png`}));
+export const CHARACTERS = roster.map(([id,name,cost,element,role,traits,attack,hp,skill,description,color])=>({id,name,cost,element,role,traits,attack,hp,skill,description,color,image:`assets/characters/${id}.webp`}));
 
 export const EQUIPMENT = [
   {id:'knife',name:'折叠小刀',icon:'⚔',color:'#aab6ce',description:'攻击 +30。两件简易装备可以合成进阶装备。',attack:30,tier:1},

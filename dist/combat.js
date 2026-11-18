@@ -1,10 +1,10 @@
-import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.5.0';
-import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.5.0';
-import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.5.0';
-export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.5.0';
-import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.5.0';
+import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.6.0';
+import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.6.0';
+import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.6.0';
+export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.6.0';
+import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.6.0';
 export {CLASSIC_SIMULATION_NOTE};
-import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.5.0';
+import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.6.0';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
 const equipmentEntries=u=>(u.items||[]).map(resolveEquipment).filter(Boolean);

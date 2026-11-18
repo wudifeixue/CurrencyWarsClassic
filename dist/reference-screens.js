@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.5.0';
-import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.5.0';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.6.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.6.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -60,7 +60,7 @@ function overviewPanel(game, battle, won, ended) {
   <section class="reference-overview-team"><h3>我的阵容</h3><div class="reference-overview-roster">${game.units.filter(u => u.zone !== 'bench').map(u => {
     const c = character(u.characterId);
     if (!c) return '';
-    return `<div class="reference-overview-unit" title="${escape(c.name)} · ${u.star} 星 · ${u.zone === 'back' ? '后台' : '前台'}"><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c.cost]}"><img src="assets/portraits/${c.id}.png" alt="${escape(c.name)}"><span class="reference-stat-stars">${'★'.repeat(u.star)}</span><span class="reference-stat-position">${u.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${u.items.map(id => `<img src="${getEquipmentArtPath(id)}" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div></div>`;
+    return `<div class="reference-overview-unit" title="${escape(c.name)} · ${u.star} 星 · ${u.zone === 'back' ? '后台' : '前台'}"><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c.cost]}"><img src="assets/portraits/${c.id}.webp" alt="${escape(c.name)}"><span class="reference-stat-stars">${'★'.repeat(u.star)}</span><span class="reference-stat-position">${u.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${u.items.map(id => `<img src="${getEquipmentArtPath(id)}" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div></div>`;
   }).join('')}</div></section>
   <div class="reference-overview-lower"><section class="reference-overview-record"><h3>本局记录</h3><p><span>累计收入</span><strong>${gem}${number(cumulativeIncome)}</strong></p><p><span>胜 / 负</span><strong>${game.wins} / ${game.losses}</strong></p></section><section class="reference-overview-strategies"><h3>投资策略</h3><div>${game.strategies.map(id => {const s = STRATEGIES.find(item => item.id === id);return s ? `<span title="${escape(s.name)}：${escape(s.description)}">${strategySymbol(id)}<small>${escape(s.name)}</small></span>` : '';}).join('') || '<p class="reference-empty-overview">尚未获得投资策略</p>'}</div></section></div></div>`;
 }
@@ -100,7 +100,7 @@ function settlementPanel(game, battle, won) {
       <section class="settle-stats"><h3>数据统计<button data-action="result-view" data-view="damage" aria-label="查看完整伤害统计">⌕</button></h3>
         ${rows.length ? rows.map(s => {
           const c = character(combat.units?.find(u => u.id === s.id)?.characterId || game.units.find(u => u.uid === s.id)?.characterId);
-          return `<div class="settle-stat" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}">${c ? `<img src="assets/portraits/${c.id}.png" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<div><i style="width:${Math.max(0, Math.min(100, (s.damage || 0) / max * 100))}%"></i></div><b>${compact(s.damage)}</b></div>`;
+          return `<div class="settle-stat" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}">${c ? `<img src="assets/portraits/${c.id}.webp" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<div><i style="width:${Math.max(0, Math.min(100, (s.damage || 0) / max * 100))}%"></i></div><b>${compact(s.damage)}</b></div>`;
         }).join('') : '<p class="settle-empty">本节点没有战斗数据</p>'}
       </section>
     </div>
@@ -135,7 +135,7 @@ export function resultScreen(game, { ended = false, view = 'overview' } = {}) {
           const c = character(initial?.characterId || current?.characterId);
           const unit = current || initial;
           const barHeight = Math.max(0, Math.min(100, (s.damage || 0) / max * 100));
-          return `<div class="reference-damage-column" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}"><div class="reference-damage-bar-space"><div class="reference-damage-bar" style="height:${barHeight}%"><span>${number(s.damage)}</span></div></div><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c?.cost || 1]}">${c ? `<img src="assets/portraits/${c.id}.png" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<span class="reference-stat-stars">${'★'.repeat(unit?.star || 1)}</span><span class="reference-stat-position">${initial?.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${(unit?.items || []).map(id => `<img src="${getEquipmentArtPath(id)}" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div><span class="reference-stat-name">${escape(s.name)}</span></div>`;
+          return `<div class="reference-damage-column" title="${escape(s.name)} · 伤害 ${number(s.damage)} · 治疗 ${number(s.healing)} · 护盾 ${number(s.shielding)}"><div class="reference-damage-bar-space"><div class="reference-damage-bar" style="height:${barHeight}%"><span>${number(s.damage)}</span></div></div><div class="reference-stat-portrait" style="--portrait-rarity:${['', '#b8bccb', '#79b9aa', '#778ce4', '#a47be4', '#c3a451'][c?.cost || 1]}">${c ? `<img src="assets/portraits/${c.id}.webp" alt="${escape(s.name)}">` : `<span>${escape(s.name)}</span>`}<span class="reference-stat-stars">${'★'.repeat(unit?.star || 1)}</span><span class="reference-stat-position">${initial?.zone === 'back' ? '▯' : '▪'}</span></div><div class="reference-stat-equipment">${(unit?.items || []).map(id => `<img src="${getEquipmentArtPath(id)}" alt="${escape(equipment(id)?.name || id)}">`).join('')}</div><span class="reference-stat-name">${escape(s.name)}</span></div>`;
         }).join('')}</div>` : '<div class="reference-no-statistics">这份旧版战报未保存逐角色伤害统计<br><small>下一场战斗将记录完整数据</small></div>'}
       </div>`}
     </div>

@@ -97,10 +97,19 @@ test('the supply screen follows the original layout and client wording',()=>{
   assert.equal((html.match(/class="supply-pack[ "]/g)||[]).length,5);
   for(const text of ['补给阶段','返回备战界面','角色详情','剩余次数：1','已选择0/1','确认'])assert.ok(html.includes(text),text);
   assert.match(html,/data-action="node-confirm" disabled/);
-  for(const o of s.flow.supplyOffers){assert.ok(html.includes(`assets/portraits/${o.rewards[0].id}.png`));assert.ok(html.includes(getEquipment(o.rewards[1].id).name));}
+  for(const o of s.flow.supplyOffers){assert.ok(html.includes(`assets/portraits/${o.rewards[0].id}.webp`));assert.ok(html.includes(getEquipment(o.rewards[1].id).name));}
   const picked=supplyScreen(s,3,{details:true});
   assert.match(picked,/supply-pack is-selected[^>]*data-index="3"/);assert.ok(picked.includes('已选择1/1'));assert.ok(picked.includes('隐藏角色详情'));
   assert.doesNotMatch(picked,/返回备战界面/,'older runs cannot leave the supply screen');
   assert.doesNotMatch(picked,/data-action="node-confirm" disabled/);
   run(s,{type:'reroll-supply'});assert.ok(supplyScreen(s).includes('剩余次数：0'));
+});
+
+test('the arena clamps, divider and back floor are one layer that moves with the board, not two background images',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const css=readFileSync(new URL('../dist/reference.css',import.meta.url),'utf8'),app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  assert.match(css,/classic-arena-base\.svg/);assert.doesNotMatch(css,/classic-arena-closed\.svg/);
+  for(const part of ['arena-back','arena-divider','arena-clamp-left','arena-clamp-right'])assert.ok(app.includes(`class="${part}`)||app.includes(`arena-clamp ${part}`),part);
+  assert.match(css,/:not\(\.shop-is-open\) \.arena-clamp-left \{ transform:translate\(14px,-70px\)/);
+  assert.match(css,/\.arena-divider, \.classic-scene \.arena-clamp \{[^}]*transition:transform \.32s/);
 });
