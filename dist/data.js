@@ -1,12 +1,12 @@
-import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.4.2';
+import { CHARACTERS as OLD_CHARACTERS, STRATEGIES as OLD_STRATEGIES, TRAITS as LEGACY_TRAITS } from './legacy-data.js?v=6.5.0';
 export { LEGACY_TRAITS };
-import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.4.2';
-import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.4.2';
-import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.4.2';
-import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.4.2';
-import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.4.2';
+import { CLASSIC_CHARACTERS, CLASSIC_TRAITS, CLASSIC_SOURCE_SEASON } from './classic-roster.js?v=6.5.0';
+import { CLASSIC_EQUIPMENT, CLASSIC_RECIPES, CLASSIC_STRATEGIES } from './classic-items.js?v=6.5.0';
+import { PRIVILEGED_EQUIPMENT } from './classic-privileged.js?v=6.5.0';
+import { CLASSIC_EMBLEMS } from './classic-emblems.js?v=6.5.0';
+import { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES } from './classic-crafting-data.js?v=6.5.0';
 export { SPECIAL_CRAFTING_EQUIPMENT, SPECIAL_CRAFTING_RECIPES };
-export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.4.2';
+export { LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY, ROUND_COUNT } from './classic-rules.js?v=6.5.0';
 export { CLASSIC_SOURCE_SEASON };
 
 const oldCharacters = new Map(OLD_CHARACTERS.map(c => [c.id,c]));
