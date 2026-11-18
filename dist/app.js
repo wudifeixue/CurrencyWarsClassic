@@ -1,17 +1,17 @@
-import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.5.0';
-import { modeScreen, nodeScreen } from './run-ui.js?v=6.5.0';
-import { supplyScreen } from './supply-ui.js?v=6.5.0';
-import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.5.0';
-import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.5.0';
-import { getProgressionPanels } from './classic-progression.js?v=6.5.0';
-import { choiceScreen, resultScreen } from './reference-screens.js?v=6.5.0';
-import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.5.0';
-import { getConsumable } from './loot.js?v=6.5.0';
-import { combatMarkup } from './battle-ui.js?v=6.5.0';
-import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.5.0';
-import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.5.0';
-import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3, usesRevision5 } from './engine.js?v=6.5.0';
-import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.5.0';
+import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.5.1';
+import { modeScreen, nodeScreen } from './run-ui.js?v=6.5.1';
+import { supplyScreen } from './supply-ui.js?v=6.5.1';
+import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.5.1';
+import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.5.1';
+import { getProgressionPanels } from './classic-progression.js?v=6.5.1';
+import { choiceScreen, resultScreen } from './reference-screens.js?v=6.5.1';
+import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.5.1';
+import { getConsumable } from './loot.js?v=6.5.1';
+import { combatMarkup } from './battle-ui.js?v=6.5.1';
+import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.5.1';
+import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.5.1';
+import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3, usesRevision5 } from './engine.js?v=6.5.1';
+import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.5.1';
 
 const paths = {flame:'M12 2.5c.6 3.2 4.6 5 4.6 10.2A4.6 4.6 0 0 1 12 17.5a4.6 4.6 0 0 1-4.6-4.8c0-2.1 1-3.6 2.2-4.8.1 2 .9 3.1 2 3.4C11.4 8.300 10.900 5.400 12 2.500zM9.500 21.500h5',
  star:'M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z',
@@ -124,9 +124,9 @@ function sellZones(){return ['left','right'].map(side=>`<div class="sell-zone se
 function battlePage(){return `${sellZones()}${synergies()}${strategies()}${board()}${benchDock()}${inventory()}${environmentSummary(game)}${progressionSummary(game)}${lootField(game)}${battlePanel()}${shop()}${unitPanel()}${itemCard()}`;}
 
 function codex(){const list=CLASSIC_ROSTER.filter(c=>(!codexCost||c.cost===codexCost)&&(!codexQuery||`${c.name}${c.element}${c.traits.map(traitName).join('')}`.includes(codexQuery)));return `<section class="panel page-panel"><div class="tab-page-head"><div><h2>角色图鉴 <span class="tiny-label">CHARACTER ARCHIVE</span></h2><p>${CLASSIC_ROSTER.length} 位同行者 · 零和博弈经典卡池</p></div><span class="number muted">${list.length} / ${CLASSIC_ROSTER.length}</span></div><div class="codex-controls">${[0,1,2,3,4,5].map(n=>`<button class="filter-button ${codexCost===n?'active':''}" data-action="filter" data-cost="${n}">${n?`${n} 费角色`:'全部角色'}</button>`).join('')}<input id="codex-search" class="search-input" placeholder="搜索角色、属性、羁绊" aria-label="搜索角色" value="${esc(codexQuery)}"></div><div class="codex-grid">${list.map(c=>`<button class="unit-card" style="--char:${c.color};--rarity:${rarity[c.cost]}" data-action="character" data-id="${c.id}" aria-label="查看${c.name}"><img src="${c.image}" alt="" loading="lazy"><span class="cost-badge">${icon('coin')}${c.cost}</span><div class="unit-info"><h3>${c.name}</h3><div class="unit-tags">${c.traits.map(t=>`<span>${traitName(t)}</span>`).join('')}</div><small>${c.element} · ${c.role}</small></div></button>`).join('')||'<p class="no-items">没有匹配的角色。</p>'}</div></section>`;}
-function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.5.0</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
+function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.5.1</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
 
-function render(){morph(app,`<main class="classic-scene ${shopOpen&&tab==='battle'?'shop-is-open':''} ${tab!=='battle'?'is-secondary':''}"><div class="scene-rails" aria-hidden="true"><div class="rail-left"></div><div class="rail-right"></div></div>${header()}${overview()}${tab==='battle'?battlePage():`<div class="secondary-screen">${codex()}</div>${footer()}`}</main>`);fitGame();renderModal();positionPanel();positionItemCard();if(pendingFx){const job=pendingFx;pendingFx=null;try{runFx(job);}catch(error){console.error(error);}}}
+function render(){morph(app,`<main class="classic-scene ${shopOpen&&tab==='battle'?'shop-is-open':''} ${tab!=='battle'?'is-secondary':''}"><div class="scene-rails" aria-hidden="true"><div class="rail-left"></div><div class="rail-right"></div></div>${ARENA_LAYER}${header()}${overview()}${tab==='battle'?battlePage():`<div class="secondary-screen">${codex()}</div>${footer()}`}</main>`);fitGame();renderModal();positionPanel();positionItemCard();if(pendingFx){const job=pendingFx;pendingFx=null;try{runFx(job);}catch(error){console.error(error);}}}
 
 // Keep the detail card next to its unit, inside the 1920 × 1080 stage.
 function positionPanel(){const panel=app.querySelector('.unit-popover');if(!panel)return;const card=app.querySelector(`.roster-card[data-uid="${panelUid}"]`);if(!card){panel.remove();panelUid=null;return;}const pw=panel.offsetWidth,ph=panel.offsetHeight,left=1724-pw,top=Math.max(118,Math.min(1064-ph,150));panelPos={left,top};panel.style.left=`${left}px`;panel.style.top=`${top}px`;panel.style.visibility='';panel.dataset.side='dock';}
@@ -164,6 +164,10 @@ function modalFrame(body,{wide=false,close=true,center=false}={}){return `<div c
 // Route bar of the supply screen: the board's route for this plane, as in REC1 5:31.
 const ROUTE_ICONS={boss:'crown',strategy:'book',supply:'bag',encounter:'shield',reward:'star',battle:'swords'};
 function supplyRoute(){const node=getCurrentNode(game),nodes=getRunNodes(game).filter(n=>n.plane===node.plane);return `<div class="supply-route" aria-label="博弈进度"><div class="supply-route-stage"><small>备战阶段</small><strong>${node.label}</strong></div><div class="supply-route-nodes">${nodes.map((n,i)=>`<span class="supply-route-node ${n.round<game.round?'done':n.round===game.round?'current':''} ${n.boss?'boss':''}" title="${esc(n.label)} · ${esc(n.name)}">${icon(ROUTE_ICONS[n.type])}${n.round===game.round?`<small>${esc(n.name)}</small>`:''}</span>${i<nodes.length-1?`<i class="${n.round<game.round?'done':''}"></i>`:''}`).join('')}</div><div class="supply-route-life">${icon('heart')}<strong>${game.hp}</strong></div></div>`;}
+// The arena parts that move when the shop opens: the side clamps, the middle divider and the back floor.
+// In the original they slide down with the board (REC1 0:53–0:54, 56:9–57:2); drawn here, rather than in
+// two background images, so they move with the rows instead of jumping.
+const ARENA_LAYER=`<svg class="arena-moving" viewBox="0 0 1920 1080" aria-hidden="true"><defs><linearGradient id="arena-cross" x2="0" y2="1"><stop stop-color="#c7b7ef"/><stop offset=".13" stop-color="#4e4385"/><stop offset=".5" stop-color="#23234f"/><stop offset=".7" stop-color="#8d7bc6"/><stop offset="1" stop-color="#32345e"/></linearGradient></defs><path class="arena-back" d="M300 620H1620L1709 1034H211Z" fill="#5c4ec9" fill-opacity=".11" stroke="#8d87f2" stroke-opacity=".2" stroke-width="2"/><g class="arena-divider"><path d="M311 586H1609l5 29H306Z" fill="#282467" stroke="#9681dc" stroke-width="2"/><path d="M309 595H1612l1 10H307Z" fill="#6154c3"/></g><g class="arena-clamp arena-clamp-left"><path d="M205 526 374 526 355 616 184 616 170 595 185 544Z" fill="#17152b" stroke="#8a7daf" stroke-width="3"/><path d="m202 537 157 0-13 63H189l-7-12z" fill="url(#arena-cross)"/><path d="m203 548 128 0-8 37H195z" fill="#5b5288"/><path d="m211 550 8 1-7 34-8-1z" fill="#ff6ce4"/><path d="m324 547 24 0-7 39h-25z" fill="#24213d"/></g><g class="arena-clamp arena-clamp-right"><g transform="translate(1920 0) scale(-1 1)"><path d="M205 526 374 526 355 616 184 616 170 595 185 544Z" fill="#17152b" stroke="#8a7daf" stroke-width="3"/><path d="m202 537 157 0-13 63H189l-7-12z" fill="url(#arena-cross)"/><path d="m203 548 128 0-8 37H195z" fill="#5b5288"/><path d="m211 550 8 1-7 34-8-1z" fill="#ff6ce4"/><path d="m324 547 24 0-7 39h-25z" fill="#24213d"/></g></g></svg>`;
 let modalKey='';
 // Staggered entrance for choice-style screens; the screens themselves stay static markup.
 function enterScreen(root){stagger(root.querySelectorAll('.reference-choice-column,.run-mode-card,.run-node-offer,.chest-option,.forge-card,.choice-card'),[{transform:'translateY(36px) scale(.96)',opacity:0},{transform:'none',opacity:1}],{duration:420,gap:90});}

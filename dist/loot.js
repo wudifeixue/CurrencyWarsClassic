@@ -1,4 +1,4 @@
-import {EQUIPMENT,TRAITS,CHARACTERS,CLASSIC_ROSTER,BENCH_CAPACITY,resolveEquipment} from './data.js?v=6.5.0';
+import {EQUIPMENT,TRAITS,CHARACTERS,CLASSIC_ROSTER,BENCH_CAPACITY,resolveEquipment} from './data.js?v=6.5.1';
 
 export const LOOT_QUALITIES=['white','blue','gold','prismatic'];
 const consumables={

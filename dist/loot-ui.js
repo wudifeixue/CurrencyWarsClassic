@@ -1,6 +1,6 @@
-import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.5.0';
-import {getConsumable} from './loot.js?v=6.5.0';
-import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.5.0';
+import {EQUIPMENT,CHARACTERS,TRAITS,RECIPES,resolveEquipment,getEquipmentArtPath} from './data.js?v=6.5.1';
+import {getConsumable} from './loot.js?v=6.5.1';
+import {getCraftResult,isCraftingMaterial} from './classic-crafting.js?v=6.5.1';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const item=id=>resolveEquipment(id);

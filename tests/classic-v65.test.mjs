@@ -104,3 +104,12 @@ test('the supply screen follows the original layout and client wording',()=>{
   assert.doesNotMatch(picked,/data-action="node-confirm" disabled/);
   run(s,{type:'reroll-supply'});assert.ok(supplyScreen(s).includes('剩余次数：0'));
 });
+
+test('the arena clamps, divider and back floor are one layer that moves with the board, not two background images',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const css=readFileSync(new URL('../dist/reference.css',import.meta.url),'utf8'),app=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  assert.match(css,/classic-arena-base\.svg/);assert.doesNotMatch(css,/classic-arena-closed\.svg/);
+  for(const part of ['arena-back','arena-divider','arena-clamp-left','arena-clamp-right'])assert.ok(app.includes(`class="${part}`)||app.includes(`arena-clamp ${part}`),part);
+  assert.match(css,/:not\(\.shop-is-open\) \.arena-clamp-left \{ transform:translate\(14px,-70px\)/);
+  assert.match(css,/\.arena-divider, \.classic-scene \.arena-clamp \{[^}]*transition:transform \.32s/);
+});
