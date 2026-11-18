@@ -1,5 +1,5 @@
-import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.4.2';
-import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.4.2';
+import { CHARACTERS, EQUIPMENT, resolveEquipment, getEquipmentArtPath, STRATEGIES, getTraitArtPath } from './data.js?v=6.5.0';
+import { getSynergies, getRunLength, getRunMode, getCurrentNode, getRunNodes, getSellPrice, getLevelXp } from './engine.js?v=6.5.0';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number = value => Math.round(Number(value) || 0).toLocaleString('zh-CN');
@@ -69,6 +69,7 @@ function overviewPanel(game, battle, won, ended) {
 // experience gained, the gold overview with its three sources, crystal ore dropped and battle statistics.
 const compact = value => { const n = Math.round(Number(value) || 0); return n >= 10000 ? `${(n / 1000).toFixed(1)}K` : number(n); };
 const heart = '<svg viewBox="0 0 100 92" aria-hidden="true"><path d="M50 90 6 46V22L24 4h14l12 12L62 4h14l18 18v24Z" fill="currentColor"/><path d="M50 74 20 44V28l8-8h6l16 16 16-16h6l8 8v16Z" fill="none" stroke="#fff8d8" stroke-width="3" opacity=".65"/></svg>';
+// The row only appears when something dropped: REC1's boss settlements (1-9, 2-7) have none.
 const oreNames = { white: '白色晶矿', blue: '蓝色晶矿', gold: '金色晶矿', prismatic: '棱彩晶矿' };
 function settlementPanel(game, battle, won) {
   const combat = battle.combat, overclock = !getRunMode(game).interest;
@@ -93,7 +94,7 @@ function settlementPanel(game, battle, won) {
         <p><span>连胜<i>×${Math.max(0, battle.streak || 0)}</i></span><b>${number(battle.streakIncome)}</b></p>
         <p class="${overclock ? 'is-muted' : ''}"><span>利息${overclock ? '<i>超频博弈不计利息</i>' : ''}</span><b>${number(battle.interestIncome)}</b></p>
         ${other ? `<p><span>策略与其他收益</span><b>${number(other)}</b></p>` : ''}
-        <p class="settle-ores"><span>掉落晶矿</span><b>${ores.length ? ores.map(([quality, count]) => `<i class="settle-ore quality-${escape(quality)}" title="${oreNames[quality] || '晶矿'}"></i>${count}`).join('') : '<small>无</small>'}</b></p>
+        ${ores.length ? `<p class="settle-ores"><span>掉落晶矿</span><b>${ores.map(([quality, count]) => `<i class="settle-ore quality-${escape(quality)}" title="${oreNames[quality] || '晶矿'}"></i>${count}`).join('')}</b></p>` : ''}
         ${notes.length ? `<small class="settle-notes">${notes.map(escape).join(' · ')}</small>` : ''}
       </section>
       <section class="settle-stats"><h3>数据统计<button data-action="result-view" data-view="damage" aria-label="查看完整伤害统计">⌕</button></h3>

@@ -73,8 +73,8 @@ test('level thresholds, node experience and settlement gold follow the recorded 
  reach(s,'1-4');strong(s);run(s,{type:'battle'});assert.equal(s.lastBattle.baseIncome,5);assert.equal(s.lastBattle.won,true);assert.equal(s.streak,2);assert.equal(s.lastBattle.streakIncome,2);
 });
 
-test('supply is a real noncombat node, rewards persist as crystals and cannot repeat',()=>{
- const s=strong(fresh());reach(s,'1-5');assert.equal(s.phase,'supply');
+test('revision 4 supply: a noncombat node whose rewards persist as crystals and cannot repeat',()=>{
+ const s=strong(fresh());s.flow.rules=4;reach(s,'1-5');assert.equal(s.phase,'supply');
  const before=s.history.length,offers=structuredClone(s.flow.supplyOffers);
  run(s,{type:'reroll-supply'});assert.notDeepEqual(s.flow.supplyOffers,offers);
  assert.equal(act(s,{type:'reroll-supply'}).ok,false);

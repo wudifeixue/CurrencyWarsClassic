@@ -1,12 +1,12 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.4.2';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.4.2';
-import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.4.2';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.4.2';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss} from './classic-flow.js?v=6.4.2';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.4.2';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.4.2';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.4.2';
-export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.5.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.5.0';
+import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.5.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.5.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss,usesRevision5} from './classic-flow.js?v=6.5.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.5.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.5.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.5.0';
+export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,usesRevision5,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const strategyIds = new Set(STRATEGIES.map(s=>s.id));
@@ -263,8 +263,37 @@ function enterNode(state) {
   }
 }
 
+// Supply nodes (revision 5). Four recorded supply screens, all at A7 (REC1 1-5, 2-3 and 3-3, REC2
+// 1-5): on the first plane the five characters cost 1–4, about the shop's odds for the player's
+// level; 2-3 offered only 3- and 4-costs and 3-3 only 4- and 5-costs. Planes 1 and 2 paired them
+// with basic equipment and plane 3 with advanced equipment, which matches Fandom's "higher levels
+// will offer rarer characters with better equipment". The client keeps the supply pools on the
+// server, so the plane 2 and 3 weights are estimates from those samples. Five packs, the one re-deal
+// and the diamonds come from talents the recorded accounts had (额外补给, 补给刷新, 钻石闪耀); 1 diamond
+// showed up in 25 recorded packs.
+const SUPPLY_COST_ODDS=Object.freeze({2:[0,0,50,50,0],3:[0,0,0,60,40]});
+export const SUPPLY_DIAMOND_CHANCE=.05;
+export const getSupplyCostOdds=(state,plane=getCurrentNode(state)?.plane)=>SUPPLY_COST_ODDS[plane]||getShopOdds(state);
+function supplyCharacter(state,cost,taken){
+  const ofCost=c=>getEffectiveCharacterCost(state,c.id)===cost;
+  const fresh=CLASSIC_ROSTER.filter(c=>ofCost(c)&&!taken.has(c.id)),pool=fresh.length?fresh:CLASSIC_ROSTER.filter(ofCost);
+  const list=pool.length?pool:CLASSIC_ROSTER.filter(c=>c.cost===cost);
+  let weight=random(state)*list.reduce((total,c)=>total+getEnvironmentShopWeight(state,c),0);
+  return list.find(c=>(weight-=getEnvironmentShopWeight(state,c))<0)||list.at(-1);
+}
 function makeSupplyOffers(state){
   const node=getCurrentNode(state),materials=EQUIPMENT.filter(e=>e.tier===1),count=getEnvironmentRules(state).supplyEquipmentCount||1;
+  if(usesRevision5(state)){
+    const odds=getSupplyCostOdds(state,node.plane),total=odds.reduce((a,b)=>a+b,0),gear=node.plane>=3?EQUIPMENT.filter(e=>e.tier===2):materials,taken=new Set();
+    state.flow.supplyOffers=Array.from({length:5},(_,i)=>{
+      let roll=random(state)*total,cost=5;for(let c=0;c<5;c++){roll-=odds[c];if(roll<0){cost=c+1;break;}}
+      const character=supplyCharacter(state,cost,taken);taken.add(character.id);
+      const itemId=random(state)<SUPPLY_DIAMOND_CHANCE?pick(state,['red-gem','blue-gem']):pick(state,gear).id,item=getEquipment(itemId);
+      const rewards=[{kind:'character',id:character.id,star:1},{kind:'item',id:itemId,amount:count}];
+      return {id:`supply-${state.round}-${i}`,name:`${character.name} · 补给包`,description:`获得${getEffectiveCharacterCost(state,character.id)}费${character.name}，以及${count===2?'2件':''}${item.name}。`,rewards};
+    });
+    state.phase='supply';return;
+  }
   if(usesRevision4(state)){
     // Old-season supply (REC1 1-5, Fandom's node page): five packs, take one, one free re-flip. Each is
     // a character drawn with the player's shop odds plus one basic item; REC1 showed a Red Gem among
@@ -508,6 +537,19 @@ function runAction(state,action) {
   }
   if(action.type==='choose-supply'){
     const offer=state.flow?.supplyOffers[action.index];if(state.phase!=='supply'||!offer)return fail('请选择有效补给。');
+    if(usesRevision5(state)&&isClassicRun(state)){
+      // Original (REC1 5:52, REC2 5:58): 确认 hands the character to the bench and the equipment to the
+      // list at once, and the run goes straight on to the next node. With a full bench the pack is
+      // kept whole as a crystal instead (the character comes first, so nothing is half-granted).
+      const granted=grantRewards(state,offer.rewards);
+      if(!granted.ok)queueRewards(state,offer.rewards,'补给包');
+      const message=granted.ok?granted.message:'备战席已满，补给已化为晶矿，腾出位置后领取。';
+      state.flow.supplyOffers=[];state.phase='prep';
+      if(state.flow.pendingNodeKind){state.flow.extraSupplyDone.push(state.round);state.flow.pendingNodeKind=null;return success(message);}
+      state.flow.nodeComplete=true;
+      const moved=advanceClassicNode(state);
+      return moved.ok?success(`${message}；${moved.message}`):moved;
+    }
     queueRewards(state,offer.rewards,'补给包');state.flow.supplyOffers=[];
     if(state.flow.pendingNodeKind){state.flow.extraSupplyDone.push(state.round);state.flow.pendingNodeKind=null;state.phase='prep';}
     else {state.flow.nodeComplete=true;state.phase='prep';}
@@ -554,8 +596,12 @@ function runAction(state,action) {
   // 返回备战 (revision 4): while an investment strategy is still to be picked, the player may go back to
   // the preparation screen and keep managing the team (REC1 2:20); only the battle waits for the pick.
   const strategyPending=state.phase==='choice'&&state.choiceKind==='strategy'&&isClassicRun(state)&&usesRevision4(state);
+  // The supply screen has the same 返回备战界面 button (revision 5): the team can be managed while
+  // the pick waits.
+  const supplyPending=state.phase==='supply'&&isClassicRun(state)&&usesRevision5(state);
   if(strategyPending&&action.type==='battle')return fail('请先选择投资策略。');
-  if(state.phase!=='prep'&&!strategyPending)return fail('请先完成当前结算或奖励选择。');
+  if(supplyPending&&action.type==='battle')return fail('请先选择补给。');
+  if(state.phase!=='prep'&&!strategyPending&&!supplyPending)return fail('请先完成当前结算或奖励选择。');
   if(state.activeChest&&!['cancel-chest','choose-chest','open-chest'].includes(action.type))return fail('请先选择装备或取消打开武装箱。');
   switch(action.type) {
     case 'collect-loot': {
@@ -706,7 +752,13 @@ function runAction(state,action) {
       state.gold+=income;state[won?'wins':'losses']++;
       const growthRewards=onBattleResolved(state,combat);
       queueRewards(state,growthRewards,'战后羁绊奖励');
-      if(won&&enemy.boss)queueRewards(state,[{kind:'chest',quality:node.plane>=2?'privileged':'advanced'},{kind:'gold',amount:5}],'首领晶矿');
+      // Boss rewards. Revision 5 follows REC1: the boss settlement lists only the 5 base gold, the
+      // streak gold and 10 EXP, with no crystal row, win (1-9) or loss (2-7). The 简易武装 talent the
+      // recorded account had adds one random basic equipment after a first- or second-plane boss is
+      // cleared (a new basic item was in the list at 2-1). Earlier runs keep their boss crystal.
+      const revision5=classic&&usesRevision5(state),bossItem=won&&enemy.boss&&revision5&&node.plane<3?basicItem(state):null;
+      if(bossItem)state.inventory.push(bossItem);
+      if(won&&enemy.boss&&!revision5)queueRewards(state,[{kind:'chest',quality:node.plane>=2?'privileged':'advanced'},{kind:'gold',amount:5}],'首领晶矿');
       if(classic&&won&&node.type==='reward')queueRewards(state,usesRevision4(state)?rewardNodeOrbs(state,node):[{kind:'gold',amount:4+node.plane*2},{kind:'chest',quality:'basic'},{kind:'item',id:pick(state,EQUIPMENT.filter(e=>e.tier===1)).id}],'奖励节点晶矿');
       // Encounter rewards: a win before revision 4. Since then the reward follows the rank notes — below
       // A4 it is always paid, from A4 only when the 25% minimum progress was reached.
@@ -721,7 +773,8 @@ function runAction(state,action) {
       if(has(state,'dividend'))rewards.push('稳定分红 +3');
       if(won&&has(state,'momentum'))rewards.push('乘胜追投 +3');
       if(growthRewards.length)rewards.push(`羁绊产出 ${growthRewards.length} 枚晶矿，返回备战后领取`);
-      if(won&&enemy.boss)rewards.push('首领晶矿已掉落，返回备战后领取');
+      if(bossItem)rewards.push(`简易武装：获得${getEquipment(bossItem).name}`);
+      else if(won&&enemy.boss&&!revision5)rewards.push('首领晶矿已掉落，返回备战后领取');
       state.lastBattle={won,playerPower,enemyPower:enemy.power,damage,income,logs,rewards,enemy:enemy.name,healing,combat,nodeLabel:node.label,nodeType:node.type,progress};
       if(verified)Object.assign(state.lastBattle,{baseIncome,streakIncome:streakBonus+victoryIncome,interestIncome:interest,streak:state.streak,xpGain});
       if(penalty)Object.assign(state.lastBattle,{hpBefore,penalty:won?null:penalty,minProgress});

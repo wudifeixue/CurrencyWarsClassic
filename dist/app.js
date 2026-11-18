@@ -1,16 +1,17 @@
-import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.4.2';
-import { modeScreen, nodeScreen } from './run-ui.js?v=6.4.2';
-import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.4.2';
-import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.4.2';
-import { getProgressionPanels } from './classic-progression.js?v=6.4.2';
-import { choiceScreen, resultScreen } from './reference-screens.js?v=6.4.2';
-import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.4.2';
-import { getConsumable } from './loot.js?v=6.4.2';
-import { combatMarkup } from './battle-ui.js?v=6.4.2';
-import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.4.2';
-import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.4.2';
-import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3 } from './engine.js?v=6.4.2';
-import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.4.2';
+import { environmentScreen, environmentSummary, environmentDetails } from './environment-ui.js?v=6.5.0';
+import { modeScreen, nodeScreen } from './run-ui.js?v=6.5.0';
+import { supplyScreen } from './supply-ui.js?v=6.5.0';
+import { isCraftingMaterial, getEquipCraftPreview, getCraftResult } from './classic-crafting.js?v=6.5.0';
+import { progressionSummary, progressionScreen } from './progression-ui.js?v=6.5.0';
+import { getProgressionPanels } from './classic-progression.js?v=6.5.0';
+import { choiceScreen, resultScreen } from './reference-screens.js?v=6.5.0';
+import { lootField, inventoryContents, chestScreen, chestName, chestType, chestArt, chestDescription, animateLootCollection, consumableArt, itemDetailCard, itemKind } from './loot-ui.js?v=6.5.0';
+import { getConsumable } from './loot.js?v=6.5.0';
+import { combatMarkup } from './battle-ui.js?v=6.5.0';
+import { getEnemyLineup, CLASSIC_SIMULATION_NOTE, getClassicSimulationDescription, getClassicTraitSimulationDescription } from './combat.js?v=6.5.0';
+import { CHARACTERS, CLASSIC_ROSTER, TRAITS, LEGACY_TRAITS, getTraitArtPath, getEquipmentArtPath, EQUIPMENT, STRATEGIES, RECIPES, LEVEL_XP, SHOP_ODDS, MAX_LEVEL, BENCH_CAPACITY, FRONT_CAPACITY } from './data.js?v=6.5.0';
+import { createGame, act, getSynergies, getEnemy, getUnitStats, migrateState, getInterest, getRefreshCost, getPopulationLimit, getEffectiveCharacterCost, getShopOdds, getCharacter, getEquipment, getSellPrice, getCurrentNode, getRunMode, getRunNodes, getRunLength, getLevelXp, getBackCapacity, getBenchCount, usesRevision3, usesRevision5 } from './engine.js?v=6.5.0';
+import { morph, rectMap, flip, fly, floatText, burst, pulse, shake, tweenNumber, stagger, reducedMotion } from './fx.js?v=6.5.0';
 
 const paths = {flame:'M12 2.5c.6 3.2 4.6 5 4.6 10.2A4.6 4.6 0 0 1 12 17.5a4.6 4.6 0 0 1-4.6-4.8c0-2.1 1-3.6 2.2-4.8.1 2 .9 3.1 2 3.4C11.4 8.300 10.900 5.400 12 2.500zM9.500 21.500h5',
  star:'M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z',
@@ -57,9 +58,9 @@ function loadGame(){try{const raw=localStorage.getItem(saveKey);if(raw){const sa
 const zoneName=z=>({front:'前台',back:'后台',bench:'备战席'}[z]);
 const positions=c=>c.allowedZones.map(zoneName).join(' / ');
 const positionBadge=(c,zone)=>{const wrong=zone&&zone!=='bench'&&!c.allowedZones.includes(zone);return `<span class="unit-position classic-position ${wrong?'wrong-position':''}" data-tip-title="赋能位置 · ${positions(c)}" data-tip="${wrong?'当前站位无法激活赋能；仍计入羁绊。':'部署在对应区域才会激活角色赋能。'}"><i class="${c.allowedZones.includes('front')?'is-filled':''}">前</i><i class="${c.allowedZones.includes('back')?'is-filled':''}">后</i></span>`;};
-let itemCardIndex=null,choiceHidden=false;
-// The preparation screen is also live while a strategy pick is put aside with 返回备战.
-const atPrep=()=>game.phase==='prep'||game.phase==='choice'&&choiceHidden&&game.choiceKind==='strategy';
+let itemCardIndex=null,choiceHidden=false,supplyDetails=false,supplyDealAt=0;
+// The preparation screen is also live while a strategy pick or a supply pick is put aside with 返回备战.
+const atPrep=()=>game.phase==='prep'||choiceHidden&&(game.phase==='choice'&&game.choiceKind==='strategy'||game.phase==='supply');
 let game=loadGame(), selected=game.units[1]?.uid, panelUid=null, panelPos=null, pendingFx=null, tab='battle', modal=newRunRequired?{type:'modes'}:null, craft=[], codexCost=0, codexQuery='', battleAnimating=false, toastTimer, battleTimer, previousFocus=null, playback=null, shopOpen=false, enlarged=false, choiceSelected=null, chestSelected=null, resultView='overview', modeSelected='standard', difficultySelected=0, nodeSelected=null, environmentSelected=null;
 const app=document.getElementById('app'),modalRoot=document.getElementById('modal-root');
 const sceneScale=()=>app.getBoundingClientRect().width/1920||1;
@@ -67,7 +68,7 @@ function save(){if(newRunRequired)return;try{localStorage.setItem(saveKey,JSON.s
 function toast(message,{error=false}={}){if(!message)return;const el=document.getElementById('toast'),vp=document.getElementById('game-viewport').getBoundingClientRect(),overlay=!!modalRoot.firstChild;el.textContent=message;el.classList.toggle('is-error',error);el.style.left=`${vp.left+vp.width/2}px`;el.style.top=`${overlay?vp.top+vp.height*.045:vp.top+vp.height*.515}px`;el.style.setProperty('--toast-scale',Math.max(.6,vp.width/1920));el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),error?2100:2500);}
 // Snapshot of what the player can see, so a render can animate from it.
 function captureState(){return {round:game.round,phase:game.phase,gold:game.gold,level:game.level,xp:game.xp,hp:game.hp,units:new Map(game.units.map(u=>[u.uid,{uid:u.uid,star:u.star,characterId:u.characterId,zone:u.zone,items:[...u.items]}])),traits:new Map(getSynergies(game).map(s=>[s.id,s.level])),rects:rectMap(app,'.roster-card[data-uid]','data-uid')};}
-function settle(before,action,fx={}){if(before.round!==game.round||!atPrep())shopOpen=false;if(game.phase==='prep'&&game.round>1&&!game.flow?.nodeComplete&&(before.round!==game.round||before.phase!=='prep'))queueShopOpen();if(!game.units.some(u=>u.uid===selected))selected=game.units.find(u=>u.zone==='front')?.uid;if(panelUid&&!game.units.some(u=>u.uid===panelUid))panelUid=null;pendingFx={before,action,fx};render();}
+function settle(before,action,fx={}){if(game.phase==='supply'&&before.phase!=='supply'){supplyDealAt=Date.now();choiceHidden=false;nodeSelected=null;}if(before.round!==game.round||!atPrep())shopOpen=false;if(game.phase==='prep'&&game.round>1&&!game.flow?.nodeComplete&&(before.round!==game.round||before.phase!=='prep'))queueShopOpen();if(!game.units.some(u=>u.uid===selected))selected=game.units.find(u=>u.zone==='front')?.uid;if(panelUid&&!game.units.some(u=>u.uid===panelUid))panelUid=null;pendingFx={before,action,fx};render();}
 let shopOpenTimer=0;
 function queueShopOpen(){clearTimeout(shopOpenTimer);const round=game.round;shopOpenTimer=setTimeout(()=>{if(game.round!==round||game.phase!=='prep'||tab!=='battle'||modal||modalRoot.firstChild||drag||panelUid||battleAnimating||shopOpen)return;shopOpen=true;render();},reducedMotion()?0:900);}
 function perform(action,{quiet=false,fx={}}={}){const before=captureState();const result=act(game,action);if(result.ok){save();settle(before,action,fx);}if(!quiet||!result.ok)toast(result.message,{error:!result.ok});return result;}
@@ -116,14 +117,14 @@ function inventory(){const count=game.inventory.length+(game.consumables?.length
 function itemCard(){if(itemCardIndex===null||tab!=='battle'||!atPrep())return '';const html=itemDetailCard(game,itemCardIndex);if(!html)itemCardIndex=null;return html;}
 function positionItemCard(){const card=app.querySelector('.item-card');if(!card)return;const tile=app.querySelector(`.equipment-rail [data-action="item"][data-index="${itemCardIndex}"]`),scene=app.querySelector('.classic-scene');if(!tile||!scene){card.style.top='150px';return;}const s=sceneScale(),r=tile.getBoundingClientRect(),base=scene.getBoundingClientRect(),top=(r.top-base.top)/s;card.style.top=`${Math.max(118,Math.min(1064-card.offsetHeight,top-20))}px`;card.querySelector('.item-card-head')?.focus?.();}
 
-function battlePanel(){const node=getCurrentNode(game),noncombat=!node.combat,enemy=noncombat?null:getEnemy(game);if(game.phase==='choice'&&choiceHidden)return `<button class="launch-button choice-reopen" data-action="choice-reopen" data-tip="返回投资策略选择">${icon('arrow')}<span>选择投资策略</span></button>`;return `${enemy?`<button class="enemy-peek" data-action="enemy" data-tip="查看敌方阵容与弱点">${icon(enemy.boss?'crown':'swords')}<span>${enemy.name}</span>${icon('info')}</button>`:'<span class="node-complete-label">补给已选择 · 可整理装备和阵容</span>'}<button class="launch-button" data-action="${noncombat?'next-node':'battle'}" ${game.phase!=='prep'?'disabled':''} data-tip="${noncombat?'前往下一个节点':'开始战斗 · 空格'}">${icon(noncombat?'arrow':'swords')}<span>${noncombat?'继续前进':'出战'}</span></button>`;}
+function battlePanel(){const node=getCurrentNode(game),noncombat=!node.combat,enemy=noncombat?null:getEnemy(game);if(game.phase==='choice'&&choiceHidden)return `<button class="launch-button choice-reopen" data-action="choice-reopen" data-tip="返回投资策略选择">${icon('arrow')}<span>选择投资策略</span></button>`;if(game.phase==='supply'&&choiceHidden)return `<button class="launch-button choice-reopen" data-action="choice-reopen" data-tip="返回补给选择">${icon('arrow')}<span>返回补给阶段</span></button>`;return `${enemy?`<button class="enemy-peek" data-action="enemy" data-tip="查看敌方阵容与弱点">${icon(enemy.boss?'crown':'swords')}<span>${enemy.name}</span>${icon('info')}</button>`:'<span class="node-complete-label">补给已选择 · 可整理装备和阵容</span>'}<button class="launch-button" data-action="${noncombat?'next-node':'battle'}" ${game.phase!=='prep'?'disabled':''} data-tip="${noncombat?'前往下一个节点':'开始战斗 · 空格'}">${icon(noncombat?'arrow':'swords')}<span>${noncombat?'继续前进':'出战'}</span></button>`;}
 
 function sellZones(){return ['left','right'].map(side=>`<div class="sell-zone sell-zone-${side}" data-sell-zone aria-label="拖到此处出售角色"><span>${icon('coin')}</span><strong>出售角色</strong><b class="sell-zone-value">拖到此处</b><small>装备自动返还</small></div>`).join('');}
 
 function battlePage(){return `${sellZones()}${synergies()}${strategies()}${board()}${benchDock()}${inventory()}${environmentSummary(game)}${progressionSummary(game)}${lootField(game)}${battlePanel()}${shop()}${unitPanel()}${itemCard()}`;}
 
 function codex(){const list=CLASSIC_ROSTER.filter(c=>(!codexCost||c.cost===codexCost)&&(!codexQuery||`${c.name}${c.element}${c.traits.map(traitName).join('')}`.includes(codexQuery)));return `<section class="panel page-panel"><div class="tab-page-head"><div><h2>角色图鉴 <span class="tiny-label">CHARACTER ARCHIVE</span></h2><p>${CLASSIC_ROSTER.length} 位同行者 · 零和博弈经典卡池</p></div><span class="number muted">${list.length} / ${CLASSIC_ROSTER.length}</span></div><div class="codex-controls">${[0,1,2,3,4,5].map(n=>`<button class="filter-button ${codexCost===n?'active':''}" data-action="filter" data-cost="${n}">${n?`${n} 费角色`:'全部角色'}</button>`).join('')}<input id="codex-search" class="search-input" placeholder="搜索角色、属性、羁绊" aria-label="搜索角色" value="${esc(codexQuery)}"></div><div class="codex-grid">${list.map(c=>`<button class="unit-card" style="--char:${c.color};--rarity:${rarity[c.cost]}" data-action="character" data-id="${c.id}" aria-label="查看${c.name}"><img src="${c.image}" alt="" loading="lazy"><span class="cost-badge">${icon('coin')}${c.cost}</span><div class="unit-info"><h3>${c.name}</h3><div class="unit-tags">${c.traits.map(t=>`<span>${traitName(t)}</span>`).join('')}</div><small>${c.element} · ${c.role}</small></div></button>`).join('')||'<p class="no-items">没有匹配的角色。</p>'}</div></section>`;}
-function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.4.2</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
+function footer(){return `<footer class="scene-footer"><span>经典回响 · 零和博弈 v6.5.0</span><div><span class="save-indicator">${saveAvailable?'进度已保存':'仅本次会话'}</span><button data-action="help">玩法指南</button><a href="https://github.com/wudifeixue/CurrencyWarsClassic" target="_blank" rel="noopener">GitHub ↗</a></div></footer>`;}
 
 function render(){morph(app,`<main class="classic-scene ${shopOpen&&tab==='battle'?'shop-is-open':''} ${tab!=='battle'?'is-secondary':''}"><div class="scene-rails" aria-hidden="true"><div class="rail-left"></div><div class="rail-right"></div></div>${header()}${overview()}${tab==='battle'?battlePage():`<div class="secondary-screen">${codex()}</div>${footer()}`}</main>`);fitGame();renderModal();positionPanel();positionItemCard();if(pendingFx){const job=pendingFx;pendingFx=null;try{runFx(job);}catch(error){console.error(error);}}}
 
@@ -160,6 +161,9 @@ async function fullscreen(){try{if(document.fullscreenElement)await document.exi
 function openModal(value){previousFocus=document.activeElement;modal=value;renderModal();}
 function closeModal(){if(newRunRequired)return;if(game.activeChest){chestSelected=null;perform({type:'cancel-chest'},{quiet:true});}modal=null;renderModal();const focusTarget=previousFocus?.isConnected?previousFocus:app.querySelector(`[data-action="select"][data-uid="${selected}"]`);focusTarget?.focus?.();}
 function modalFrame(body,{wide=false,close=true,center=false}={}){return `<div class="overlay" data-action="backdrop"><section class="modal ${center?'modal-centered':''}" role="dialog" aria-modal="true" aria-labelledby="modal-heading" tabindex="-1" ${wide?'style="width:min(900px,100%)"':''}>${close?`<button class="icon-button modal-close" data-action="close" aria-label="关闭">${icon('close')}</button>`:''}${body}</section></div>`;}
+// Route bar of the supply screen: the board's route for this plane, as in REC1 5:31.
+const ROUTE_ICONS={boss:'crown',strategy:'book',supply:'bag',encounter:'shield',reward:'star',battle:'swords'};
+function supplyRoute(){const node=getCurrentNode(game),nodes=getRunNodes(game).filter(n=>n.plane===node.plane);return `<div class="supply-route" aria-label="博弈进度"><div class="supply-route-stage"><small>备战阶段</small><strong>${node.label}</strong></div><div class="supply-route-nodes">${nodes.map((n,i)=>`<span class="supply-route-node ${n.round<game.round?'done':n.round===game.round?'current':''} ${n.boss?'boss':''}" title="${esc(n.label)} · ${esc(n.name)}">${icon(ROUTE_ICONS[n.type])}${n.round===game.round?`<small>${esc(n.name)}</small>`:''}</span>${i<nodes.length-1?`<i class="${n.round<game.round?'done':''}"></i>`:''}`).join('')}</div><div class="supply-route-life">${icon('heart')}<strong>${game.hp}</strong></div></div>`;}
 let modalKey='';
 // Staggered entrance for choice-style screens; the screens themselves stay static markup.
 function enterScreen(root){stagger(root.querySelectorAll('.reference-choice-column,.run-mode-card,.run-node-offer,.chest-option,.forge-card,.choice-card'),[{transform:'translateY(36px) scale(.96)',opacity:0},{transform:'none',opacity:1}],{duration:420,gap:90});}
@@ -167,7 +171,8 @@ function renderModal(){let html='';
  if(modal?.type==='modes'){html=modeScreen(game,modeSelected,difficultySelected,newRunRequired);}
  else if(battleAnimating&&playback){html=combatMarkup(playback,game.lastBattle.enemy,game.round);}
  else if(game.phase==='environment'){html=environmentScreen(game,environmentSelected);}
- else if(['supply','encounter'].includes(game.phase)){html=nodeScreen(game,nodeSelected);}
+ else if(game.phase==='supply'&&!choiceHidden){html=supplyScreen(game,nodeSelected,{route:supplyRoute(),canReturn:usesRevision5(game),details:supplyDetails,dealing:Date.now()-supplyDealAt<900});}
+ else if(game.phase==='encounter'){html=nodeScreen(game,nodeSelected);}
  else if(game.phase==='choice'&&!choiceHidden){html=choiceScreen(game,choiceSelected);}
  else if(game.phase==='result'){html=resultScreen(game,{view:resultView});}
  else if(game.phase==='ended'&&!modal){html=resultScreen(game,{ended:true,view:resultView});}
@@ -242,8 +247,9 @@ function handleAction(button){const a=button.dataset.action,i=Number(button.data
  case 'difficulty-select':case 'rank-select':difficultySelected=i;renderModal();break;
  case 'start-run':clearTimeout(battleTimer);game=createGame(undefined,{mode:modeSelected,rank:difficultySelected});newRunRequired=false;selected=game.units[0]?.uid;tab='battle';modal=null;craft=[];battleAnimating=false;playback=null;shopOpen=false;choiceSelected=null;choiceHidden=false;chestSelected=null;nodeSelected=null;environmentSelected=null;save();render();toast('请选择本局投资环境。');break;
  case 'node-select':nodeSelected=i;renderModal();break;
- case 'node-confirm':if(Number.isInteger(nodeSelected)){const result=perform({type:game.phase==='supply'?'choose-supply':'choose-encounter',index:nodeSelected});if(result.ok)nodeSelected=null;}break;
- case 'reroll-supply':case 'reroll-encounter':nodeSelected=null;perform({type:a});break;
+ case 'node-confirm':if(Number.isInteger(nodeSelected)){const result=perform({type:game.phase==='supply'?'choose-supply':'choose-encounter',index:nodeSelected});if(result.ok){nodeSelected=null;choiceHidden=false;}}break;
+ case 'reroll-supply':case 'reroll-encounter':nodeSelected=null;if(a==='reroll-supply')supplyDealAt=Date.now();perform({type:a});break;
+ case 'supply-details':supplyDetails=!supplyDetails;renderModal();break;
  case 'next-node':nodeSelected=null;choiceSelected=null;perform({type:'next-node'});break;
  case 'reroll-strategy':choiceSelected=null;perform({type:'refresh-strategy',index:i});break;
  case 'close':if(!newRunRequired)closeModal();break;
