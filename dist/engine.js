@@ -1,11 +1,11 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.4.1';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.4.1';
-import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.4.1';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.4.1';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss} from './classic-flow.js?v=6.4.1';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.4.1';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.4.1';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.4.1';
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.4.2';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.4.2';
+import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.4.2';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.4.2';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss} from './classic-flow.js?v=6.4.2';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.4.2';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.4.2';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.4.2';
 export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
@@ -264,8 +264,22 @@ function enterNode(state) {
 }
 
 function makeSupplyOffers(state){
-  const node=getCurrentNode(state),cost=Math.min(5,node.plane+1),pool=CLASSIC_ROSTER.filter(c=>c.cost===cost);
-  const materials=EQUIPMENT.filter(e=>e.tier===1),count=getEnvironmentRules(state).supplyEquipmentCount||1;
+  const node=getCurrentNode(state),materials=EQUIPMENT.filter(e=>e.tier===1),count=getEnvironmentRules(state).supplyEquipmentCount||1;
+  if(usesRevision4(state)){
+    // Old-season supply (REC1 1-5, Fandom's node page): five packs, take one, one free re-flip. Each is
+    // a character drawn with the player's shop odds plus one basic item; REC1 showed a Red Gem among
+    // the five, so a diamond can stand in for the item (that 15% chance is an estimate).
+    const odds=getShopOdds(state),taken=new Set();
+    state.flow.supplyOffers=Array.from({length:5},(_,i)=>{
+      let roll=random(state)*odds.reduce((a,b)=>a+b,0),cost=1;for(let c=0;c<5;c++){roll-=odds[c];if(roll<0){cost=c+1;break;}}
+      const pool=CLASSIC_ROSTER.filter(c=>c.cost===cost&&!taken.has(c.id)),character=pick(state,pool.length?pool:CLASSIC_ROSTER.filter(c=>c.cost===cost));taken.add(character.id);
+      const gem=random(state)<.15&&getEquipment('red-gem'),itemId=gem?pick(state,['red-gem','blue-gem']):pick(state,materials).id;
+      const rewards=[{kind:'character',id:character.id,star:1},{kind:'item',id:itemId,amount:count}];
+      return {id:`supply-${state.round}-${i}`,name:`${character.name} · 补给包`,description:`获得${character.cost}费${character.name}，以及${count===2?'2件':''}${getEquipment(itemId).name}。`,rewards};
+    });
+    state.phase='supply';return;
+  }
+  const cost=Math.min(5,node.plane+1),pool=CLASSIC_ROSTER.filter(c=>c.cost===cost);
   state.flow.supplyOffers=Array.from({length:3},(_,i)=>{
     const character=pick(state,pool),item=pick(state,materials);
     const rewards=[{kind:'character',id:character.id,star:1},{kind:'item',id:item.id,amount:count}];
@@ -275,8 +289,28 @@ function makeSupplyOffers(state){
   });
   state.phase='supply';
 }
+// Encounter rewards (revision 4). Fandom's node page: the player picks one of two fights, an easy and
+// a hard one, out of four star tiers; low tiers pay token gold, EXP or free refreshes, higher tiers
+// larger amounts plus basic equipment or 4/5-cost characters, and the 4-star tier Wealth Gems or an
+// advanced equipment selector. The client adds +0 / +5 / +10 / +20 enemy difficulty by tier. Amounts
+// below follow the client's value units and are estimates.
+const ENCOUNTER_TIER_NAMES=['','一星挑战','二星挑战','三星挑战','四星挑战'];
+function encounterRewards(state,level,plane){
+  const pickOne=list=>list[Math.floor(random(state)*list.length)];
+  if(level===1)return [pickOne([{kind:'gold',amount:2+plane},{kind:'xp',amount:4},{kind:'refresh',amount:2}])];
+  if(level===2)return pickOne([[{kind:'gold',amount:3+plane},{kind:'refresh',amount:2}],[{kind:'xp',amount:6},{kind:'gold',amount:2+plane}]]);
+  if(level===3)return pickOne([[{kind:'item',id:pick(state,EQUIPMENT.filter(e=>e.tier===1)).id},{kind:'gold',amount:2+plane}],[{kind:'character',id:pick(state,CLASSIC_ROSTER.filter(c=>c.cost===(plane>=3?5:4))).id}]]);
+  return pickOne([[{kind:'item',id:'wealth-gem'},{kind:'gold',amount:2*plane}],[{kind:'chest',quality:plane>=3?'privileged':'advanced'},{kind:'gold',amount:2*plane}]]);
+}
 function makeEncounterOffers(state){
   const plane=getCurrentNode(state).plane;
+  if(usesRevision4(state)){
+    const low=1+Math.floor(random(state)*3);
+    state.flow.encounterOffers=[low,low+1].map(level=>{
+      const rewards=encounterRewards(state,level,plane);
+      return {id:`encounter-${state.round}-${level}`,name:ENCOUNTER_TIER_NAMES[level],level,hpMultiplier:[0,1,1.15,1.3,1.6][level],attackMultiplier:[0,1,1.1,1.2,1.35][level],description:level===low?'较轻松的一场战斗，奖励较少。':'更强的敌人，奖励更好。',rewards};
+    });state.phase='encounter';return;
+  }
   state.flow.encounterOffers=[1,2,3].map(level=>{
     const rewards=level===1?[{kind:'gold',amount:6+plane*2}]:level===2?[{kind:'chest',quality:'basic'},{kind:'refresh',amount:5}]:[{kind:'chest',quality:plane===3?'privileged':'advanced'},{kind:'gold',amount:8+plane*2}];
     return {id:`encounter-${state.round}-${level}`,name:`难度 ${level}`,level,hpMultiplier:[0,.9,1.2,1.65][level],attackMultiplier:[0,.85,1.05,1.25][level],description:level===1?'较轻的战斗压力，获胜获得金币。':level===2?'更强的敌人，获胜获得简易武装箱与5次免费刷新。':'高难度敌人，获胜获得进阶武装箱和更多金币；第三位面升级为特权箱。',rewards};

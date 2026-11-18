@@ -1,10 +1,10 @@
-import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.4.1';
-import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.4.1';
-import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.4.1';
-export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.4.1';
-import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.4.1';
+import {getEnvironmentUnitModifiers} from './classic-environments.js?v=6.4.2';
+import {getProgressionBattleModifiers, getProgressionUnitTraits, getProgressionTraitCounts, getProgressionNavigatorPartner, getEffectiveCharacterCost} from './classic-progression.js?v=6.4.2';
+import {createCombatMetrics, finishCombatMetrics} from './classic-combat-metrics.js?v=6.4.2';
+export {getClassicSimulationDescription, CLASSIC_SIMULATION_DESCRIPTIONS, getClassicTraitSimulationDescription, CLASSIC_TRAIT_SIMULATION_DESCRIPTIONS} from './classic-simulation-notes.js?v=6.4.2';
+import {classicAction, CLASSIC_SIMULATION_NOTE} from './classic-actions.js?v=6.4.2';
 export {CLASSIC_SIMULATION_NOTE};
-import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.4.1';
+import {CHARACTERS, TRAITS, EQUIPMENT, STRATEGIES, resolveEquipment} from './data.js?v=6.4.2';
 
 const characterMap = new Map(CHARACTERS.map(c => [c.id, c]));
 const equipmentEntries=u=>(u.items||[]).map(resolveEquipment).filter(Boolean);
@@ -200,11 +200,11 @@ export function simulateCombat(state, options={}) {
   const maxSp=5+(trait('sp')?tierValue([2,3,4,5],trait('sp')):0)+allies.filter(a=>a.positionAllowed&&a.characterId==='1306').reduce((n,a)=>n+starValue([2,3,4,5],a),0)+(allies.some(a=>a.positionAllowed&&a.zone==='back'&&a.characterId==='1508')?2:0);
   let time=0, turn=0, allySp=3, enemySp=5, context=null, reactions=[], winner=null, energyConsumed=0, belobogCharge=6, breakCharge=0, consecutiveAllies=0, bloodPool=0;
   // Countdown battles (rules revision 4): the old client never knocks a character down. A fatal blow
-  // restores the character and takes reviveLoss turns off the remaining countdown; one turn is 100
-  // action value. How much HP comes back is not published ("回复部分生命值"); the site uses 50%.
+  // brings the character back at full HP (Fandom's node page) and takes reviveLoss points off the
+  // remaining countdown; one point is 100 of this simulator's action value.
   const countdown=options.countdown&&Number.isFinite(options.countdown.turns)&&options.countdown.turns>0?options.countdown:null;
   let limit=countdown?countdown.turns*100:Infinity, revives=0;
-  const REVIVE_HP=.5, RECORD_CAP=249;
+  const REVIVE_HP=1, RECORD_CAP=249;
   let lastEnergyTime=0;
   const passive=(u,p)=>u.items.some(id=>resolveEquipment(id)?.passive===p);
   const valid=(u,id)=>u.hp>0&&u.characterId===id&&u.positionAllowed!==false;

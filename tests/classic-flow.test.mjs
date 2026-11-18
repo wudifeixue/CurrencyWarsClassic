@@ -86,8 +86,9 @@ test('supply is a real noncombat node, rewards persist as crystals and cannot re
 
 test('encounter branches change enemies and grant selected reward only after victory',()=>{
  const a=strong(fresh('standard','secondhand',2));reach(a,'1-7');const b=structuredClone(a);
- assert.equal(a.phase,'encounter');const low=a.flow.encounterOffers[0],high=a.flow.encounterOffers[2];
- run(a,{type:'choose-encounter',index:0});run(b,{type:'choose-encounter',index:2});
+ assert.equal(a.phase,'encounter');assert.equal(a.flow.encounterOffers.length,2,'an easy and a hard fight');
+ const low=a.flow.encounterOffers[0],high=a.flow.encounterOffers[1];assert.equal(high.level,low.level+1);
+ run(a,{type:'choose-encounter',index:0});run(b,{type:'choose-encounter',index:1});
  assert.ok(getEnemy(b).units[0].maxHp>getEnemy(a).units[0].maxHp);
  assert.ok(getEnemy(b).units[0].attack>getEnemy(a).units[0].attack);
  assert.equal(a.loot.some(l=>l.source==='遭遇奖励'),false);

@@ -1,6 +1,6 @@
 // Zero-Sum Game route structure. Sources and explicitly adapted values are in
 // docs/classic-flow-research.md and docs/classic-opening-research.md. No weekly/account rewards are simulated here.
-import {CHARACTERS,resolveEquipment} from './data.js?v=6.4.1';
+import {CHARACTERS,resolveEquipment} from './data.js?v=6.4.2';
 export const RUN_MODES=Object.freeze([
   {id:'standard',name:'标准博弈',description:'三个位面，23个节点。奖励、投资、补给、遭遇与首领依次推进；保留利息，经营完整阵容。',nodeCount:23,interest:true,nodeGold:0,nodeXp:2},
   {id:'overclock',name:'超频博弈',description:'更短的三个位面，共16个节点。无利息，每个节点的基础金币和经验更多。',nodeCount:16,interest:false,nodeGold:12,nodeXp:6},
@@ -108,12 +108,14 @@ export function getDefeatPenaltyParts(node,progress,{rank=0,revision4=false}={})
   const parts={base:(node.boss?[10,15,20]:[5,10,15])[p],progress:Math.round([10,15,20][p]*missing),threshold:minimum!==null&&progress<minimum?surcharge[p]:0};
   return {...parts,total:parts.base+parts.progress+parts.threshold};
 }
-// Battle countdown in turns (old client TotalTurn): ordinary and encounter battles 18 / 15 / 12 by
-// plane, bosses 20 / 16 / 16, reward nodes 99. Each fatal blow takes 0.25 of a turn off what is left
-// (AvatarReviveDelayLose); from A3 the loss is higher — the client does not show by how much, so the
-// site uses 0.5, an estimate.
+// Battle countdown (old client TotalTurn): ordinary and encounter battles 18 / 15 / 12 by plane,
+// bosses 20 / 16 / 16, reward nodes 99. Fandom's node page gives the same table in action value
+// (180 / 150 / 120, bosses 200 / 160 / 160), so one point is 10 action value in the original. A fallen
+// character returns at full HP for 15 action value (35 from A3), i.e. 1.5 / 3.5 points. The site's
+// two-dimensional battles run each point as 100 of their own action value — ten times the original
+// length, a web adaptation that keeps its enemy health tuning — and charge the revive in points.
 export const getNodeCountdown=node=>{const p=Math.max(0,Math.min(2,(node?.plane||1)-1));return node?.type==='reward'?99:node?.boss?[20,16,16][p]:[18,15,12][p];};
-export const getReviveCountdownLoss=rank=>rank>=3?.5:.25;
+export const getReviveCountdownLoss=rank=>rank>=3?3.5:1.5;
 export const getDefeatPenalty=(node,progress)=>getDefeatPenaltyParts(node,progress).total;
 export function initFlow(mode='standard',difficulty=0,rank=0){
   const r=RANKS.some(x=>x.id===rank)?rank:0;
@@ -139,9 +141,10 @@ export function validateFlow(state){
     return r.kind==='chest'&&['basic','advanced','privileged'].includes(r.quality);
   };
   const validOffer=o=>o&&typeof o.id==='string'&&typeof o.name==='string'&&typeof o.description==='string'&&Array.isArray(o.rewards)&&o.rewards.length>0&&o.rewards.length<10&&o.rewards.every(validReward);
-  const validEncounter=o=>validOffer(o)&&[1,2,3].includes(o.level)&&[o.hpMultiplier,o.attackMultiplier].every(n=>Number.isFinite(n)&&n>=.1&&n<=5);
+  const validEncounter=o=>validOffer(o)&&[1,2,3,4].includes(o.level)&&[o.hpMultiplier,o.attackMultiplier].every(n=>Number.isFinite(n)&&n>=.1&&n<=5);
   if(!f.supplyOffers.every(validOffer)||!f.encounterOffers.every(validEncounter))return false;
   if(f.selectedEncounter!==null&&!validEncounter(f.selectedEncounter))return false;
-  if(state.phase==='supply'&&f.supplyOffers.length!==3||state.phase==='encounter'&&f.encounterOffers.length!==3)return false;
+  // Revision 4 offers five supply packs and two encounters; older saves still hold three of each.
+  if(state.phase==='supply'&&![3,5].includes(f.supplyOffers.length)||state.phase==='encounter'&&![2,3].includes(f.encounterOffers.length))return false;
   return true;
 }

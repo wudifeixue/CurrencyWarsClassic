@@ -16,7 +16,7 @@ test('classic diamond matrix makes all sixteen named emblems in either ingredien
     const id=`trait-${traits[i]}`;
     assert.equal(getCraftResult(gem,part),id);assert.equal(getCraftResult(part,gem),id);
     const s=fixture([gem,'blade',part]);
-    assert.equal(combineInventoryItems(s,2,0).ok,true);assert.deepEqual(s.inventory,['blade',id]);
+    assert.equal(combineInventoryItems(s,2,0).ok,true);assert.deepEqual(s.inventory,[id,'blade'],'the result takes the target slot');
     assert.equal(resolveEquipment(id).trait,traits[i]);
   });
   assert.equal(Object.keys(RECIPES).length,57);
