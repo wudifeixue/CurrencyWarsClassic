@@ -54,11 +54,12 @@
 .classic-scene .char-card-speed div{position:relative;height:18px;background:#2c2b33}
 .classic-scene .char-card-speed i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#5d5b68,#8d8a98)}
 .classic-scene .char-card-speed b{position:relative;display:block;text-align:center;font:600 14px/18px var(--number);color:#fff}
-.classic-scene .char-card-stats{display:grid;grid-template-columns:1fr 1fr;margin:10px 14px 0;border:1px solid #3d3b46;background:#1c1b22}
-.classic-scene .char-card-stats span{display:flex;align-items:baseline;gap:8px;padding:8px 12px}
-.classic-scene .char-card-stats span+span{border-left:1px solid #3d3b46}
-.classic-scene .char-card-stats small{font-size:13px;color:#a9a5b4}
-.classic-scene .char-card-stats b{font:600 18px var(--number);color:#fff}
+.classic-scene .char-card-stats{display:grid;grid-template-columns:repeat(4,1fr);margin:10px 14px 0;border:1px solid #3d3b46;background:#1c1b22}
+.classic-scene .char-card-stats span{display:flex;flex-direction:column;gap:1px;padding:6px 8px;border-top:1px solid #3d3b46}
+.classic-scene .char-card-stats span:not(:nth-child(4n+1)){border-left:1px solid #3d3b46}
+.classic-scene .char-card-stats span:nth-child(-n+4){border-top:0}
+.classic-scene .char-card-stats small{font-size:12px;color:#a9a5b4}
+.classic-scene .char-card-stats b{font:600 16px var(--number);color:#fff}
 .classic-scene .char-card-skill{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px 12px;text-align:left;color:#efeaff;background:#24232b;border:1px solid #6b6876}
 .classic-scene .char-card-skill:hover{border-color:#cfc9de}
 .classic-scene .char-card-skill b{font-size:17px}
@@ -98,3 +99,21 @@
 .item-card-role{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid #5d5a68;opacity:.7}
 .item-card-role.is-owned{border-color:#9ff6e8;opacity:1;box-shadow:0 0 8px #79fff455}
 .item-card-role img{width:100%;height:100%;object-fit:cover}
+
+/* 物品栏: items fill top to bottom and then open a new column to the left, so every item stays
+   visible and draggable (a scrolling list hid everything past the fifth). */
+.classic-scene .equipment-rail{width:auto;max-height:none}
+.classic-scene .equipment-rail .inventory,.classic-scene.shop-is-open .equipment-rail .inventory,.classic-scene:not(.shop-is-open) .equipment-rail .inventory{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-template-rows:repeat(5,74px);grid-auto-columns:74px;direction:rtl;justify-content:end;max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none;padding:0 6px 4px 3px}
+.classic-scene .equipment-rail .inventory>*{direction:ltr}
+.classic-scene .equipment-rail .inventory-item:hover{transform:translateY(-3px)}
+
+/* Bonds not yet active: small icons with count/next, four to a row. */
+.classic-scene .synergy-chips{display:grid;grid-template-columns:repeat(4,48px);gap:10px 8px;padding:10px 0 0 10px}
+.classic-scene .synergy-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;border:0;background:none;color:#a8a0b9;cursor:pointer}
+.classic-scene .synergy-chip .trait-symbol{width:38px;height:38px;opacity:.8}
+.classic-scene .synergy-chip .trait-symbol img{width:24px;height:24px}
+.classic-scene .synergy-chip small{margin-top:9px;font:600 14px/1 var(--number);color:#d6d0e6;text-shadow:0 1px 2px #000}
+.classic-scene .synergy-chip:hover .trait-symbol{opacity:1;filter:brightness(1.2)}
+
+/* Environment pick: shorter cards; the starting characters and items show on the chosen card only. */
+.environment-screen .reference-choice-cards{top:210px;height:540px}

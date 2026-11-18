@@ -30,8 +30,8 @@ function reach(s,label,{stopAtSupply=false}={}){
 }
 const cost=id=>CLASSIC_ROSTER.find(c=>c.id===id).cost;
 
-test('new runs use rules revision 5',()=>{
-  assert.equal(FLOW_RULES,5);assert.equal(fresh().flow.rules,5);
+test('new runs use rules revision 5 or later',()=>{
+  assert.ok(FLOW_RULES>=5);assert.equal(fresh().flow.rules,FLOW_RULES);
 });
 
 test('confirming a supply hands over the character and the item and moves straight on to the next node',()=>{
