@@ -10,7 +10,7 @@ Source URL pattern: `https://raw.githubusercontent.com/Mar-7th/StarRailRes/maste
 
 ## Square portrait cards
 
-The matching 24 square portraits in `portraits/` were downloaded unchanged on 2026-11-13 from [`icon/character`](https://github.com/Mar-7th/StarRailRes/tree/master/icon/character) in the same resource repository. Each PNG is **256 × 256**, and the total size is **2,912,640 bytes**. They use the same character IDs and rights attribution as the previews below.
+The matching 24 square portraits in `portraits/` were downloaded on 2026-11-13 (re-encoded as WebP at the same size in v6.6 to cut the download from about 15 MB to 4 MB) from [`icon/character`](https://github.com/Mar-7th/StarRailRes/tree/master/icon/character) in the same resource repository. Each PNG is **256 × 256**, and the total size is **2,912,640 bytes**. They use the same character IDs and rights attribution as the previews below.
 
 Source URL pattern: `https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/character/<ID>.png`
 
@@ -20,30 +20,30 @@ The 17 vector equipment illustrations in `equipment/`, 12 white trait symbols in
 
 | Local file | Character |
 | --- | --- |
-| `characters/1001.png` | 三月七 |
-| `characters/1002.png` | 丹恒 |
-| `characters/1003.png` | 姬子 |
-| `characters/1004.png` | 瓦尔特 |
-| `characters/1005.png` | 卡芙卡 |
-| `characters/1006.png` | 银狼 |
-| `characters/1008.png` | 阿兰 |
-| `characters/1009.png` | 艾丝妲 |
-| `characters/1013.png` | 黑塔 |
-| `characters/1101.png` | 布洛妮娅 |
-| `characters/1102.png` | 希儿 |
-| `characters/1103.png` | 希露瓦 |
-| `characters/1104.png` | 杰帕德 |
-| `characters/1105.png` | 娜塔莎 |
-| `characters/1106.png` | 佩拉 |
-| `characters/1107.png` | 克拉拉 |
-| `characters/1108.png` | 桑博 |
-| `characters/1109.png` | 虎克 |
-| `characters/1201.png` | 青雀 |
-| `characters/1202.png` | 停云 |
-| `characters/1203.png` | 罗刹 |
-| `characters/1204.png` | 景元 |
-| `characters/1205.png` | 刃 |
-| `characters/1208.png` | 符玄 |
+| `characters/1001.webp` | 三月七 |
+| `characters/1002.webp` | 丹恒 |
+| `characters/1003.webp` | 姬子 |
+| `characters/1004.webp` | 瓦尔特 |
+| `characters/1005.webp` | 卡芙卡 |
+| `characters/1006.webp` | 银狼 |
+| `characters/1008.webp` | 阿兰 |
+| `characters/1009.webp` | 艾丝妲 |
+| `characters/1013.webp` | 黑塔 |
+| `characters/1101.webp` | 布洛妮娅 |
+| `characters/1102.webp` | 希儿 |
+| `characters/1103.webp` | 希露瓦 |
+| `characters/1104.webp` | 杰帕德 |
+| `characters/1105.webp` | 娜塔莎 |
+| `characters/1106.webp` | 佩拉 |
+| `characters/1107.webp` | 克拉拉 |
+| `characters/1108.webp` | 桑博 |
+| `characters/1109.webp` | 虎克 |
+| `characters/1201.webp` | 青雀 |
+| `characters/1202.webp` | 停云 |
+| `characters/1203.webp` | 罗刹 |
+| `characters/1204.webp` | 景元 |
+| `characters/1205.webp` | 刃 |
+| `characters/1208.webp` | 符玄 |
 
 
 ## Classic roster expansion (2026-11-13)

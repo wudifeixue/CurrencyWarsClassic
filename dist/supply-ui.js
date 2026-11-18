@@ -2,8 +2,8 @@
 // backdrop under the route bar, five packs of a character card above the equipment it carries, the
 // re-deal counter (剩余次数) and 已选择 0/1 beside 确认, 角色详情 bottom-left and 返回备战界面 top-right.
 // Labels are the Chinese client strings (TextMapCHS).
-import { CHARACTERS, TRAITS, LEGACY_TRAITS, resolveEquipment, getEquipmentArtPath, getTraitArtPath } from './data.js?v=6.5.1';
-import { getEffectiveCharacterCost } from './engine.js?v=6.5.1';
+import { CHARACTERS, TRAITS, LEGACY_TRAITS, resolveEquipment, getEquipmentArtPath, getTraitArtPath } from './data.js?v=6.6.0';
+import { getEffectiveCharacterCost } from './engine.js?v=6.6.0';
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const RARITY = ['', '#8d929c', '#3f9e8a', '#5d6fe0', '#9a68dc', '#d6a83e'];
@@ -23,7 +23,7 @@ function packCard(game, offer, index, selected, details) {
   const detail = (c.empowerments || []).map(e => `<span><b>${zoneLabel(e.zone) || ''} · ${esc(e.name)}</b>${esc(e.description)}</span>`).join('') || `<span>${esc(c.description || '')}</span>`;
   return `<button class="supply-pack ${picked ? 'is-selected' : ''}" style="--rarity:${RARITY[cost] || RARITY[1]};--deal:${index}" data-action="node-select" data-index="${index}" aria-pressed="${picked}" aria-label="${esc(c.name)}（${cost}费）与${esc(item?.name || '')}">
     <span class="supply-card">
-      <img class="supply-face" src="assets/portraits/${esc(c.id)}.png" alt="" draggable="false">
+      <img class="supply-face" src="assets/portraits/${esc(c.id)}.webp" alt="" draggable="false">
       <span class="supply-zones" title="赋能位置 · ${(c.allowedZones || []).map(zoneLabel).join(' / ')}"><i class="${c.allowedZones?.includes('front') ? 'on' : ''}"></i><i class="${c.allowedZones?.includes('back') ? 'on' : ''}"></i></span>
       ${owned ? `<span class="supply-owned" title="已拥有 ${owned} 名"></span>` : ''}
       <span class="supply-traits">${c.traits.map(t => `<span><img src="${getTraitArtPath(t)}" alt="" draggable="false">${esc(traitName(t))}</span>`).join('')}</span>

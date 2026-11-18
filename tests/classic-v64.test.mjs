@@ -127,7 +127,7 @@ test('the item card lists what an item combines into, and owned partners combine
   assert.equal((html.match(/class="craft-row is-owned"/g)||[]).length,3,'star, the second knife and the red gem');
   const r=run(s,{type:'combine',indexA:0,indexB:1});assert.equal(r.index,0);
   assert.equal(getEquipment(s.inventory[0]).tier,2,'the result sits where the target was');assert.deepEqual(s.inventory.slice(1),['knife','red-gem']);
-  assert.match(itemDetailCard(s,0),/合成路线/);
+  assert.match(itemDetailCard(s,0),/合成公式/);assert.match(itemDetailCard(s,0),/适配角色/);
   // Repeated combines never leave the consumed pair behind.
   s.inventory=['knife','star','knife','star'];run(s,{type:'combine',indexA:0,indexB:1});run(s,{type:'combine',indexA:1,indexB:2});
   assert.equal(s.inventory.length,2);assert.ok(s.inventory.every(id=>getEquipment(id).tier===2));

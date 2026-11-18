@@ -97,7 +97,7 @@ test('the supply screen follows the original layout and client wording',()=>{
   assert.equal((html.match(/class="supply-pack[ "]/g)||[]).length,5);
   for(const text of ['补给阶段','返回备战界面','角色详情','剩余次数：1','已选择0/1','确认'])assert.ok(html.includes(text),text);
   assert.match(html,/data-action="node-confirm" disabled/);
-  for(const o of s.flow.supplyOffers){assert.ok(html.includes(`assets/portraits/${o.rewards[0].id}.png`));assert.ok(html.includes(getEquipment(o.rewards[1].id).name));}
+  for(const o of s.flow.supplyOffers){assert.ok(html.includes(`assets/portraits/${o.rewards[0].id}.webp`));assert.ok(html.includes(getEquipment(o.rewards[1].id).name));}
   const picked=supplyScreen(s,3,{details:true});
   assert.match(picked,/supply-pack is-selected[^>]*data-index="3"/);assert.ok(picked.includes('已选择1/1'));assert.ok(picked.includes('隐藏角色详情'));
   assert.doesNotMatch(picked,/返回备战界面/,'older runs cannot leave the supply screen');

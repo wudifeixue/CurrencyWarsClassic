@@ -159,6 +159,8 @@ test('squad HP loss follows the old penalty table: fixed part, unfinished progre
 
 test('units stand in fixed slots: gaps stay, a taken slot trades places, rows have 4, 6 and 9 places',()=>{
  const s=createGame(7,{mode:'standard'});run(s,{type:'choose-environment',id:s.environment.choices[0]});
+ // Four different characters: the field never holds two copies of one (无法上阵同名角色).
+ s.units.forEach((u,i)=>{u.characterId=['1001','1009','1013','1108'][i];});
  assert.deepEqual(s.units.map(u=>u.slot),[0,1,2,3],'supplies fill the bench from the left');
  const [a,b,c,d]=s.units.map(u=>u.uid),slot=uid=>{const u=s.units.find(x=>x.uid===uid);return `${u.zone}${u.slot}`;};
  run(s,{type:'move',uid:a,zone:'front',position:2});assert.equal(slot(a),'front2');
@@ -178,7 +180,7 @@ test('units stand in fixed slots: gaps stay, a taken slot trades places, rows ha
  const old=structuredClone(s);for(const u of old.units)delete u.slot;
  const migrated=migrateState(old);assert.ok(migrated);
  assert.deepEqual(migrated.units.filter(u=>u.zone==='front').map(u=>u.slot),[0,1],'saves without slots line up from the left');
- s.level=10;s.units.push(...Array.from({length:8},(_,i)=>({uid:`extra-${i}`,characterId:'1013',star:3,zone:'bench',items:[]})));
+ s.level=10;const others=CLASSIC_ROSTER.filter(c=>!['1001','1009','1013','1108'].includes(c.id));s.units.push(...Array.from({length:8},(_,i)=>({uid:`extra-${i}`,characterId:others[i].id,star:3,zone:'bench',items:[]})));
  run(s,{type:'move',uid:a,zone:'front'});
  for(let i=0;i<5;i++)run(s,{type:'move',uid:`extra-${i}`,zone:'back'});
  assert.equal(s.units.filter(u=>u.zone==='back').length,6);

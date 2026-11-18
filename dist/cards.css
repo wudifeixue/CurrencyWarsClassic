@@ -1,0 +1,100 @@
+/* Cards and side panels after the old client (REC1 0:54, 11:49, 12:26). Loaded last, so these win. */
+
+/* 前台 / 后台 mark: two stacked squares, filled where the empowerment works; no text. */
+.classic-scene .classic-position{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:24px;height:34px;min-width:0;padding:0;background:#0a0912ee;border:0;font-size:0;clip-path:polygon(0 0,100% 0,100% 100%,7px 100%,0 calc(100% - 7px))}
+.classic-scene .classic-position i{display:block;width:12px!important;height:10px!important;padding:0!important;border:2px solid #fff!important;background:transparent!important;font-size:0!important;color:transparent!important}
+.classic-scene .classic-position i.is-filled{background:#fff!important}
+.classic-scene .classic-position.wrong-position{outline:none;background:#5c1022f0}
+.classic-scene .classic-position.wrong-position i{border-color:#ffa3b0!important}
+.classic-scene .classic-position.wrong-position i.is-filled{background:#ffa3b0!important}
+.classic-scene .shop-card .classic-position{width:30px;height:42px}
+.classic-scene .shop-card .classic-position i,.classic-scene .roster-card .classic-position i{border:2px solid #fff!important;padding:0!important}
+.classic-scene .shop-card .classic-position i{width:14px!important;height:12px!important}
+
+/* Shop: cards about the original's size (190 × 210 at 1080p, REC1 0:54) with bonds and name only. */
+.classic-scene .shop{left:300px;width:1120px;height:292px;padding:26px 22px 22px}
+.classic-scene .shop-cards{gap:14px;height:236px}
+.classic-scene .shop-card{height:236px}
+.classic-scene .shop-card img.face{object-position:50% 22%}
+.classic-scene .shop-traits>span{height:27px;font-size:18px}
+.classic-scene .shop-info h3{font-size:22px}
+.classic-scene .shop-footer{top:290px}
+
+/* Bond list: smaller rows; an inactive bond shows only "count/next". Details on hover and click. */
+.classic-scene .synergy-list{gap:4px}
+.classic-scene .synergy{grid-template-columns:48px 1fr;gap:8px;min-height:58px;padding:4px 4px 4px 8px}
+.classic-scene .synergy .trait-symbol{width:44px;height:44px}
+.classic-scene .synergy .trait-symbol img{width:28px;height:28px}
+.classic-scene .synergy-name{font-size:17px;line-height:1.2}
+.classic-scene .synergy-count{font-size:17px;line-height:1.2}
+.classic-scene .synergy:not(.activated){opacity:.86}
+
+/* Environment and 羁绊成长 as small icons in the top-centre row, beside the strategies. */
+.classic-scene .strategy-pins .environment-open,.classic-scene .strategy-pins .growth-open{position:relative;left:auto;top:auto;width:37px;height:37px;min-width:0;max-width:none;padding:0;display:grid;place-items:center;transition:none}
+.classic-scene .strategy-pins .environment-open img{width:30px;height:30px;object-fit:contain;position:static}
+.classic-scene .strategy-pins .growth-open{font-size:20px;color:#bfe8ff}
+
+/* Character card */
+.classic-scene .char-card{width:400px;padding:0 0 14px;background:linear-gradient(175deg,#232129 0%,#17161c 60%,#121116 100%);border:1px solid #5d5a68}
+.classic-scene .char-card-head{position:relative;display:grid;grid-template-columns:76px 1fr;gap:12px;align-items:center;padding:14px 46px 10px 14px}
+.classic-scene .char-card-face{width:76px;height:76px;border:2px solid var(--rarity);background:#0d0c12;overflow:hidden}
+.classic-scene .char-card-face img{width:100%;height:100%;object-fit:cover}
+.classic-scene .char-card-title h2{margin:0;font-size:24px;line-height:1.2}
+.classic-scene .char-card-title .popover-stars{font-size:17px;letter-spacing:1px}
+.classic-scene .char-card-where{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:15px;color:#dcd8e6}
+.classic-scene .char-card-where.is-off{color:#ff9fae}
+.classic-scene .char-card-where .classic-position{position:static;width:18px;height:26px;gap:2px;clip-path:none;background:transparent}
+.classic-scene .char-card-where .classic-position i{width:10px!important;height:8px!important}
+.classic-scene .char-card-cost{position:absolute;right:48px;top:14px;display:flex;align-items:center;gap:3px;font:600 18px var(--number);color:#ffe3a4}
+.classic-scene .char-card-cost .icon{width:20px;height:20px}
+.classic-scene .char-card-role{position:absolute;right:14px;bottom:12px;padding:2px 8px;font-size:13px;color:#3a2a0e;background:#e3c46f}
+.classic-scene .char-card .popover-traits{padding:4px 14px 0}
+.classic-scene .char-card-speed{margin:12px 14px 0}
+.classic-scene .char-card-speed small{display:block;font-size:13px;color:#a9a5b4;margin-bottom:4px}
+.classic-scene .char-card-speed div{position:relative;height:18px;background:#2c2b33}
+.classic-scene .char-card-speed i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#5d5b68,#8d8a98)}
+.classic-scene .char-card-speed b{position:relative;display:block;text-align:center;font:600 14px/18px var(--number);color:#fff}
+.classic-scene .char-card-stats{display:grid;grid-template-columns:1fr 1fr;margin:10px 14px 0;border:1px solid #3d3b46;background:#1c1b22}
+.classic-scene .char-card-stats span{display:flex;align-items:baseline;gap:8px;padding:8px 12px}
+.classic-scene .char-card-stats span+span{border-left:1px solid #3d3b46}
+.classic-scene .char-card-stats small{font-size:13px;color:#a9a5b4}
+.classic-scene .char-card-stats b{font:600 18px var(--number);color:#fff}
+.classic-scene .char-card-skill{display:block;width:calc(100% - 28px);margin:10px 14px 0;padding:10px 12px;text-align:left;color:#efeaff;background:#24232b;border:1px solid #6b6876}
+.classic-scene .char-card-skill:hover{border-color:#cfc9de}
+.classic-scene .char-card-skill b{font-size:17px}
+.classic-scene .char-card-skill em{display:inline-block;margin-left:8px;padding:1px 6px;font-style:normal;font-size:12px;color:#d9f6ff;background:#3a7a8c}
+.classic-scene .char-card-skill p{margin:6px 0 0;font-size:14px;line-height:1.5;color:#d6d2e0}
+.classic-scene .char-card-gear{display:flex;align-items:center;gap:10px;margin:12px 14px 0}
+.classic-scene .char-card-recommend{flex:none;padding:8px 12px;font-size:14px;color:#fff;background:#2b2a33;border:1px solid #8c899a;border-radius:18px}
+.classic-scene .char-card-recommend:hover,.classic-scene .char-card-recommend.is-open{color:#1d1c22;background:#f1eff6;border-color:#fff}
+.classic-scene .char-card .popover-items{margin:0;gap:8px}
+.classic-scene .char-card .popover-items .item-slot{width:52px;height:52px}
+.classic-scene .char-card-foot{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin:12px 14px 0}
+.classic-scene .char-card-foot>button:first-child{padding:9px 12px;font-size:15px;color:#fff;background:#2b2a33;border:1px solid #6b6876;border-radius:20px}
+.classic-scene .char-card-foot>button:first-child:hover{border-color:#fff}
+.classic-scene .char-card .popover-sell{width:auto;margin:0;border-radius:20px;justify-content:center;gap:8px}
+.classic-scene .char-card .popover-sell b{margin-left:0;font-size:18px}
+.classic-scene .char-card .popover-sell span{font-size:16px}
+
+/* 推荐装备 popup, to the left of the card as in the original */
+.classic-scene .recommend-panel{position:absolute;right:calc(100% + 10px);top:160px;width:330px;padding:12px 14px 14px;background:#141318f2;border:1px solid #5d5a68;box-shadow:0 12px 30px #000a}
+.classic-scene .unit-popover[data-side="right"] .recommend-panel{right:auto;left:calc(100% + 10px)}
+.classic-scene .recommend-panel h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:16px;color:#fff}
+.classic-scene .recommend-panel h3 small{font-size:12px;color:#a9a5b4;font-weight:400}
+.classic-scene .recommend-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.classic-scene .recommend-row.is-second{margin-top:10px;padding-top:10px;border-top:1px solid #34323c}
+.classic-scene .recommend-item{display:flex;align-items:center;gap:4px}
+.classic-scene .recommend-main{width:56px;height:56px;border:2px solid #6b6876;background:#1e1d24}
+.classic-scene .recommend-main img{width:100%;height:100%;object-fit:contain}
+.classic-scene .recommend-parts{display:flex;flex-direction:column;gap:3px}
+.classic-scene .recommend-parts span{width:26px;height:26px;border:1px solid #4a4855;background:#1e1d24;opacity:.55}
+.classic-scene .recommend-parts span.is-owned{opacity:1;border-color:#9ff6e8}
+.classic-scene .recommend-parts img{width:100%;height:100%;object-fit:contain}
+.classic-scene .recommend-item.is-owned .recommend-main{border-color:#ffe08a;box-shadow:0 0 10px #ffe08a66}
+.classic-scene .recommend-empty{margin:0;font-size:14px;color:#a9a5b4}
+
+/* 适配角色 on the item card */
+.item-card-roles{display:flex;flex-wrap:wrap;gap:6px}
+.item-card-role{width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid #5d5a68;opacity:.7}
+.item-card-role.is-owned{border-color:#9ff6e8;opacity:1;box-shadow:0 0 8px #79fff455}
+.item-card-role img{width:100%;height:100%;object-fit:cover}
