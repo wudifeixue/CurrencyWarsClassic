@@ -1,8 +1,8 @@
-import {getRunLength} from './classic-flow.js?v=6.7.0';
+import {getRunLength} from './classic-flow.js?v=6.8.0';
 // Old Zero-Sum Game persistent bonds. References and simulator boundaries:
 // docs/classic-progression-research.md. No dependency on engine or combat.
-import {CLASSIC_CHARACTERS,CLASSIC_TRAITS} from './classic-roster.js?v=6.7.0';
-import {CLASSIC_EQUIPMENT} from './classic-items.js?v=6.7.0';
+import {CLASSIC_CHARACTERS,CLASSIC_TRAITS} from './classic-roster.js?v=6.8.0';
+import {CLASSIC_EQUIPMENT} from './classic-items.js?v=6.8.0';
 const chars=new Map(CLASSIC_CHARACTERS.map(c=>[c.id,c]));
 const traits=new Map(CLASSIC_TRAITS.map(t=>[t.id,t]));
 const gear=new Map(CLASSIC_EQUIPMENT.map(e=>[e.id,e]));
@@ -100,7 +100,14 @@ const BLESSINGS=[
  {id:'crit',name:'幸运祝福',stats:{crit:.1}},
  {id:'critical',name:'会心祝福',stats:{critDamage:.18}},
 ];
-const DAY_ITEMS=[{id:'day-propeller',name:'白昼•光速螺旋桨',count:3},{id:'day-hybrid',name:'白昼•武器大师',count:4},{id:'day-execution',name:'白昼•斩首行动',count:6}];
+const DAY_ITEMS=[{id:'day-propeller',name:'白昼•光速螺旋桨',count:3,art:'light-propeller'},{id:'day-hybrid',name:'白昼•武器大师',count:4,art:'hybrid'},{id:'day-execution',name:'白昼•斩首行动',count:6,art:'cannon'}];
+// 白昼 equipment follows the bond as in the original: each item is there while enough different
+// 昼之半神 characters are on the field (3 / 4 / 6) and gone — effect included — when they are not.
+// An item handed to a character returns to it when the bond is complete again.
+export function getDayEquipment(state){
+ const p=read(state),day=getProgressionTraitCounts(state).day||0,people=deployed(state);
+ return DAY_ITEMS.map(entry=>{const uid=p.day?.assignments?.[entry.id],owner=people.find(u=>u.uid===uid&&getProgressionUnitTraits(state,u).includes('day'));return {...entry,available:day>=entry.count,owner:owner?.uid||null};});
+}
 export function initProgression(){return {version:1,rng:0,nodeEntries:[],resolvedBattles:[],knownUnits:[],
  scholar:{dna:0,level:1},wolfpack:{xp:0,level:1},night:{essence:0,level:1},day:{unlocked:[],assignments:{}},
  seer:{battles:0,charges:0,cards:[],threeStarGranted:false},gamer:{cost:3,claimedCosts:[],accessories:[],accessoryOwners:{},copyBattles:0,admin:false},
@@ -243,7 +250,7 @@ export function getProgressionBattleModifiers(state){
  statAdd(team,p.beloved.buffs);
  if(tier(counts,'scholar')){ruleFlags.scholar={level:p.scholar.level,frontHealRatio:.2+.05*(p.scholar.level-1),frontDamageReduction:.15+.03*(p.scholar.level-1)};for(const u of people.filter(u=>u.zone==='front'))statAdd(statsFor(u),{damageReduction:ruleFlags.scholar.frontDamageReduction});}
  const wolf=tier(counts,'wolfpack');if(wolf){const form=WOLF_FORMS[Math.min(6,p.wolfpack.level-1)];statAdd(team,{crit:form.crit});const extra=[.15,.3,.5,.9][wolf-1]*.5*(p.wolfpack.level-1);for(const u of members(state,'wolfpack'))statAdd(statsFor(u),{frontPower:extra,backPower:extra});ruleFlags.wolfpack={level:p.wolfpack.level,...form};summons.push({id:'wolfpack',kind:'wolfpack',...form,level:p.wolfpack.level,hpScale:0,params:{...form}});}
- const day=tier(counts,'day');if(day||p.day.unlocked.length){ruleFlags.day={tier:day,enhanced:day>=4,assignments:{}};for(const entry of DAY_ITEMS){const uid=p.day.assignments[entry.id];const owner=people.find(u=>u.uid===uid&&getProgressionUnitTraits(state,u).includes('day'));if(owner)ruleFlags.day.assignments[entry.id]=uid;}}
+ const day=tier(counts,'day');if(day||p.day.unlocked.length){ruleFlags.day={tier:day,enhanced:day>=4,assignments:{}};for(const entry of DAY_ITEMS){const uid=p.day.assignments[entry.id];const owner=people.find(u=>u.uid===uid&&getProgressionUnitTraits(state,u).includes('day'));if(owner&&(counts.day||0)>=entry.count)ruleFlags.day.assignments[entry.id]=uid;}}
  if(p.seer.cards.includes('agility'))statAdd(team,{speedPct:.16});
  for(const u of people.filter(u=>String(u.characterId)==='1307'))if(p.seer.cards.includes('blank'))statAdd(statsFor(u),{backPower:.25});
  if(p.seer.cards.length)ruleFlags.seer={assertionHpRatio:p.seer.cards.includes('assertion')?.1:0,arcanaInitialStacks:p.seer.cards.includes('original-arcana')?7:0,arcanaExtraCap:p.seer.cards.includes('deep-arcana')?49:0,arcanaMultiplier:p.seer.cards.includes('deep-arcana')?1.2:1};
@@ -298,7 +305,7 @@ export function applyProgressionAction(state,action){
   const target=members(state,'festival').find(u=>u.uid===action.uid);if(!tier(counts,'festival')||!target)return fail('请选择上场的盛会之星角色。');
   update=real=>{real.festival.targetUid=target.uid;};message=`巨星：${char(target).name}`;
  }else if(action.kind==='day-equip'){
-  const target=members(state,'day').find(u=>u.uid===action.uid),entry=DAY_ITEMS.find(x=>x.id===action.id);if(!target||!entry||!p.day.unlocked.includes(entry.id))return fail('仅能交给上场的昼之半神角色。');
+  const target=members(state,'day').find(u=>u.uid===action.uid),entry=DAY_ITEMS.find(x=>x.id===action.id);if(!entry||(counts.day||0)<entry.count)return fail('昼之半神人数不足，这件白昼装备暂时没有出现。');if(!target)return fail('仅能交给上场的昼之半神角色。');
   const assigned=Object.entries(p.day.assignments).filter(([id,uid])=>id!==entry.id&&uid===target.uid).length;
   if((target.items||[]).some(id=>gear.get(id.replace(/^privileged:/,''))?.exclusiveSlots))return fail('随便骰子独占装备栏，无法同时穿戴白昼装备。');
   if((target.items||[]).length+assigned>=3)return fail('角色的三个装备栏已满，请先移走装备。');

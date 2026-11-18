@@ -2,8 +2,8 @@
 // backdrop under the route bar, five packs of a character card above the equipment it carries, the
 // re-deal counter (剩余次数) and 已选择 0/1 beside 确认, 角色详情 bottom-left and 返回备战界面 top-right.
 // Labels are the Chinese client strings (TextMapCHS).
-import { CHARACTERS, TRAITS, LEGACY_TRAITS, resolveEquipment, getEquipmentArtPath, getTraitArtPath } from './data.js?v=6.7.0';
-import { getEffectiveCharacterCost } from './engine.js?v=6.7.0';
+import { CHARACTERS, TRAITS, LEGACY_TRAITS, resolveEquipment, getEquipmentArtPath, getTraitArtPath } from './data.js?v=6.8.0';
+import { getEffectiveCharacterCost } from './engine.js?v=6.8.0';
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const RARITY = ['', '#8d929c', '#3f9e8a', '#5d6fe0', '#9a68dc', '#d6a83e'];

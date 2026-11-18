@@ -61,7 +61,8 @@ test('white-day gear shares three slots, follows its merged owner and is release
  progression(s,{kind:'day-unequip',id:'day-propeller'});run(s,{type:'equip',uid:'copy',itemIndex:0});run(s,{type:'unequip',uid:'copy',itemIndex:2});progression(s,{kind:'day-equip',id:'day-propeller',uid:'copy'});
  buy(s,ids[0]);assert.equal(s.progression.day.assignments['day-propeller'],'survivor');assert.equal(s.units.find(u=>u.uid==='survivor').items.length,2);assert.equal(s.inventory.length,3);
  run(s,{type:'sell',uid:'survivor'});assert.equal(s.progression.day.assignments['day-propeller'],undefined);assert.ok(s.progression.day.unlocked.includes('day-propeller'));
- progression(s,{kind:'day-equip',id:'day-propeller',uid:'other-one'});assert.equal(getProgressionBattleModifiers(s).ruleFlags.day.assignments['day-propeller'],'other-one');
+ // Two different 昼之半神 left: the 白昼 item is gone until a third is back on the field.
+ const gone=act(s,{type:'progression',kind:'day-equip',id:'day-propeller',uid:'other-one'});assert.equal(gone.ok,false);assert.match(gone.message,/人数不足/);
 });
 test('equipped emblems occupy a slot, unite duplicate character contributions and can be removed',()=>{
  const s=setup([unit('1001','march-a'),unit('1001','march-b','back'),unit('1202','tingyun')]);queueRewards(s,[{kind:'item',id:'trait-night',amount:2}]);collect(s);

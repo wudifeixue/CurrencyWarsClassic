@@ -117,3 +117,7 @@
 
 /* Environment pick: shorter cards; the starting characters and items show on the chosen card only. */
 .environment-screen .reference-choice-cards{top:210px;height:540px}
+
+/* 白昼 equipment: gold edge and a small 白昼 tag, in the 物品栏 and under the character. */
+.classic-scene .equipment-rail .inventory-item.day-item{border-color:#ffd77a;background:linear-gradient(135deg,#8a6a2a,#2b2030)}
+.classic-scene .equipped-icon.is-day{box-shadow:0 0 0 2px #ffd77a}

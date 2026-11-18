@@ -64,7 +64,7 @@ test('navigator copies selected partner traits and first item in battle, retaini
  const traits=getBattleSynergies(s);assert.equal(traits.find(t=>t.id==='shield').count,2);
  assert.ok(getBattleStats(s,nav).attack>baseline.attack);const before=structuredClone(s),r=run(s,{maxActions:8});
  assert.ok(r.events[0].text.includes('复制领航伙伴'));assert.ok(r.events[0].snapshot.find(u=>u.id===nav.uid).temporaryItems.includes('privileged:hybrid'));assert.deepEqual(s,before);
- const day=state([unit('1510','front',['trait-day','knife']),unit('1001','back',['battery'])]);day.progression.day.unlocked=['day-propeller'];day.progression.day.assignments={'day-propeller':'1510-front'};const beforeDay=getBattleStats(day,day.units[0]);day.progression.navigator.targetUid='1001-back';assert.deepEqual(getBattleStats(day,day.units[0]).dayEquipment,beforeDay.dayEquipment,'copied navigator modification does not consume a normal slot');assert.equal(beforeDay.dayEquipment.length,1);
+ const day=state([unit('1510','front',['trait-day','knife']),unit('1001','back',['battery']),unit('1402','back'),unit('1403','back')]);day.progression.day.unlocked=['day-propeller'];day.progression.day.assignments={'day-propeller':'1510-front'};const beforeDay=getBattleStats(day,day.units[0]);day.progression.navigator.targetUid='1001-back';assert.deepEqual(getBattleStats(day,day.units[0]).dayEquipment,beforeDay.dayEquipment,'copied navigator modification does not consume a normal slot');assert.equal(beforeDay.dayEquipment.length,1);
 });
 
 test('festival selection changes actual critical stats and Sparkle opening skill points',()=>{
@@ -90,7 +90,7 @@ test('day equipment respects three slots, persists when faction drops, and enhan
  const enhanced=getBattleStats(s,u);const lower=structuredClone(s);lower.units=lower.units.slice(0,3);onRosterChanged(lower);
  lower.progression.day.assignments={'day-propeller':u.uid};assert.ok(getBattleStats(lower,lower.units[0]).dayEquipment.includes('day-propeller'));
  assert.ok(enhanced.damageAmp>=getBattleStats(lower,lower.units[0]).damageAmp);
- lower.units=lower.units.slice(0,1);assert.ok(getBattleStats(lower,lower.units[0]).dayEquipment.includes('day-propeller'),'already earned equipment persists under the unlock threshold');
+ lower.units=lower.units.slice(0,1);assert.ok(!getBattleStats(lower,lower.units[0]).dayEquipment.includes('day-propeller'),'below three 昼之半神 the 白昼 item is gone, effect included');
 });
 
 test('savior inherits only active traits represented at the front without adding trait members',()=>{
@@ -118,13 +118,13 @@ test('all 36 privileged variants produce finite nonmutating combat and retain th
 
 test('copied dice retains navigator equipment and fills only empty slots without displacing daylight gear',()=>{
  for(const dice of ['comet','privileged:comet']){
-  const make=(items)=>{const s=state([unit('1510','front',items),unit('1001','back',[dice])]);s.seed=30;s.progression.navigator.targetUid='1001-back';return s;};
+  const make=(items,extra=[])=>{const s=state([unit('1510','front',items),unit('1001','back',[dice]),...extra]);s.seed=30;s.progression.navigator.targetUid='1001-back';return s;};
   for(const [items,expected]of [[[],2],[['knife'],2],[['trait-day','knife'],1],[['trait-day','knife','pistol'],0]]){
    const s=make(items),before=structuredClone(s),r=run(s,{maxActions:1}),nav=r.units.find(u=>u.id==='1510-front');
    assert.equal(nav.temporaryItems.length,expected,`${items} reserves its real slots`);assert.deepEqual(s,before);
    if(expected===0)assert.equal(nav.attack,getBattleStats(s,s.units[0]).attack,'a full navigator retains its own knife and emblem rather than receiving a replacement dice loadout');
   }
-  const day=make(['trait-day','knife']);day.progression.day.unlocked=['day-propeller'];day.progression.day.assignments={'day-propeller':'1510-front'};
+  const day=make(['trait-day','knife'],[unit('1402','back'),unit('1403','back')]);day.progression.day.unlocked=['day-propeller'];day.progression.day.assignments={'day-propeller':'1510-front'};
   const equipped=getBattleStats(day,day.units[0]);assert.deepEqual(equipped.dayEquipment,['day-propeller']);
   const replay=run(day,{maxActions:1}),nav=replay.units.find(u=>u.id==='1510-front');assert.equal(nav.temporaryItems.length,0,'the daylight item reserves the final ordinary slot');assert.equal(nav.attack,equipped.attack,'copied dice preserves the knife, emblem, and daylight strength');assert.equal(nav.speed,equipped.speed);
  }

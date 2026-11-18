@@ -53,7 +53,7 @@ test('portraits and character art are WebP',()=>{
 
 test('revision 6: enemies scale with every rank, and 3-star characters leave the shop and supply',async()=>{
   const {RANK_ENEMY_SCALE,FLOW_RULES}=await import('../dist/classic-flow.js');const {getEnemy,isMaxedCharacter}=await import('../dist/engine.js');
-  assert.equal(FLOW_RULES,6);assert.equal(RANK_ENEMY_SCALE.length,9);
+  assert.ok(FLOW_RULES>=6);assert.equal(RANK_ENEMY_SCALE.length,9);
   for(let i=1;i<9;i++){assert.ok(RANK_ENEMY_SCALE[i].hpMultiplier>RANK_ENEMY_SCALE[i-1].hpMultiplier);assert.ok(RANK_ENEMY_SCALE[i].attackMultiplier>RANK_ENEMY_SCALE[i-1].attackMultiplier);}
   const hp=rank=>{const s=createGame(5,{mode:'standard',rank});run(s,{type:'choose-environment',id:s.environment.choices[0]});return getEnemy(s).units.reduce((n,u)=>n+u.maxHp,0);};
   assert.ok(hp(8)>hp(7)&&hp(7)>hp(6)&&hp(6)>hp(5),'A6, A7 and A8 are no longer one band');
@@ -61,4 +61,21 @@ test('revision 6: enemies scale with every rank, and 3-star characters leave the
   assert.equal(isMaxedCharacter(s,'1001'),true);
   for(let k=0;k<40;k++){s.gold=10;run(s,{type:'refresh'});assert.ok(!s.shop.includes('1001'),'no 3-star copy in the shop');}
   const old=fresh();old.flow.rules=5;old.units=[{uid:'m',characterId:'1001',star:3,zone:'bench',slot:0,items:[],recruitCost:1}];assert.equal(isMaxedCharacter(old,'1001'),false,'older runs keep their shop');
+});
+
+test('白昼 equipment appears in the 物品栏 while 3 / 4 / 6 昼之半神 are on the field and disappears below that',async()=>{
+  const {getDayEquipment}=await import('../dist/classic-progression.js');const {inventoryContents}=await import('../dist/loot-ui.js');const {getBattleStats}=await import('../dist/combat.js');
+  const s=fresh();s.inventory=[];s.units=['1402','1403','1409','1405'].map((id,i)=>({uid:`d${i}`,characterId:id,star:1,zone:i<2?'front':'back',slot:i%2,items:[],recruitCost:1}));
+  const out=()=>getDayEquipment(s).filter(e=>e.available).map(e=>e.id);
+  assert.deepEqual(out(),['day-propeller','day-hybrid'],'four 昼之半神: the first two items');
+  let html=inventoryContents(s);assert.equal((html.match(/data-action="day-item"/g)||[]).length,2);assert.match(html,/白昼•光速螺旋桨/);
+  run(s,{type:'progression',kind:'day-equip',id:'day-propeller',uid:'d0'});
+  assert.ok(getBattleStats(s,s.units[0]).dayEquipment.includes('day-propeller'));
+  html=inventoryContents(s);assert.equal((html.match(/data-action="day-item"/g)||[]).length,1,'the handed-out item leaves the 物品栏');
+  run(s,{type:'move',uid:'d3',zone:'bench'});
+  assert.deepEqual(out(),['day-propeller'],'three left: 武器大师 is gone');
+  run(s,{type:'move',uid:'d2',zone:'bench'});
+  assert.deepEqual(out(),[],'two left: everything is gone');assert.ok(!getBattleStats(s,s.units[0]).dayEquipment.includes('day-propeller'),'and its effect with it');
+  assert.equal(inventoryContents(s).includes('day-item'),false);
+  run(s,{type:'move',uid:'d2',zone:'back'});assert.ok(getBattleStats(s,s.units[0]).dayEquipment.includes('day-propeller'),'back to three: the item returns to its owner');
 });

@@ -22,6 +22,7 @@ function deploy(s){
  if(s.phase!=='prep')return s;
  for(const u of s.units.filter(u=>u.zone==='bench')){
   if(s.units.filter(x=>x.zone!=='bench').length>=s.level)break;
+  if(s.units.some(x=>x.zone!=='bench'&&x.characterId===u.characterId))continue; // 无法上阵同名角色
   run(s,{type:'move',uid:u.uid,zone:s.units.filter(x=>x.zone==='front').length<4?'front':'back'});
  }
  return s;
@@ -49,8 +50,8 @@ test('a run opens at level 3 with an empty board and Starting Supplies on the be
  assert.equal(s.phase,'prep');assert.equal(getCurrentNode(s).label,'1-1');assert.equal(s.level,3);
  assert.equal(s.units.length,4);assert.ok(s.units.every(u=>u.zone==='bench'&&u.star===1),'four supplies wait on the bench, nothing is deployed');
  assert.equal(r.supplies.filter(x=>x.kind==='character').length,4);
- assert.ok(s.gold>=3&&s.gold<=4,'three or four starting coins');assert.equal(s.inventory.length,1,'one basic equipment in the list');
- assert.equal(s.loot.filter(o=>o.source==='开局补给').length,1,'and one more inside a crystal');
+ assert.ok(s.gold>=3&&s.gold<=4,'three or four starting coins');assert.equal(s.inventory.length,0,'no item in the list: only the wrench, as in REC2');
+ assert.equal(s.loot.filter(o=>o.source==='开局补给').length,1,'one basic item waits inside a crystal');assert.equal(s.loot.find(o=>o.source==='开局补给').contents[0].kind,'item');
  assert.equal(s.shop.filter(Boolean).length,5);assert.ok(s.shop.every(id=>CLASSIC_ROSTER.find(c=>c.id===id).cost===1),'level 3 shop only offers 1-cost characters');
  assert.equal(act(s,{type:'battle'}).ok,false,'cannot fight with nobody deployed');
  const [a,b,c,d]=s.units.map(u=>u.uid);
