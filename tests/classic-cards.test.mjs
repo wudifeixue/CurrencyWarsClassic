@@ -50,3 +50,15 @@ test('portraits and character art are WebP',()=>{
   const roster=readFileSync(new URL('../dist/classic-roster.js',import.meta.url),'utf8');
   assert.ok(!/assets\/(portraits|characters)\/[^"]+\.png/.test(roster));
 });
+
+test('revision 6: enemies scale with every rank, and 3-star characters leave the shop and supply',async()=>{
+  const {RANK_ENEMY_SCALE,FLOW_RULES}=await import('../dist/classic-flow.js');const {getEnemy,isMaxedCharacter}=await import('../dist/engine.js');
+  assert.equal(FLOW_RULES,6);assert.equal(RANK_ENEMY_SCALE.length,9);
+  for(let i=1;i<9;i++){assert.ok(RANK_ENEMY_SCALE[i].hpMultiplier>RANK_ENEMY_SCALE[i-1].hpMultiplier);assert.ok(RANK_ENEMY_SCALE[i].attackMultiplier>RANK_ENEMY_SCALE[i-1].attackMultiplier);}
+  const hp=rank=>{const s=createGame(5,{mode:'standard',rank});run(s,{type:'choose-environment',id:s.environment.choices[0]});return getEnemy(s).units.reduce((n,u)=>n+u.maxHp,0);};
+  assert.ok(hp(8)>hp(7)&&hp(7)>hp(6)&&hp(6)>hp(5),'A6, A7 and A8 are no longer one band');
+  const s=fresh();s.units=[{uid:'m',characterId:'1001',star:3,zone:'bench',slot:0,items:[],recruitCost:1}];
+  assert.equal(isMaxedCharacter(s,'1001'),true);
+  for(let k=0;k<40;k++){s.gold=10;run(s,{type:'refresh'});assert.ok(!s.shop.includes('1001'),'no 3-star copy in the shop');}
+  const old=fresh();old.flow.rules=5;old.units=[{uid:'m',characterId:'1001',star:3,zone:'bench',slot:0,items:[],recruitCost:1}];assert.equal(isMaxedCharacter(old,'1001'),false,'older runs keep their shop');
+});

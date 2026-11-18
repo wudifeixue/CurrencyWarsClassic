@@ -1,12 +1,12 @@
-import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.6.0';
-import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.6.0';
-import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.6.0';
-import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.6.0';
-import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss,usesRevision5} from './classic-flow.js?v=6.6.0';
-import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.6.0';
-import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.6.0';
-export {getEnemyLineup,simulateCombat} from './combat.js?v=6.6.0';
-export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,usesRevision5,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
+import {CHARACTERS,CLASSIC_ROSTER,EQUIPMENT,STRATEGIES,RECIPES,LEVEL_XP,SHOP_ODDS,MAX_LEVEL,BENCH_CAPACITY,FRONT_CAPACITY,ROUND_COUNT,TRAITS,resolveEquipment} from './data.js?v=6.7.0';
+import {simulateCombat,getEnemyLineup,getBattleStats,getBattleSynergies} from './combat.js?v=6.7.0';
+import {initializeLoot,queueRewards,makeChest,makeRoleChest,getConsumable,validateLoot} from './loot.js?v=6.7.0';
+import {initProgression,migrateProgression,validateProgression,onNodeEntry,onBattleResolved,onRosterChanged,onManagementAction,refreshProgression,applyProgressionAction,getEffectiveCharacterCost,getProgressionShopModifiers} from './classic-progression.js?v=6.7.0';
+import {RUN_MODES,DIFFICULTIES,CLASSIC_LEVEL_XP,ZERO_SUM_LEVEL_XP,START_LEVEL,BOSS_MIN_PROGRESS,usesVerifiedRules,usesRevision3,getNodeBaseIncome,getNodeEntryGold,getNodeXp,getDefeatPenaltyParts,getStreakGold,getClassicSellPrice,initFlow,validateFlow,isClassicRun,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesRevision4,getRank,RANKS,HIGH_RANK_LEVEL_XP,getStartingHp,getMinProgress,getNodeCountdown,getReviveCountdownLoss,usesRevision5,usesRevision6,RANK_ENEMY_SCALE} from './classic-flow.js?v=6.7.0';
+import {initEnvironment,chooseEnvironment,rerollEnvironments,onEnvironmentEvent,getEnvironmentShopWeight,getEnvironmentShopOdds,getEnvironmentRefreshCost,getEnvironmentStrategyRarity,getEnvironmentRules,validateEnvironment} from './classic-environments.js?v=6.7.0';
+import {combineInventoryItems,equipCraftingItem,getSmeltingPool} from './classic-crafting.js?v=6.7.0';
+export {getEnemyLineup,simulateCombat} from './combat.js?v=6.7.0';
+export {RUN_MODES,DIFFICULTIES,BOSS_MIN_PROGRESS,RANKS,getRunMode,getRunNodes,getCurrentNode,getRunLength,usesVerifiedRules,usesRevision3,usesRevision4,usesRevision5,usesRevision6,getRank,getMinProgress,getNodeCountdown,getNodeBaseIncome,getNodeXp};
 
 const characters = new Map(CHARACTERS.map(c=>[c.id,c]));
 const strategyIds = new Set(STRATEGIES.map(s=>s.id));
@@ -106,12 +106,19 @@ function addUnit(state,characterId,zone='bench',star=1,cost=getEffectiveCharacte
   return unit;
 }
 
+// A character the player already has at 3 stars stops being offered (revision 6): it cannot be
+// upgraded any further, so a copy in the shop or supply would only be a dead card.
+export const isMaxedCharacter=(state,id)=>usesRevision6(state)&&state.units.some(u=>u.characterId===String(id)&&u.star>=3);
+function offerPool(state,cost){
+  const all=CLASSIC_ROSTER.filter(c=>getEffectiveCharacterCost(state,c.id)===cost),open=all.filter(c=>!isMaxedCharacter(state,c.id));
+  return open.length?open:all;
+}
 function rollShop(state) {
   state.shop = Array.from({length:5},()=>{
     let roll=random(state)*100;
     let cost=1;
     for(const chance of getShopOdds(state)) {if(roll<chance) break;roll-=chance;cost++;}
-    const pool=CLASSIC_ROSTER.filter(c=>getEffectiveCharacterCost(state,c.id)===cost);
+    const pool=offerPool(state,cost);
     let weight=random(state)*pool.reduce((total,c)=>total+getEnvironmentShopWeight(state,c),0);
     return (pool.find(c=>(weight-=getEnvironmentShopWeight(state,c))<0)||pool.at(-1)).id;
   });
@@ -208,7 +215,7 @@ export function getEnemy(state) {
     ['末日兽',5100,'最终首领。击败它，完成这场经典远征。'],
   ];
   const node=getCurrentNode(state),[name,power,description]=enemies[Math.max(0,Math.min(11,(node?.combatRound||state.round)-1))];
-  const difficulty=DIFFICULTIES[state.flow?.difficulty||0],encounter=state.flow?.selectedEncounter;
+  const difficulty=usesRevision6(state)?RANK_ENEMY_SCALE[getRank(state)]||RANK_ENEMY_SCALE[0]:DIFFICULTIES[state.flow?.difficulty||0],encounter=state.flow?.selectedEncounter;
   // Simulator tuning: a full standard route earns far more equipment and copies
   // than the historical web prototype. These are not original server stats.
   const routeHp=[0,1+(node?.index||1)*.2,5+(node?.index||1)*.5,10+(node?.index||1)*.9][node?.plane||1];
@@ -282,7 +289,7 @@ export const SUPPLY_DIAMOND_CHANCE=.05;
 export const getSupplyCostOdds=(state,plane=getCurrentNode(state)?.plane)=>SUPPLY_COST_ODDS[plane]||getShopOdds(state);
 function supplyCharacter(state,cost,taken){
   const ofCost=c=>getEffectiveCharacterCost(state,c.id)===cost;
-  const fresh=CLASSIC_ROSTER.filter(c=>ofCost(c)&&!taken.has(c.id)),pool=fresh.length?fresh:CLASSIC_ROSTER.filter(ofCost);
+  const fresh=CLASSIC_ROSTER.filter(c=>ofCost(c)&&!taken.has(c.id)&&!isMaxedCharacter(state,c.id)),pool=fresh.length?fresh:CLASSIC_ROSTER.filter(ofCost);
   const list=pool.length?pool:CLASSIC_ROSTER.filter(c=>c.cost===cost);
   let weight=random(state)*list.reduce((total,c)=>total+getEnvironmentShopWeight(state,c),0);
   return list.find(c=>(weight-=getEnvironmentShopWeight(state,c))<0)||list.at(-1);
